@@ -32,8 +32,13 @@ export class Pow {
 
   // default genesis ID to mainnet
   constructor(network: Network) {
-    const powConfig = GetNetworkConfig(network);
-    const client = new Client(powConfig);
+    const conf = GetNetworkConfig(network);
+    const client = new Client({
+      username: conf.powUser,
+      password: conf.powPass,
+      host: conf.powHost,
+      port: conf.powPort,
+    });
     this.btc = client;
     this.cache = new LRU<string, any>({ max: 1024 * 4 });
   }
