@@ -73,7 +73,7 @@
     "build": "rm -fr dist && tsc -p ."
   },
   "bin": {
-    "scan-sync": "dist/src/main.js"
+    "scan-service": "dist/src/main.js"
   },
   "importSort": {
     ".js, .jsx, .ts, .tsx": {
