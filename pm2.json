@@ -1,0 +1,13 @@
+{
+  "apps": [
+    {
+      "name": "scan-api",
+      "instances": "1",
+      "script": "./src/pm2-main.ts",
+      "interpreter": "ts-node",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  ]
+}
