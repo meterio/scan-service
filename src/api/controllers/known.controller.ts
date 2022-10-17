@@ -68,7 +68,18 @@ class KnownController extends BaseController {
   private importFromSourcify = async (req: Request, res: Response) => {
     const { address } = req.params;
     const contract = await this.contractRepo.findByAddress(address);
+    // if (contract.verified) {
+    //   return res.json({ verified: true, address });
+    // }
+    let files = null
     if (contract.verified) {
+      if (contract.status === 'match') {
+        files = await this.contractFileRepo.findAllByContract(contract.verifiedFrom);
+      } else {
+        files = await this.contractFileRepo.findAllByContract(address);
+      }
+    }
+    if (contract.verified && files && files.length) {
       return res.json({ verified: true, address });
     }
 
