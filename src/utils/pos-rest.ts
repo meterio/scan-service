@@ -6,6 +6,7 @@ import { ERC165, ERC721, ERC1155, ERC721Metadata, ERC20 } from '@meterio/devkit'
 import { GetNetworkConfig } from '../const';
 import { Net } from './net';
 import { blockIDtoNum, isBytes32 } from './utils';
+export const PROBE_TIMEOUT = 5000;
 
 export namespace Pos {
   export type ExpandedBlock = Omit<Required<Flex.Meter.Block>, 'transactions'> & {
@@ -594,7 +595,7 @@ export class Pos {
   }
 
   public async probe(ipAddress: string): Promise<Pos.ProbeInfo> {
-    const net = new Net(`http://${ipAddress}:8670`, 3 * 1000); // probe with a timeout of 3s
+    const net = new Net(`http://${ipAddress}:8670`, PROBE_TIMEOUT); // probe with a timeout of 3s
     return net.http('GET', 'probe', {});
   }
 }

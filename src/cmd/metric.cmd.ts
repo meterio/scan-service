@@ -26,7 +26,7 @@ import {
   ContractType,
   ValidatorStatus,
 } from '../const';
-import { InterruptedError, Net, Pos, Pow, sleep } from '../utils';
+import { InterruptedError, Net, Pos, Pow, sleep, PROBE_TIMEOUT } from '../utils';
 import { MetricCache } from '../types';
 import { postToSlackChannel } from '../utils/slack';
 import { CMD } from './cmd';
@@ -51,6 +51,7 @@ const every30m = (60 * 30) / (SAMPLING_INTERVAL / 1000); // count of index in 30
 const every2h = (2 * 60 * 60) / (SAMPLING_INTERVAL / 1000); // count of index in 2 hours
 const every4h = (4 * 60 * 60) / (SAMPLING_INTERVAL / 1000); // count of index in 4 hours
 const every6h = (6 * 60 * 60) / (SAMPLING_INTERVAL / 1000); // count of index in 6 hours
+
 export class MetricCMD extends CMD {
   private shutdown = false;
   private ev = new EventEmitter();
@@ -310,7 +311,10 @@ export class MetricCMD extends CMD {
             let probe: Pos.ProbeInfo;
             const base = { name: v.name, ip: v.ipAddress, pubKey: v.pubKey };
             try {
-              const result = await Promise.race<Pos.ProbeInfo | void>([this.pos.probe(v.ipAddress), sleep(1000)]);
+              const result = await Promise.race<Pos.ProbeInfo | void>([
+                this.pos.probe(v.ipAddress),
+                sleep(PROBE_TIMEOUT),
+              ]);
               if (!result) {
                 throw new Error('timed out');
               }
