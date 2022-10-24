@@ -36,6 +36,20 @@ export default class BlockRepo {
     });
   }
 
+  public async findDistinctStateRoot(start: number, end: number) {
+    return this.model.aggregate([
+      { $match: { number: { $gte: start, $lte: end } } },
+      {
+        $group: {
+          _id: '$stateRoot',
+          stateRoot: { $first: '$stateRoot' },
+          number: { $first: '$number' },
+          txCount: { $first: '$txCount' },
+        },
+      },
+    ]);
+  }
+
   public async findKBlocksByEpochs(epochs: number[]) {
     return this.model.find({
       blockType: BlockType.KBlock,
