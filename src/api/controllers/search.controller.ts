@@ -1,4 +1,4 @@
-import { AccountRepo, BlockRepo, ContractRepo, TxRepo } from '../../repo';
+import { AccountRepo, AuctionRepo, BidRepo, BlockRepo, ContractRepo, TxRepo } from '../../repo';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Network, ContractType } from '../../const';
@@ -14,6 +14,8 @@ class SearchController extends BaseController {
   private txRepo = new TxRepo();
   private accountRepo = new AccountRepo();
   private contractRepo = new ContractRepo();
+  private auctionRepo = new AuctionRepo();
+  private bidRepo = new BidRepo();
 
   constructor(network: Network, standby: boolean) {
     super(network, standby);
@@ -40,6 +42,19 @@ class SearchController extends BaseController {
         console.log(`exact match for tx hash: `, word);
         return res.json({ type: 'tx', data: tx.toJSON() });
       }
+
+      const auction = await this.auctionRepo.findByID(word);
+      if (auction) {
+        console.log(`exact match for auction id: `, word);
+        return res.json({ type: 'auction', data: auction.toJSON() });
+      }
+
+      const bid = await this.bidRepo.findById(word);
+      if (bid) {
+        console.log(`exact match for bid id: `, word);
+        return res.json({ type: 'bid', data: bid.toJSON() });
+      }
+
       return res.json({ type: 'hash' });
     }
 
