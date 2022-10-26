@@ -105,10 +105,15 @@ blockSchema.methods.toSummary = function () {
     qcHeight: this.qc.qcHeight,
     blockType: this.blockType,
     gasUsed: this.gasUsed,
+    gasLimit: this.gasLimit,
     txCount: this.txCount,
     beneficiary: this.beneficiary,
     reward: this.reward,
     actualReward: this.actualReward,
+    stateRoot: this.stateRoot,
+    receiptsRoot: this.receiptsRoot,
+    txsRoot: this.txsRoot,
+    size: this.size,
   };
 };
 
