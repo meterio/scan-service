@@ -18,6 +18,19 @@ const _oauth = new OAuth(
   'HMAC-SHA1',
 );
 
+const getOAuthRequestToken = () => {
+  return new Promise((resolve, reject) => {
+    _oauth.getOAuthRequestToken((error, oauth_token, oauth_token_secret, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        console.log({ oauth_token, oauth_token_secret, results });
+        resolve({ oauth_token, oauth_token_secret, results });
+      }
+    });
+  });
+};
+
 class TwitterController extends BaseController {
   public path = '/api/twitter';
   public router = Router();
@@ -32,8 +45,7 @@ class TwitterController extends BaseController {
   }
 
   private getOAuthRequestToken = async (req: Request, res: Response) => {
-    const token = await _oauth.getOAuthRequestToken()
-    console.log('token', token)
+    const token  = await getOAuthRequestToken();
     res.json({
       token
     })
