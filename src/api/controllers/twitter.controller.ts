@@ -3,33 +3,26 @@ import { try$ } from 'express-toolbox';
 import { Network } from '../../const';
 import { BaseController } from './baseController';
 
-import { OAuth } from 'oauth'
+import OAuth from 'oauth-1.0a'
+import crypto from 'crypto'
+import axios from 'axios';
 
 const oauthCallback = process.env.FRONTEND_URL;
 const CONSUMER_KEY = process.env.CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.CONSUMER_SECRET;
-const _oauth = new OAuth(
-  'https://api.twitter.com/oauth/request_token',
-  'https://api.twitter.com/oauth/access_token',
-  CONSUMER_KEY, // consumer key
-  CONSUMER_SECRET, // consumer secret
-  '1.0',
-  oauthCallback,
-  'HMAC-SHA1',
-);
 
-const getOAuthRequestToken = () => {
-  return new Promise((resolve, reject) => {
-    _oauth.getOAuthRequestToken((error, oauth_token, oauth_token_secret, results) => {
-      if (error) {
-        reject(error);
-      } else {
-        console.log({ oauth_token, oauth_token_secret, results });
-        resolve({ oauth_token, oauth_token_secret, results });
-      }
-    });
-  });
-};
+const requestTokenURL = 'https://api.twitter.com/oauth/request_token';
+const authorizeURL = new URL('https://api.twitter.com/oauth/authorize');
+const accessTokenURL = 'https://api.twitter.com/oauth/access_token';
+
+const oauth = new OAuth({
+  consumer: {
+    key: CONSUMER_KEY,
+    secret: CONSUMER_SECRET
+  },
+  signature_method: 'HMAC-SHA1',
+  hash_function: (baseString, key) => crypto.createHmac('sha1', key).update(baseString).digest('base64')
+});
 
 class TwitterController extends BaseController {
   public path = '/api/twitter';
@@ -45,9 +38,20 @@ class TwitterController extends BaseController {
   }
 
   private getOAuthRequestToken = async (req: Request, res: Response) => {
-    const token  = await getOAuthRequestToken();
+    
+    const authHeader = oauth.toHeader(oauth.authorize({
+      url: requestTokenURL,
+      method: 'POST'
+    }));
+    const result = await axios.post(requestTokenURL, {
+      oauth_callback: oauthCallback
+    }, {
+      headers: {
+        Authorization: authHeader["Authorization"]
+      }
+    })
     res.json({
-      token
+      result
     })
   };
 }
