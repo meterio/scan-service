@@ -13,7 +13,7 @@ const CONSUMER_KEY = process.env.CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.CONSUMER_SECRET;
 
 const requestTokenURL = 'https://api.twitter.com/oauth/request_token';
-const authorizeURL = new URL('https://api.twitter.com/oauth/authorize');
+const authorizeURL = 'https://api.twitter.com/oauth/authorize';
 const accessTokenURL = 'https://api.twitter.com/oauth/access_token';
 const verifyCredentialsURL = 'https://api.twitter.com/1.1/account/verify_credentials.json';
 const userURL = 'https://api.twitter.com/2/users'
@@ -65,8 +65,7 @@ class TwitterController extends BaseController {
     if (result.data) {
       const parseRes = qs.parse(result.data)
       data = { ...data, ...parseRes }
-      authorizeURL.searchParams.append('oauth_token', data.oauth_token)
-      data.authorizeURL = authorizeURL.href;
+      data.authorizeURL = `${authorizeURL}?oauth_token=${data.oauth_token}`;
     }
     res.json({
       ...data
