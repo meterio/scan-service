@@ -79,10 +79,11 @@ class TwitterController extends BaseController {
       method: 'POST'
     }));
 
-    const result = await axios.post(accessTokenURL, {
-      oauth_token,
-      oauth_verifier
-    }, {
+    const result = await axios.post(accessTokenURL, null, {
+      params: {
+        oauth_token,
+        oauth_verifier
+      },
       headers: {
         Authorization: authHeader["Authorization"]
       }
