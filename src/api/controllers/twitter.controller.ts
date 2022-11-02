@@ -16,6 +16,7 @@ const requestTokenURL = 'https://api.twitter.com/oauth/request_token';
 const authorizeURL = new URL('https://api.twitter.com/oauth/authorize');
 const accessTokenURL = 'https://api.twitter.com/oauth/access_token';
 const verifyCredentialsURL = 'https://api.twitter.com/1.1/account/verify_credentials.json';
+const userURL = 'https://api.twitter.com/2/users'
 
 const oauth = new OAuth({
   consumer: {
@@ -39,6 +40,7 @@ class TwitterController extends BaseController {
     this.router.get(`${this.path}/requestToken`, try$(this.getOAuthRequestToken));
     this.router.get(`${this.path}/accessToken/:oauth_token/:oauth_verifier`, try$(this.getOAuthAccessToken));
     this.router.get(`${this.path}/verifyCredentials/:oauth_token/:oauth_token_secret`, try$(this.verifyCredentials))
+    this.router.get(`${this.path}/user/:oauth_token/:oauth_token_secret/:id`, try$(this.getUseById))
   }
 
   private getOAuthRequestToken = async (req: Request, res: Response) => {
@@ -121,6 +123,34 @@ class TwitterController extends BaseController {
         Authorization: authHeader["Authorization"]
       }
     })
+
+    res.json({
+      result: result.data
+    })
+  }
+
+  private getUseById = async (req: Request, res: Response) => {
+    const { oauth_token, oauth_token_secret, id } = req.params
+
+    const endpointURL = new URL(`${userURL}/${id}`)
+    endpointURL.searchParams.append('user.fields', 'id,name,profile_image_url,description')
+
+    const token = {
+      key: oauth_token,
+      secret: oauth_token_secret
+    };
+  
+    const authHeader = oauth.toHeader(oauth.authorize({
+      url: endpointURL.href,
+      method: 'GET'
+    }, token));
+  
+    const result = await axios.get(endpointURL.href, {
+      headers: {
+        Authorization: authHeader["Authorization"],
+        'user-agent': "v2UserLookupJS"
+      }
+    });
 
     res.json({
       result: result.data
