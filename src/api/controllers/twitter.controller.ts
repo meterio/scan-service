@@ -153,7 +153,7 @@ class TwitterController extends BaseController {
     });
 
     res.json({
-      result: result.data
+      ...result.data
     })
   }
 }
