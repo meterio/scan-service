@@ -13,7 +13,7 @@ const CONSUMER_KEY = process.env.CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.CONSUMER_SECRET;
 
 const requestTokenURL = 'https://api.twitter.com/oauth/request_token';
-const authorizeURL = 'https://api.twitter.com/oauth/authorize';
+const authorizeURL = 'https://api.twitter.com/oauth/authenticate';
 const accessTokenURL = 'https://api.twitter.com/oauth/access_token';
 const verifyCredentialsURL = 'https://api.twitter.com/1.1/account/verify_credentials.json';
 const userURL = 'https://api.twitter.com/2/users'
@@ -39,7 +39,6 @@ class TwitterController extends BaseController {
   private initializeRoutes() {
     this.router.get(`${this.path}/requestToken`, try$(this.getOAuthRequestToken));
     this.router.get(`${this.path}/accessToken/:oauth_token/:oauth_verifier`, try$(this.getOAuthAccessToken));
-    this.router.get(`${this.path}/verifyCredentials/:oauth_token/:oauth_token_secret`, try$(this.verifyCredentials))
     this.router.get(`${this.path}/user/:oauth_token/:oauth_token_secret/:id`, try$(this.getUseById))
   }
 
@@ -102,29 +101,6 @@ class TwitterController extends BaseController {
 
     res.json({
       ...data
-    })
-  }
-
-  private verifyCredentials = async (req: Request, res: Response) => {
-    const { oauth_token, oauth_token_secret } = req.params
-    const token = {
-      key: oauth_token,
-      secret: oauth_token_secret
-    };
-
-    const authHeader = oauth.toHeader(oauth.authorize({
-      url: verifyCredentialsURL,
-      method: 'GET'
-    }, token));
-
-    const result = await axios.get(verifyCredentialsURL, {
-      headers: {
-        Authorization: authHeader["Authorization"]
-      }
-    })
-
-    res.json({
-      result: result.data
     })
   }
 
