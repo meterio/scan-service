@@ -3,3 +3,4 @@
 /* eslint-disable */
 
 export { PermitRouter__factory } from "./factories/PermitRouter__factory";
+export { ERC721Twitter__factory } from "./factories/ERC721Twitter__factory";

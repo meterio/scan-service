@@ -1,12 +1,15 @@
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Network } from '../../const';
+import { TWITTER_NEED } from '../const';
 import { BaseController } from './baseController';
 
 import OAuth from 'oauth-1.0a'
 import crypto from 'crypto'
 import axios from 'axios';
 import qs from 'querystring'
+import { ERC721Twitter__factory } from '../typechain';
+import { ethers } from 'ethers';
 
 const CALLBACK_URL = process.env.CALLBACK_URL;
 const CONSUMER_KEY = process.env.CONSUMER_KEY;
@@ -39,7 +42,28 @@ class TwitterController extends BaseController {
   private initializeRoutes() {
     this.router.get(`${this.path}/requestToken`, try$(this.getOAuthRequestToken));
     this.router.get(`${this.path}/accessToken/:oauth_token/:oauth_verifier`, try$(this.getOAuthAccessToken));
-    this.router.get(`${this.path}/user/:oauth_token/:oauth_token_secret/:id`, try$(this.getUseById))
+    this.router.get(`${this.path}/user/:oauth_token/:oauth_token_secret/:id`, try$(this.getUseById));
+    this.router.get(`${this.path}/mint/:address/:tokenId/:username`, try$(this.mint));
+  }
+
+  private mint = async (req: Request, res: Response) => {
+    const { address, tokenId, username } = req.params;
+
+    if (!address || !tokenId || !username) {
+      throw new Error('check address/tokenId/username please')
+    }
+
+    const { twitterContract, privateKey, rpc } = TWITTER_NEED;
+
+    const twitter = ERC721Twitter__factory.connect(
+      twitterContract,
+      new ethers.Wallet(privateKey, new ethers.providers.JsonRpcProvider(rpc))
+    );
+
+    const tx = await twitter.mint(address, tokenId, username);
+    const receipt = await tx.wait();
+
+    res.json(receipt)
   }
 
   private getOAuthRequestToken = async (req: Request, res: Response) => {
