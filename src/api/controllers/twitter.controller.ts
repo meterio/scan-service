@@ -18,8 +18,8 @@ const CONSUMER_SECRET = process.env.CONSUMER_SECRET;
 const requestTokenURL = 'https://api.twitter.com/oauth/request_token';
 const authorizeURL = 'https://api.twitter.com/oauth/authenticate';
 const accessTokenURL = 'https://api.twitter.com/oauth/access_token';
-const verifyCredentialsURL = 'https://api.twitter.com/1.1/account/verify_credentials.json';
-const userURL = 'https://api.twitter.com/2/users'
+const userURL = 'https://api.twitter.com/2/users';
+const tweetsURL = `https://api.twitter.com/2/tweets`;
 
 const oauth = new OAuth({
   consumer: {
@@ -44,6 +44,51 @@ class TwitterController extends BaseController {
     this.router.get(`${this.path}/accessToken/:oauth_token/:oauth_verifier`, try$(this.getOAuthAccessToken));
     this.router.get(`${this.path}/user/:oauth_token/:oauth_token_secret/:id`, try$(this.getUseById));
     this.router.get(`${this.path}/mint/:address/:tokenId/:username`, try$(this.mint));
+    this.router.get(`${this.path}/create/:oauth_token/:oauth_token_secret`, try$(this.create));
+  }
+
+  private create = async (req: Request, res: Response) => {
+    const { text } = req.query
+    const { oauth_token, oauth_token_secret } = req.params
+    if (!text) {
+      throw new Error('text is need')
+    }
+
+    const token = {
+      key: oauth_token,
+      secret: oauth_token_secret
+    };
+  
+    const authHeader = oauth.toHeader(oauth.authorize({
+      url: tweetsURL,
+      method: 'POST'
+    }, token));
+
+    try {
+      const result = await axios.post(tweetsURL, {
+        text
+      }, {
+        headers: {
+          Authorization: authHeader["Authorization"],
+          'user-agent': "v2CreateTweetJS",
+          'content-type': "application/json",
+          'accept': "application/json"
+        }
+      })
+      console.log('create tweet result', result)
+      if (result.data) {
+        res.json(result.data)
+      } else {
+        res.json({
+          error: 'create tweet failed'
+        })
+      }
+    } catch(e) {
+      res.json({
+        error: e
+      })
+    }
+    
   }
 
   private mint = async (req: Request, res: Response) => {
@@ -60,10 +105,16 @@ class TwitterController extends BaseController {
       new ethers.Wallet(privateKey, new ethers.providers.JsonRpcProvider(rpc))
     );
 
-    const tx = await twitter.mint(address, tokenId, username);
-    const receipt = await tx.wait();
+    try {
+      const tx = await twitter.mint(address, tokenId, username);
+      const receipt = await tx.wait();
 
-    res.json(receipt)
+      res.json(receipt)
+    } catch(e) {
+      res.json({
+        error: e
+      })
+    }
   }
 
   private getOAuthRequestToken = async (req: Request, res: Response) => {
@@ -132,7 +183,7 @@ class TwitterController extends BaseController {
     const { oauth_token, oauth_token_secret, id } = req.params
 
     const endpointURL = new URL(`${userURL}/${id}`)
-    endpointURL.searchParams.append('user.fields', 'id,name,profile_image_url,description')
+    endpointURL.searchParams.append('user.fields', 'id,name,profile_image_url,description,created_at')
 
     const token = {
       key: oauth_token,
