@@ -118,14 +118,14 @@ class TwitterController extends BaseController {
   }
 
   private getOAuthRequestToken = async (req: Request, res: Response) => {
+
+    const _requestTokenURL = `${requestTokenURL}?oauth_callback=${encodeURIComponent(CALLBACK_URL)}&x_auth_access_type=write`
     
     const authHeader = oauth.toHeader(oauth.authorize({
-      url: requestTokenURL,
+      url: _requestTokenURL,
       method: 'POST'
     }));
-    const result = await axios.post(requestTokenURL, {
-      oauth_callback: CALLBACK_URL
-    }, {
+    const result = await axios.post(_requestTokenURL, null, {
       headers: {
         Authorization: authHeader["Authorization"]
       }
