@@ -18,6 +18,7 @@ const CONSUMER_SECRET = process.env.CONSUMER_SECRET;
 const requestTokenURL = 'https://api.twitter.com/oauth/request_token';
 const authorizeURL = 'https://api.twitter.com/oauth/authenticate';
 const accessTokenURL = 'https://api.twitter.com/oauth/access_token';
+const invalidateURL = 'https://api.twitter.com/1.1/oauth/invalidate_token';
 const userURL = 'https://api.twitter.com/2/users';
 const tweetsURL = `https://api.twitter.com/2/tweets`;
 
@@ -45,6 +46,7 @@ class TwitterController extends BaseController {
     this.router.get(`${this.path}/user/:oauth_token/:oauth_token_secret/:id`, try$(this.getUseById));
     this.router.get(`${this.path}/mint/:address/:tokenId/:username`, try$(this.mint));
     this.router.get(`${this.path}/create/:oauth_token/:oauth_token_secret`, try$(this.create));
+    this.router.get(`${this.path}/invalidateToken/:oauth_token/:oauth_token_secret`, try$(this.invalidateToken));
   }
 
   private create = async (req: Request, res: Response) => {
@@ -68,6 +70,7 @@ class TwitterController extends BaseController {
       const result = await axios.post(tweetsURL, {
         text
       }, {
+        responseType: 'json',
         headers: {
           Authorization: authHeader["Authorization"],
           'user-agent': "v2CreateTweetJS",
@@ -85,7 +88,7 @@ class TwitterController extends BaseController {
       }
     } catch(e) {
       res.json({
-        error: e
+        error: e.response.data
       })
     }
     
@@ -125,25 +128,31 @@ class TwitterController extends BaseController {
       url: _requestTokenURL,
       method: 'POST'
     }));
-    const result = await axios.post(_requestTokenURL, null, {
-      headers: {
-        Authorization: authHeader["Authorization"]
+    try {
+      const result = await axios.post(_requestTokenURL, null, {
+        headers: {
+          Authorization: authHeader["Authorization"]
+        }
+      })
+      let data = {
+        oauth_token: '',
+        oauth_token_secret: '',
+        oauth_callback_confirmed: false,
+        authorizeURL: ''
       }
-    })
-    let data = {
-      oauth_token: '',
-      oauth_token_secret: '',
-      oauth_callback_confirmed: false,
-      authorizeURL: ''
+      if (result.data) {
+        const parseRes = qs.parse(result.data)
+        data = { ...data, ...parseRes }
+        data.authorizeURL = `${authorizeURL}?oauth_token=${data.oauth_token}`;
+      }
+      res.json({
+        ...data
+      })
+    } catch(e) {
+      res.json({
+        error: e.response.data
+      })
     }
-    if (result.data) {
-      const parseRes = qs.parse(result.data)
-      data = { ...data, ...parseRes }
-      data.authorizeURL = `${authorizeURL}?oauth_token=${data.oauth_token}`;
-    }
-    res.json({
-      ...data
-    })
   };
 
   private getOAuthAccessToken = async (req: Request, res: Response) => {
@@ -154,29 +163,64 @@ class TwitterController extends BaseController {
       method: 'POST'
     }));
 
-    const result = await axios.post(accessTokenURL, null, {
-      params: {
-        oauth_token,
-        oauth_verifier
-      },
-      headers: {
-        Authorization: authHeader["Authorization"]
+    try {
+      const result = await axios.post(accessTokenURL, null, {
+        params: {
+          oauth_token,
+          oauth_verifier
+        },
+        headers: {
+          Authorization: authHeader["Authorization"]
+        }
+      })
+  
+      let data = {
+        oauth_token: '',
+        oauth_token_secret: ''
       }
-    })
-
-    let data = {
-      oauth_token: '',
-      oauth_token_secret: ''
+  
+      if (result.data) {
+        const parseRes = qs.parse(result.data)
+        data = { ...data, ...parseRes }
+      }
+  
+      res.json({
+        ...data
+      })
+    } catch(e) {
+      res.json({
+        error: e.response.data
+      })
     }
+  }
 
-    if (result.data) {
-      const parseRes = qs.parse(result.data)
-      data = { ...data, ...parseRes }
+  private invalidateToken = async (req: Request, res: Response) => {
+    const { oauth_token, oauth_token_secret } = req.params
+
+    const token = {
+      key: oauth_token,
+      secret: oauth_token_secret
+    };
+
+    const authHeader = oauth.toHeader(oauth.authorize({
+      url: invalidateURL,
+      method: 'POST'
+    }, token));
+
+    try {
+      const result = await axios.post(invalidateURL, null, {
+        headers: {
+          Authorization: authHeader["Authorization"]
+        }
+      })
+      res.json({
+        result
+      })
+    } catch(e) {
+      res.json({
+        error: e.response.data
+      })
     }
-
-    res.json({
-      ...data
-    })
   }
 
   private getUseById = async (req: Request, res: Response) => {
