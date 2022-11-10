@@ -10,6 +10,7 @@ import axios from 'axios';
 import qs from 'querystring'
 import { ERC721Twitter__factory } from '../typechain';
 import { ethers } from 'ethers';
+import { twitterSign, walletSign } from '../utils/permitSign';
 
 const CALLBACK_URL = process.env.CALLBACK_URL;
 const CONSUMER_KEY = process.env.CONSUMER_KEY;
@@ -47,6 +48,66 @@ class TwitterController extends BaseController {
     this.router.get(`${this.path}/mint/:address/:tokenId/:username`, try$(this.mint));
     this.router.get(`${this.path}/create/:oauth_token/:oauth_token_secret`, try$(this.create));
     this.router.get(`${this.path}/invalidateToken/:oauth_token/:oauth_token_secret`, try$(this.invalidateToken));
+    this.router.get(`${this.path}/username/:id`, try$(this.getUsernameById));
+    this.router.get(`${this.path}/sinatureNFTWallet/:userAddr/:userId/:chainId`, try$(this.getNFTWalletSinature));
+    this.router.get(`${this.path}/sinatureTwitter/:userAddr/:tokenId/:username/:chainId`, try$(this.getTwitterSinature));
+  }
+
+  private getTwitterSinature = async (req: Request, res: Response) => {
+    const { userAddr, tokenId, username, chainId } = req.params
+    
+    const { twitterContract, privateKey, rpc } = TWITTER_NEED;
+    try {
+      const signer = new ethers.Wallet(privateKey, new ethers.providers.JsonRpcProvider(rpc))
+      const signature = await twitterSign(signer, twitterContract, userAddr, tokenId, username, Number(chainId))
+      res.json({
+        result: signature
+      })
+    } catch(e) {
+      console.log('get twitter signature', e)
+      res.json({
+        error: e.message
+      })
+    }
+  }
+
+  private getNFTWalletSinature = async (req: Request, res: Response) => {
+    const { userAddr, userId, chainId } = req.params
+    const { nftWalletContract, privateKey, rpc } = TWITTER_NEED;
+    try {
+      const signer = new ethers.Wallet(privateKey, new ethers.providers.JsonRpcProvider(rpc))
+      const sinature = await walletSign(signer, nftWalletContract, userAddr, userId, Number(chainId))
+      res.json({
+        result: sinature
+      })
+    } catch(e) {
+      console.log('get nft wallet signature', e)
+      res.json({
+        error: e.message
+      })
+    }
+  }
+
+  private getUsernameById = async (req: Request, res: Response) => {
+    const { id } = req.params
+
+    const { twitterContract, rpc } = TWITTER_NEED;
+
+    const twitter = ERC721Twitter__factory.connect(
+      twitterContract,
+      new ethers.providers.JsonRpcProvider(rpc)
+    );
+
+    try {
+      const result = await twitter['username(uint256)'](id)
+      res.json({
+        result
+      })
+    } catch(e) {
+      res.json({
+        error: e.message
+      })
+    }
   }
 
   private create = async (req: Request, res: Response) => {
