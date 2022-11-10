@@ -109,7 +109,7 @@ class TwitterController extends BaseController {
     );
 
     try {
-      const tx = await twitter.mint(address, tokenId, username);
+      const tx = await twitter['mint(address,uint256,string)'](address, tokenId, username);
       const receipt = await tx.wait();
 
       res.json(receipt)
