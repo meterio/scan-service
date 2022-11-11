@@ -17,3 +17,10 @@ export const SWAP_GAS_NEED = {
   routerAddr: process.env.SWAPPER_ROUTER_ADDR,
   rpc: process.env.SWAPPER_RPC_URL,
 };
+
+export const TWITTER_NEED = {
+  privateKey: process.env.SWAPPER_PRIVATE_KEY,
+  twitterContract: process.env.TWITTER_CONTRACT,
+  rpc: process.env.SWAPPER_RPC_URL,
+  nftWalletContract: process.env.NFT_WALLET_CONTRACT,
+}
