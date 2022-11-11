@@ -20,7 +20,7 @@ const ALBUM_BUCKET_NAME = 'nft-image.meter';
 const S3_WEBSITE_BASE = 'nft-image.meter.io';
 // const INFURA_IPFS_PREFIX = 'https://metersync.infura-ipfs.io/ipfs/';
 const INFURA_IPFS_PREFIX = 'https://metersync.mypinata.cloud/ipfs/';
-const convertables = ['ipfs://', 'https://gateway.pinata.cloud/ipfs/', 'https://ipfs.io/ipfs/'];
+const CONVERTIBLES = ['ipfs://', 'https://gateway.pinata.cloud/ipfs/', 'https://ipfs.io/ipfs/'];
 
 const BASE64_ENCODED_JSON = 'base64 encoded json';
 
@@ -264,7 +264,7 @@ export class NFTCache {
 
   convertUrl(uri: string): string {
     let url = uri;
-    for (const conv of convertables) {
+    for (const conv of CONVERTIBLES) {
       if (url.startsWith(conv)) {
         return url.replace(conv, INFURA_IPFS_PREFIX);
       }

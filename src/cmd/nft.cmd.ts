@@ -5,7 +5,7 @@ import pino from 'pino';
 import { GetNetworkConfig, ZeroAddress } from '../const';
 import { InterruptedError, sleep } from '../utils';
 import { CMD } from './cmd';
-import { ERC1155ABI, ERC721ABI, ERC1155, ERC721, abi } from '@meterio/devkit';
+import { ERC1155ABI, ERC721ABI, ERC1155, ERC721, abi, ERC1155Metadata } from '@meterio/devkit';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { NFTCache } from '../types/nftCache';
@@ -157,7 +157,7 @@ export class NFTCMD extends CMD {
         this.log.info({ txHash: evt.txHash }, `handle mint ERC1155 ${tokenStr}`);
 
         const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
-        const contract = new ethers.Contract(tokenAddress, [ERC1155ABI.URI], provider);
+        const contract = new ethers.Contract(tokenAddress, [ERC1155ABI.uri], provider);
         let tokenURI = '';
         try {
           tokenURI = await contract.uri(id);
@@ -215,10 +215,11 @@ export class NFTCMD extends CMD {
 
       this.log.info({ txHash: evt.txHash }, `handle mint ERC1155 ${tokenStr}`);
       const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
-      const contract = new ethers.Contract(tokenAddress, [ERC1155ABI.URI], provider);
+      const contract = new ethers.Contract(tokenAddress, [ERC1155ABI.uri], provider);
       let tokenURI = '';
       try {
         tokenURI = await contract.uri(tokenId);
+        tokenURI = this.nftCache.convertUrl(tokenURI);
       } catch (e) {
         this.log.error({ err: e }, `error getting tokenURI for ERC1155 ${tokenStr}`);
       }
