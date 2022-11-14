@@ -193,6 +193,12 @@ export default class NFTRepo {
     return { count: count[0] ? count[0]['count'] : 0, result };
   }
 
+  public async findByTypeInRange(type: string, start: number, end: number) {
+    return this.model.find({
+      type, // ERC721, ERC1155
+      'block.number': { $gte: start, $lt: end },
+    });
+  }
   public async findInRange(start: number, end: number) {
     return this.model.find({
       'block.number': { $gte: start, $lt: end },
