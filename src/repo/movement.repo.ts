@@ -178,20 +178,22 @@ export default class MovementRepo {
       ],
     };
     const count = await this.countERC20TxsByAddress(addr);
-    const result = await this.model.aggregate([
-      { $match: query },
-      // { $sort: { 'block.number': -1 } },
-      // { $skip: limit * page },
-      // { $limit: limit },
-      { $lookup: { from: 'contract', localField: 'tokenAddress', foreignField: 'address', as: 'contract' } },
-      {
-        $addFields: {
-          contract: {
-            $cond: { if: { $eq: [{ $size: '$contract' }, 0] }, then: null, else: { $arrayElemAt: ['$contract', 0] } },
+    const result = await this.model
+      .aggregate([
+        { $match: query },
+        // { $sort: { 'block.number': -1 } },
+        // { $skip: limit * page },
+        // { $limit: limit },
+        { $lookup: { from: 'contract', localField: 'tokenAddress', foreignField: 'address', as: 'contract' } },
+        {
+          $addFields: {
+            contract: {
+              $cond: { if: { $eq: [{ $size: '$contract' }, 0] }, then: null, else: { $arrayElemAt: ['$contract', 0] } },
+            },
           },
         },
-      },
-    ]);
+      ])
+      .allowDiskUse(true);
 
     const sorted = result.sort((a, b) => (a.block.number > b.block.number ? -1 : 1));
     const actual = sorted.slice(page * limit, (page + 1) * limit);
