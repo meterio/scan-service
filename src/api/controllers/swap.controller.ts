@@ -20,10 +20,10 @@ class SwapController extends BaseController {
   }
 
   private formatSwapParams = (req: Request) => {
-    const { account, amountIn, amountOutMin, deadline, signature } = req.query;
+    const { account, amountIn, amountOutMin, deadline, signature, routerAddr } = req.query;
 
-    if (!account || !amountIn || !amountOutMin || !deadline || !signature) {
-      throw new Error("'account | amountIn | amountOutMin | deadline | signature' are necessary.");
+    if (!account || !amountIn || !amountOutMin || !deadline || !signature || !routerAddr) {
+      throw new Error("'account | amountIn | amountOutMin | deadline | signature | routerAddr' are necessary.");
     }
 
     const r = {
@@ -32,15 +32,16 @@ class SwapController extends BaseController {
       amountOutMin: String(amountOutMin),
       deadline: String(deadline),
       signature: String(signature),
+      routerAddr: String(routerAddr)
     };
 
     return r;
   };
 
   private swapGas = async (req: Request, res: Response) => {
-    const { account, amountIn, amountOutMin, deadline, signature } = this.formatSwapParams(req);
+    const { account, amountIn, amountOutMin, deadline, signature, routerAddr } = this.formatSwapParams(req);
 
-    const { routerAddr, privateKey, rpc } = SWAP_GAS_NEED;
+    const { privateKey, rpc } = SWAP_GAS_NEED;
 
     const router = PermitRouter__factory.connect(
       routerAddr,
