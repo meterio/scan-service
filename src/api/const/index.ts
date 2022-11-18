@@ -14,7 +14,6 @@ export const UNIT_WEI = 1e18;
 
 export const SWAP_GAS_NEED = {
   privateKey: process.env.SWAPPER_PRIVATE_KEY,
-  routerAddr: process.env.SWAPPER_ROUTER_ADDR,
   rpc: process.env.SWAPPER_RPC_URL,
 };
 
