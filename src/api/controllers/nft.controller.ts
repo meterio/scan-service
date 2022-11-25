@@ -9,6 +9,7 @@ import CuratedCollectionRepo from '../../repo/curatedCollection.repo';
 
 class NFTController extends BaseController {
   public path = '/api/nfts';
+  public path1 = '/api/nfts1';
   public router = Router();
 
   private nftRepo = new NFTRepo();
@@ -25,9 +26,9 @@ class NFTController extends BaseController {
     this.router.get(`${this.path}/:address/tokens`, try$(this.getTokensInCollection));
     this.router.get(`${this.path}/:address/:tokenId`, try$(this.getTokenDetail));
 
-    this.router.get(`${this.path}/setCuratedCollectionAddr/:name/:address`, try$(this.setCuratedCollectionAddr))
-    this.router.get(`${this.path}/curatedCollectionAddr`, try$(this.getCuratedCollectionAddr))
-    this.router.get(`${this.path}/delCuratedCollectionAddr`, try$(this.delCuratedCollectionAddr))
+    this.router.get(`${this.path1}/setCuratedCollectionAddr/:name/:address`, try$(this.setCuratedCollectionAddr))
+    this.router.get(`${this.path1}/curatedCollectionAddr`, try$(this.getCuratedCollectionAddr))
+    this.router.get(`${this.path1}/delCuratedCollectionAddr/:address`, try$(this.delCuratedCollectionAddr))
   }
 
   private delCuratedCollectionAddr = async (req: Request, res: Response) => {
@@ -40,7 +41,7 @@ class NFTController extends BaseController {
 
   private setCuratedCollectionAddr = async (req: Request, res: Response) => {
     const { name, address } = req.params;
-    const result = await this.curatedCollectionRepo.create({ name, address, network: this.network});
+    const result = await this.curatedCollectionRepo.create({ name, address: address.toLowerCase(), network: this.network});
     res.json({
       result
     })
@@ -49,13 +50,15 @@ class NFTController extends BaseController {
   private getCuratedCollectionAddr = async (req: Request, res: Response) => {
     const collections = await this.curatedCollectionRepo.findAllByNetwork(this.network);
     res.json({
-      ...collections
+      result: collections.map(c => c.toJSON())
     })
   }
 
   private getCuratedCollections = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const curatedAddrs = getCuratedNFTs(this.network);
+    // const curatedAddrs = getCuratedNFTs(this.network);
+    const collections = await this.curatedCollectionRepo.findAllByNetwork(this.network);
+    const curatedAddrs = collections.map(c => c.address);
     const paginate = await this.contractRepo.paginateWithAddressList(curatedAddrs, page, limit);
     /*
     - getAllCollections - this gives all NFT that stored on your DB
