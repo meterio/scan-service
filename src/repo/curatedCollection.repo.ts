@@ -20,4 +20,8 @@ export default class CuratedCollectionRepo {
   public async bulkInsert(...curatedCollection: CuratedCollection[]) {
     return this.model.create(curatedCollection);
   }
+
+  public async delete(address: string) {
+    return this.model.deleteOne({ address });
+  }
 }

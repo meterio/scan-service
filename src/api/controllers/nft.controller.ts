@@ -27,6 +27,15 @@ class NFTController extends BaseController {
 
     this.router.get(`${this.path}/setCuratedCollectionAddr/:name/:address`, try$(this.setCuratedCollectionAddr))
     this.router.get(`${this.path}/curatedCollectionAddr`, try$(this.getCuratedCollectionAddr))
+    this.router.get(`${this.path}/delCuratedCollectionAddr`, try$(this.delCuratedCollectionAddr))
+  }
+
+  private delCuratedCollectionAddr = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const result = await this.curatedCollectionRepo.delete(address)
+    res.json({
+      result
+    })
   }
 
   private setCuratedCollectionAddr = async (req: Request, res: Response) => {
@@ -38,7 +47,7 @@ class NFTController extends BaseController {
   }
 
   private getCuratedCollectionAddr = async (req: Request, res: Response) => {
-    const collections = this.curatedCollectionRepo.findAllByNetwork(this.network);
+    const collections = await this.curatedCollectionRepo.findAllByNetwork(this.network);
     res.json({
       ...collections
     })
