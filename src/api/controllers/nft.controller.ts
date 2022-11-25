@@ -5,6 +5,7 @@ import { getCuratedNFTs } from '../const';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { Network } from '../../const';
 import { BaseController } from './baseController';
+import CuratedCollectionRepo from '../../repo/curatedCollection.repo';
 
 class NFTController extends BaseController {
   public path = '/api/nfts';
@@ -12,6 +13,7 @@ class NFTController extends BaseController {
 
   private nftRepo = new NFTRepo();
   private contractRepo = new ContractRepo();
+  private curatedCollectionRepo = new CuratedCollectionRepo();
 
   constructor(network: Network, standby: boolean) {
     super(network, standby);
@@ -22,6 +24,24 @@ class NFTController extends BaseController {
     this.router.get(`${this.path}/curated`, try$(this.getCuratedCollections));
     this.router.get(`${this.path}/:address/tokens`, try$(this.getTokensInCollection));
     this.router.get(`${this.path}/:address/:tokenId`, try$(this.getTokenDetail));
+
+    this.router.get(`${this.path}/setCuratedCollectionAddr/:name/:address`, try$(this.setCuratedCollectionAddr))
+    this.router.get(`${this.path}/curatedCollectionAddr`, try$(this.getCuratedCollectionAddr))
+  }
+
+  private setCuratedCollectionAddr = async (req: Request, res: Response) => {
+    const { name, address } = req.params;
+    const result = await this.curatedCollectionRepo.create({ name, address, network: this.network});
+    res.json({
+      result
+    })
+  }
+
+  private getCuratedCollectionAddr = async (req: Request, res: Response) => {
+    const collections = this.curatedCollectionRepo.findAllByNetwork(this.network);
+    res.json({
+      ...collections
+    })
   }
 
   private getCuratedCollections = async (req: Request, res: Response) => {
