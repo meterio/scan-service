@@ -27,8 +27,8 @@ class NFTController extends BaseController {
     this.router.get(`${this.path}/:address/tokens`, try$(this.getTokensInCollection));
     this.router.get(`${this.path}/:address/:tokenId`, try$(this.getTokenDetail));
 
-    this.router.post(`${this.adminPath}/curated`, isAdmin, try$(this.addAddressToCurated));
-    this.router.delete(`${this.adminPath}/curated/:address`, isAdmin, try$(this.deleteAddressFromCurated));
+    this.router.post(`${this.adminPath}/curated`, [isAdmin], try$(this.addAddressToCurated));
+    this.router.delete(`${this.adminPath}/curated/:address`, [isAdmin], try$(this.deleteAddressFromCurated));
   }
 
   private deleteAddressFromCurated = async (req: Request, res: Response) => {
@@ -41,6 +41,8 @@ class NFTController extends BaseController {
 
   private addAddressToCurated = async (req: Request, res: Response) => {
     const { name, address } = req.body;
+    console.log('address', address);
+    console.log(addrPattern.test(address));
     if (address && addrPattern.test(address)) {
       const result = await this.curatedRepo.create({
         name,
