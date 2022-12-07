@@ -1,4 +1,5 @@
 import { BigNumber } from 'bignumber.js';
+import { number } from 'bitcoinjs-lib/src/script';
 import { ContractType } from '../const';
 
 import { BlockConcise } from '../model/blockConcise.interface';
@@ -125,5 +126,9 @@ export default class ContractRepo {
 
   public async paginateWithAddressList(addresses: string[], pageNum?: number, limitNum?: number) {
     return this.paginate({ address: { $in: addresses } }, pageNum, limitNum);
+  }
+
+  public async paginateERC721And1155(pageNum?: number, limitNum?: number) {
+    return this.paginate({ type: { $in: ['ERC721', 'ERC1155'] } }, pageNum, limitNum);
   }
 }

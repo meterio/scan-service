@@ -23,11 +23,18 @@ class NFTController extends BaseController {
   }
 
   private initializeRoutes() {
+    // @deprecated
     this.router.get(`${this.path}/curated`, try$(this.getCuratedCollections));
     this.router.get(`${this.path}/:address/tokens`, try$(this.getTokensInCollection));
     this.router.get(`${this.path}/:address/:tokenId`, try$(this.getTokenDetail));
 
+    // added for nft market
+    this.router.get(`${this.path}/collections`, try$(this.getAllCollections));
+    this.router.get(`${this.path}/tokens/after/:blockNum`, try$(this.getTokensAfterBlock));
+
+    // @deprecated
     this.router.post(`${this.adminPath}/curated`, [isAdmin], try$(this.addAddressToCurated));
+    // @deprecated
     this.router.delete(`${this.adminPath}/curated/:address`, [isAdmin], try$(this.deleteAddressFromCurated));
   }
 
@@ -54,6 +61,32 @@ class NFTController extends BaseController {
     } else {
       res.json({ error: 'not recognized address' });
     }
+  };
+
+  private getAllCollections = async (req: Request, res: Response) => {
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    // const curatedAddrs = getCuratedNFTs(this.network);
+    const paginate = await this.contractRepo.paginateERC721And1155(page, limit);
+    /*
+    - getAllCollections - this gives all NFT that stored on your DB
+    request: page, limit
+    return: collection list [nftAddress, nftCreator, createTxHash, createBlockNumber, nftName, nftSymbol, nftType]
+
+    */
+    if (paginate.result)
+      return res.json({
+        totalRows: paginate.count,
+        collections: paginate.result.map((c) => ({
+          address: c.address,
+          name: c.name,
+          symbol: c.symbol,
+          type: c.type,
+          createTxHash: c.creationTxHash,
+          createBlockNum: c.firstSeen.number,
+          createTimestamp: c.firstSeen.number,
+          creator: c.master,
+        })),
+      });
   };
 
   private getCuratedCollections = async (req: Request, res: Response) => {
@@ -156,6 +189,39 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
       symbol: contract.symbol,
       master: contract.master,
       ...token[0].toJSON(),
+    });
+  };
+
+  private getTokensAfterBlock = async (req: Request, res: Response) => {
+    const { blockNum } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+
+    const paginate = await this.nftRepo.paginateAfterBlock(Number(blockNum), page, limit);
+    return res.json({
+      nfts: paginate.result.map((n) => {
+        let tokenJSON = {};
+        try {
+          tokenJSON = JSON.parse(n.tokenJSON);
+        } catch (e) {
+          console.log('error parsing json');
+        }
+
+        return {
+          collectionAddress: n.address,
+          tokenId: n.tokenId,
+          tokenURI: n.tokenURI || '',
+          tokenJSON: tokenJSON,
+
+          mediaURI: n.mediaURI || '',
+          mediaType: n.mediaType || '',
+          minter: n.minter,
+          createTxHash: n.creationTxHash,
+          createBlockNum: n.block.number,
+          createTimestamp: n.block.timestamp,
+          status: n.status,
+        };
+      }),
+      // .filter((n) => n.mediaURI !== ''),
     });
   };
 }

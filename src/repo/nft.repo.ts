@@ -204,4 +204,8 @@ export default class NFTRepo {
       'block.number': { $gte: start, $lt: end },
     });
   }
+
+  public async paginateAfterBlock(blockNum: number, pageNum?: number, limitNum?: number) {
+    return this.paginate({ 'block.number': { $gt: blockNum } }, pageNum, limitNum);
+  }
 }
