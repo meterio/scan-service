@@ -20,6 +20,7 @@ import SwapController from './controllers/swap.controller';
 import NFTController from './controllers/nft.controller';
 import DownloadController from './controllers/download.controller';
 import TwitterController from './controllers/twitter.controller';
+import EventController from './controllers/event.controller';
 import { Network } from '../const';
 
 export const serveAPI = async (network: Network, standby: boolean, port: number) => {
@@ -43,7 +44,8 @@ export const serveAPI = async (network: Network, standby: boolean, port: number)
       new SwapController(network, standby),
       new NFTController(network, standby),
       new DownloadController(network, standby),
-      new TwitterController(network, standby)
+      new TwitterController(network, standby),
+      new EventController(network, standby),
     ],
     network,
     standby

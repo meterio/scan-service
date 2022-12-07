@@ -73,4 +73,28 @@ export default class LogEventRepo {
     ]);
     return { count, result };
   }
+
+  public async paginateByFilter(
+    topics0: string,
+    address?: string,
+    fromBlock?: number,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    let query = { 'topics.0': topics0, address: address?.toLowerCase(), 'block.number': undefined };
+    let blockFilter = { $gt: fromBlock };
+    if (fromBlock) {
+      query['block.number'] = blockFilter;
+    }
+
+    const count = await this.model.count(query);
+    const result = await this.model.aggregate([
+      { $match: query },
+      { $sort: { 'block.number': 1 } },
+      { $skip: limit * page },
+      { $limit: limit },
+    ]);
+    return { count, result };
+  }
 }
