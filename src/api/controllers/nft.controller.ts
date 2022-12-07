@@ -3,7 +3,7 @@ import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { getCuratedNFTs } from '../const';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
-import { Network } from '../../const';
+import { ContractType, Network } from '../../const';
 import { BaseController } from './baseController';
 import CuratedRepo from '../../repo/curated.repo';
 import isAdmin from '../middleware/auth.middleware';
@@ -73,20 +73,22 @@ class NFTController extends BaseController {
     return: collection list [nftAddress, nftCreator, createTxHash, createBlockNumber, nftName, nftSymbol, nftType]
 
     */
-    if (paginate.result)
+    if (paginate.result) {
       return res.json({
         totalRows: paginate.count,
         collections: paginate.result.map((c) => ({
           address: c.address,
           name: c.name,
           symbol: c.symbol,
-          type: c.type,
+          type: ContractType[c.type],
           createTxHash: c.creationTxHash,
           createBlockNum: c.firstSeen.number,
           createTimestamp: c.firstSeen.number,
           creator: c.master,
         })),
       });
+    }
+    return res.json({ totalRows: 0, collections: [] });
   };
 
   private getCuratedCollections = async (req: Request, res: Response) => {
@@ -108,7 +110,7 @@ return: collection list [nftAddress, nftCreator, createTxHash, createBlockNumber
           address: c.address,
           name: c.name,
           symbol: c.symbol,
-          type: c.type,
+          type: ContractType[c.type],
           createTxHash: c.creationTxHash,
           createBlockNum: c.firstSeen.number,
           createTimestamp: c.firstSeen.number,
@@ -198,6 +200,7 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
 
     const paginate = await this.nftRepo.paginateAfterBlock(Number(blockNum), page, limit);
     return res.json({
+      totalRows: paginate.count,
       nfts: paginate.result.map((n) => {
         let tokenJSON = {};
         try {
