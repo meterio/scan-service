@@ -162,7 +162,9 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
 
           mediaURI: n.mediaURI || '',
           mediaType: n.mediaType || '',
+          type: n.type,
           minter: n.minter,
+          owner: n.owner,
           createTxHash: n.creationTxHash,
           createBlockNum: n.block.number,
           createTimestamp: n.block.timestamp,
@@ -217,7 +219,9 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
 
           mediaURI: n.mediaURI || '',
           mediaType: n.mediaType || '',
+          type: n.type,
           minter: n.minter,
+          owner: n.owner,
           createTxHash: n.creationTxHash,
           createBlockNum: n.block.number,
           createTimestamp: n.block.timestamp,
