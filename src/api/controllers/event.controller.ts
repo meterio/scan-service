@@ -17,8 +17,31 @@ class EventController extends BaseController {
   }
 
   private initializeRoutes() {
+    this.router.get(`${this.path}/on/:address/after/:blockNum`, try$(this.getEventsOnAddressAfterBlock));
     this.router.post(`${this.path}/filter`, try$(this.getEventsByFilter));
   }
+
+  private getEventsOnAddressAfterBlock = async (req: Request, res: Response) => {
+    const { address, blockNum } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+
+    const paginate = await this.eventRepo.paginateOnAddressAfterBlock(address, Number(blockNum), page, limit);
+    if (paginate) {
+      return res.json({
+        totalRows: paginate.count,
+        events: paginate.result.map((r) => ({
+          address: r.address,
+          topics: r.topics,
+          data: r.data,
+          blockNum: r.block.number,
+          txHash: r.txHash,
+          clauseIndex: r.clauseIndex,
+          logIndex: r.logIndex,
+        })),
+      });
+    }
+    return res.json({ totalRows: 0, events: [] });
+  };
 
   private getEventsByFilter = async (req: Request, res: Response) => {
     const { topics0, address, fromBlock } = req.body;
@@ -28,7 +51,15 @@ class EventController extends BaseController {
     if (paginate) {
       return res.json({
         totalRows: paginate.count,
-        events: paginate.result.map((r) => r.toJSON()),
+        events: paginate.result.map((r) => ({
+          address: r.address,
+          topics: r.topics,
+          data: r.data,
+          blockNum: r.block.number,
+          txHash: r.txHash,
+          clauseIndex: r.clauseIndex,
+          logIndex: r.logIndex,
+        })),
       });
     }
     return res.json({ totalRows: 0, events: [] });
