@@ -206,6 +206,15 @@ export default class NFTRepo {
   }
 
   public async paginateAfterBlock(blockNum: number, pageNum?: number, limitNum?: number) {
-    return this.paginate({ 'block.number': { $gt: blockNum } }, pageNum, limitNum);
+    const query = { 'block.number': { $gt: blockNum } };
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    const count = await this.model.count(query);
+    const result = await this.model
+      .find(query)
+      .sort({ 'block.number': 1 })
+      .limit(limit)
+      .skip(limit * page);
+
+    return { count, result };
   }
 }
