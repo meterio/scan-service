@@ -129,12 +129,7 @@ export default class ContractRepo {
     return this.paginate({ address: { $in: addresses } }, pageNum, limitNum);
   }
 
-  public async paginateERC721And1155(pageNum?: number, limitNum?: number) {
-    console.log('pageNum:', pageNum, 'limitNum:', limitNum);
-    return this.paginate({ type: { $in: [ContractType.ERC721, ContractType.ERC1155] } }, pageNum, limitNum);
-  }
-
-  public async paginateERC721And1155AfterBlock(blockNum: number, pageNum?: number, limitNum?: number) {
+  public async paginateNFTAfterBlock(blockNum: number, pageNum?: number, limitNum?: number) {
     const query = { type: { $in: [ContractType.ERC721, ContractType.ERC1155] }, 'block.number': { $gt: blockNum } };
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     const count = await this.model.count(query);

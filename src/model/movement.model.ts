@@ -46,6 +46,14 @@ schema.index({ from: 1, token: 1 });
 schema.index({ to: 1, token: 1 });
 schema.index({ 'block.number': 1 });
 schema.index({ 'block.number': -1 });
+schema.index(
+  { 'nftTransfers.0': 1 },
+  {
+    partialFilterExpression: {
+      'nftTransfers.0': { $exists: true },
+    },
+  }
+);
 
 schema.set('toJSON', {
   virtuals: false,

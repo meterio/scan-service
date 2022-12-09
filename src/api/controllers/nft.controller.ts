@@ -1,7 +1,6 @@
 import { ContractRepo, NFTRepo } from '../../repo';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
-import { getCuratedNFTs } from '../const';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { ContractType, Network } from '../../const';
 import { BaseController } from './baseController';
@@ -29,8 +28,8 @@ class NFTController extends BaseController {
     this.router.get(`${this.path}/:address/:tokenId`, try$(this.getTokenDetail));
 
     // added for nft market
-    this.router.get(`${this.path}/collections/after/:blockNum`, try$(this.getCollectionsAfterBlock));
-    this.router.get(`${this.path}/tokens/after/:blockNum`, try$(this.getTokensAfterBlock));
+    this.router.get(`${this.path}/collections/after/:blockNum`, try$(this.getNFTCollectionsAfterBlock));
+    this.router.get(`${this.path}/tokens/after/:blockNum`, try$(this.getNFTTokensAfterBlock));
 
     // @deprecated
     this.router.post(`${this.adminPath}/curated`, [isAdmin], try$(this.addAddressToCurated));
@@ -169,11 +168,11 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
     });
   };
 
-  private getCollectionsAfterBlock = async (req: Request, res: Response) => {
+  private getNFTCollectionsAfterBlock = async (req: Request, res: Response) => {
     const { blockNum } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const paginate = await this.contractRepo.paginateERC721And1155AfterBlock(Number(blockNum), page, limit);
+    const paginate = await this.contractRepo.paginateNFTAfterBlock(Number(blockNum), page, limit);
     return res.json({
       totalRows: paginate.count,
       collections: paginate.result.map((c) => {
@@ -195,7 +194,7 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
     });
   };
 
-  private getTokensAfterBlock = async (req: Request, res: Response) => {
+  private getNFTTokensAfterBlock = async (req: Request, res: Response) => {
     const { blockNum } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 

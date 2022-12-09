@@ -357,4 +357,18 @@ export default class MovementRepo {
   public async deleteByToken(token: Token) {
     return this.model.deleteMany({ token });
   }
+
+  public async paginateNFTMovementsAfterBlock(blockNum: number, pageNum?: number, limitNum?: number) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    let query = { 'nftTransfers.0': { $exists: true }, 'block.number': { $gt: blockNum } };
+
+    const count = await this.model.count(query);
+    const result = await this.model.aggregate([
+      { $match: query },
+      { $sort: { 'block.number': 1 } },
+      { $skip: limit * page },
+      { $limit: limit },
+    ]);
+    return { count, result };
+  }
 }
