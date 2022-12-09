@@ -133,4 +133,17 @@ export default class ContractRepo {
     console.log('pageNum:', pageNum, 'limitNum:', limitNum);
     return this.paginate({ type: { $in: [ContractType.ERC721, ContractType.ERC1155] } }, pageNum, limitNum);
   }
+
+  public async paginateERC721And1155AfterBlock(blockNum: number, pageNum?: number, limitNum?: number) {
+    const query = { type: { $in: [ContractType.ERC721, ContractType.ERC1155] }, 'block.number': { $gt: blockNum } };
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    const count = await this.model.count(query);
+    const result = await this.model
+      .find(query)
+      .sort({ 'block.number': 1 })
+      .limit(limit)
+      .skip(limit * page);
+
+    return { count, result };
+  }
 }

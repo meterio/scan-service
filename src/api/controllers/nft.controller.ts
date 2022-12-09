@@ -29,7 +29,7 @@ class NFTController extends BaseController {
     this.router.get(`${this.path}/:address/:tokenId`, try$(this.getTokenDetail));
 
     // added for nft market
-    this.router.get(`${this.path}/collections`, try$(this.getAllCollections));
+    this.router.get(`${this.path}/collections/after/:blockNum`, try$(this.getCollectionsAfterBlock));
     this.router.get(`${this.path}/tokens/after/:blockNum`, try$(this.getTokensAfterBlock));
 
     // @deprecated
@@ -61,34 +61,6 @@ class NFTController extends BaseController {
     } else {
       res.json({ error: 'not recognized address' });
     }
-  };
-
-  private getAllCollections = async (req: Request, res: Response) => {
-    const { page, limit } = extractPageAndLimitQueryParam(req);
-    // const curatedAddrs = getCuratedNFTs(this.network);
-    const paginate = await this.contractRepo.paginateERC721And1155(page, limit);
-    /*
-    - getAllCollections - this gives all NFT that stored on your DB
-    request: page, limit
-    return: collection list [nftAddress, nftCreator, createTxHash, createBlockNumber, nftName, nftSymbol, nftType]
-
-    */
-    if (paginate.result) {
-      return res.json({
-        totalRows: paginate.count,
-        collections: paginate.result.map((c) => ({
-          address: c.address,
-          name: c.name,
-          symbol: c.symbol,
-          type: ContractType[c.type],
-          createTxHash: c.creationTxHash,
-          createBlockNum: c.firstSeen.number,
-          createTimestamp: c.firstSeen.number,
-          creator: c.master,
-        })),
-      });
-    }
-    return res.json({ totalRows: 0, collections: [] });
   };
 
   private getCuratedCollections = async (req: Request, res: Response) => {
@@ -194,6 +166,32 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
       symbol: contract.symbol,
       master: contract.master,
       ...token[0].toJSON(),
+    });
+  };
+
+  private getCollectionsAfterBlock = async (req: Request, res: Response) => {
+    const { blockNum } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+
+    const paginate = await this.contractRepo.paginateERC721And1155AfterBlock(Number(blockNum), page, limit);
+    return res.json({
+      totalRows: paginate.count,
+      collections: paginate.result.map((c) => {
+        return {
+          type: ContractType[c.type],
+          address: c.address,
+          name: c.name,
+          symbol: c.symbol,
+          officialSite: c.officialSite,
+          totalSupply: c.totalSupply,
+          holderCount: c.holdersCount,
+          transfersCount: c.transfersCount,
+          master: c.master,
+          verified: c.verified,
+          creationTxHash: c.creationTxHash,
+          firstSeen: c.firstSeen,
+        };
+      }),
     });
   };
 
