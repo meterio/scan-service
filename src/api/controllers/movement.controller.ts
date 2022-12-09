@@ -4,7 +4,6 @@ import { try$ } from 'express-toolbox';
 import { RECENT_WINDOW } from '../const';
 import { Network } from '../../const';
 import { BaseController } from './baseController';
-import { extractPageAndLimitQueryParam } from '../utils/utils';
 class MovementController extends BaseController {
   public path = '/api/transfers';
   public router = Router();
@@ -17,7 +16,6 @@ class MovementController extends BaseController {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/recent`, try$(this.getRecent));
-    this.router.get(`${this.path}/nft/after/:blockNum`, try$(this.getTransfersAfterBlock));
   }
 
   private getRecent = async (req: Request, res: Response) => {
@@ -32,30 +30,6 @@ class MovementController extends BaseController {
 
     const transfers = await this.movementRepo.findRecentWithLimit(count);
     return res.json({ transfers });
-  };
-
-  private getTransfersAfterBlock = async (req: Request, res: Response) => {
-    const { blockNum } = req.params;
-    const { page, limit } = extractPageAndLimitQueryParam(req);
-
-    const paginate = await this.movementRepo.paginateNFTMovementsAfterBlock(Number(blockNum), page, limit);
-
-    if (paginate) {
-      return res.json({
-        totalRows: paginate.count,
-        transfers: paginate.result.map((m) => ({
-          from: m.from,
-          to: m.to,
-          tokenAddress: m.tokenAddress,
-          nftTransfers: m.nftTransfers,
-          txHash: m.txHash,
-          blockNum: m.block.number,
-          timestamp: m.block.timestamp,
-        })),
-      });
-    }
-
-    return res.json({ totalRows: 0, transfers: [] });
   };
 }
 

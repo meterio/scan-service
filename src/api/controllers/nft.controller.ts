@@ -1,4 +1,4 @@
-import { ContractRepo, NFTRepo } from '../../repo';
+import { ContractRepo, MovementRepo, NFTRepo } from '../../repo';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
@@ -15,6 +15,7 @@ class NFTController extends BaseController {
   private nftRepo = new NFTRepo();
   private contractRepo = new ContractRepo();
   private curatedRepo = new CuratedRepo();
+  private movementRepo = new MovementRepo();
 
   constructor(network: Network, standby: boolean) {
     super(network, standby);
@@ -28,6 +29,7 @@ class NFTController extends BaseController {
     this.router.get(`${this.path}/:address/:tokenId`, try$(this.getTokenDetail));
 
     // added for nft market
+    this.router.get(`${this.path}/transfers/after/:blockNum`, try$(this.getNFTTransfersAfterBlock));
     this.router.get(`${this.path}/collections/after/:blockNum`, try$(this.getNFTCollectionsAfterBlock));
     this.router.get(`${this.path}/tokens/after/:blockNum`, try$(this.getNFTTokensAfterBlock));
 
@@ -229,6 +231,30 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
       }),
       // .filter((n) => n.mediaURI !== ''),
     });
+  };
+
+  private getNFTTransfersAfterBlock = async (req: Request, res: Response) => {
+    const { blockNum } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+
+    const paginate = await this.movementRepo.paginateNFTMovementsAfterBlock(Number(blockNum), page, limit);
+
+    if (paginate) {
+      return res.json({
+        totalRows: paginate.count,
+        transfers: paginate.result.map((m) => ({
+          from: m.from,
+          to: m.to,
+          tokenAddress: m.tokenAddress,
+          nftTransfers: m.nftTransfers,
+          txHash: m.txHash,
+          blockNum: m.block.number,
+          timestamp: m.block.timestamp,
+        })),
+      });
+    }
+
+    return res.json({ totalRows: 0, transfers: [] });
   };
 }
 
