@@ -49,8 +49,8 @@ const schema = new mongoose.Schema<Contract>({
   firstSeen: blockConciseSchema,
 });
 
-schema.index({ 'block.number': 1 });
-schema.index({ 'block.number': -1 });
+schema.index({ 'firstSeen.number': 1 });
+schema.index({ 'firstSeen.number': -1 });
 schema.index({ creationInputHash: 1 });
 schema.index({ verified: 1, creationInputHash: 1 });
 

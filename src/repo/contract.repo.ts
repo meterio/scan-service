@@ -130,7 +130,7 @@ export default class ContractRepo {
   }
 
   public async paginateNFTAfterBlock(blockNum: number, pageNum?: number, limitNum?: number) {
-    const query = { type: { $in: [ContractType.ERC721, ContractType.ERC1155] }, 'block.number': { $gt: blockNum } };
+    const query = { type: { $in: [ContractType.ERC721, ContractType.ERC1155] }, 'firstSeen.number': { $gt: blockNum } };
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     const count = await this.model.count(query);
     const result = await this.model
