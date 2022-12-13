@@ -17,15 +17,21 @@ class EventController extends BaseController {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}/on/:address/after/:blockNum`, try$(this.getEventsOnAddressAfterBlock));
+    this.router.get(`${this.path}/on/:address/in/:fromNum/:toNum`, try$(this.getEventsOnAddressInRange));
     this.router.post(`${this.path}/filter`, try$(this.getEventsByFilter));
   }
 
-  private getEventsOnAddressAfterBlock = async (req: Request, res: Response) => {
-    const { address, blockNum } = req.params;
+  private getEventsOnAddressInRange = async (req: Request, res: Response) => {
+    const { address, fromNum, toNum } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const paginate = await this.eventRepo.paginateOnAddressAfterBlock(address, Number(blockNum), page, limit);
+    const paginate = await this.eventRepo.paginateOnAddressInRange(
+      address,
+      Number(fromNum),
+      Number(toNum),
+      page,
+      limit
+    );
     if (paginate) {
       return res.json({
         totalRows: paginate.count,

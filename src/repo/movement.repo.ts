@@ -358,14 +358,20 @@ export default class MovementRepo {
     return this.model.deleteMany({ token });
   }
 
-  public async paginateNFTMovementsAfterBlock(blockNum: number, pageNum?: number, limitNum?: number) {
+  public async paginateNFTMovementsInRange(fromNum: number, toNum: number, pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
-    let query = { $or: [{ type: Token.ERC1155 }, { type: Token.ERC721 }], 'block.number': { $gt: blockNum } };
+    let query = {
+      token: { $in: ['ERC1155', 'ERC721'] },
+      'block.number': { $gte: fromNum, $lte: toNum },
+    };
 
-    const count = await this.model.count(query);
+    const count = await this.model.count({
+      token: { $in: [Token.ERC1155, Token.ERC721] },
+      'block.number': { $gte: fromNum, $lte: toNum },
+    });
     const result = await this.model.aggregate([
       { $match: query },
-      { $sort: { 'block.number': 1 } },
+      // { $sort: { 'block.number': 1 } },
       { $skip: limit * page },
       { $limit: limit },
     ]);

@@ -29,9 +29,9 @@ class NFTController extends BaseController {
     this.router.get(`${this.path}/:address/:tokenId`, try$(this.getTokenDetail));
 
     // added for nft market
-    this.router.get(`${this.path}/transfers/after/:blockNum`, try$(this.getNFTTransfersAfterBlock));
-    this.router.get(`${this.path}/collections/after/:blockNum`, try$(this.getNFTCollectionsAfterBlock));
-    this.router.get(`${this.path}/tokens/after/:blockNum`, try$(this.getNFTTokensAfterBlock));
+    this.router.get(`${this.path}/transfers/in/:fromNum/:toNum`, try$(this.getNFTTransfersInRange));
+    this.router.get(`${this.path}/collections/in/:fromNum/:toNum`, try$(this.getNFTCollectionsInRange));
+    this.router.get(`${this.path}/tokens/in/:fromNum/:toNum`, try$(this.getNFTTokensInRange));
 
     // @deprecated
     this.router.post(`${this.adminPath}/curated`, [isAdmin], try$(this.addAddressToCurated));
@@ -170,11 +170,11 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
     });
   };
 
-  private getNFTCollectionsAfterBlock = async (req: Request, res: Response) => {
-    const { blockNum } = req.params;
+  private getNFTCollectionsInRange = async (req: Request, res: Response) => {
+    const { fromNum, toNum } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const paginate = await this.contractRepo.paginateNFTAfterBlock(Number(blockNum), page, limit);
+    const paginate = await this.contractRepo.paginateNFTInRange(Number(fromNum), Number(toNum), page, limit);
     return res.json({
       totalRows: paginate.count,
       collections: paginate.result.map((c) => {
@@ -196,11 +196,11 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
     });
   };
 
-  private getNFTTokensAfterBlock = async (req: Request, res: Response) => {
-    const { blockNum } = req.params;
+  private getNFTTokensInRange = async (req: Request, res: Response) => {
+    const { fromNum, toNum } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const paginate = await this.nftRepo.paginateAfterBlock(Number(blockNum), page, limit);
+    const paginate = await this.nftRepo.paginateInRange(Number(fromNum), Number(toNum), page, limit);
     return res.json({
       totalRows: paginate.count,
       nfts: paginate.result.map((n) => {
@@ -233,18 +233,20 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
     });
   };
 
-  private getNFTTransfersAfterBlock = async (req: Request, res: Response) => {
-    const { blockNum } = req.params;
+  private getNFTTransfersInRange = async (req: Request, res: Response) => {
+    const { fromNum, toNum } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const paginate = await this.movementRepo.paginateNFTMovementsAfterBlock(Number(blockNum), page, limit);
+    const paginate = await this.movementRepo.paginateNFTMovementsInRange(Number(fromNum), Number(toNum), page, limit);
 
     if (paginate) {
+      console.log('count: ', paginate.count, ' transfers:', paginate.result.length);
       return res.json({
         totalRows: paginate.count,
         transfers: paginate.result.map((m) => ({
           from: m.from,
           to: m.to,
+          token: m.token,
           tokenAddress: m.tokenAddress,
           nftTransfers: m.nftTransfers,
           txHash: m.txHash,

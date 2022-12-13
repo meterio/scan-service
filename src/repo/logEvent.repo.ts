@@ -98,14 +98,20 @@ export default class LogEventRepo {
     return { count, result };
   }
 
-  public async paginateOnAddressAfterBlock(address: string, blockNum: number, pageNum?: number, limitNum?: number) {
+  public async paginateOnAddressInRange(
+    address: string,
+    fromNum: number,
+    toNum: number,
+    pageNum?: number,
+    limitNum?: number
+  ) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
-    let query = { address: address?.toLowerCase(), 'block.number': { $gt: blockNum } };
+    let query = { address: address?.toLowerCase(), 'block.number': { $gte: fromNum, $lte: toNum } };
 
     const count = await this.model.count(query);
     const result = await this.model.aggregate([
       { $match: query },
-      { $sort: { 'block.number': 1 } },
+      // { $sort: { 'block.number': 1 } },
       { $skip: limit * page },
       { $limit: limit },
     ]);

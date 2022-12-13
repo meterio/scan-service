@@ -129,16 +129,16 @@ export default class ContractRepo {
     return this.paginate({ address: { $in: addresses } }, pageNum, limitNum);
   }
 
-  public async paginateNFTAfterBlock(blockNum: number, pageNum?: number, limitNum?: number) {
+  public async paginateNFTInRange(fromNum: number, toNum: number, pageNum?: number, limitNum?: number) {
     const query = {
-      $or: [{ type: ContractType.ERC721 }, { type: ContractType.ERC1155 }],
-      'firstSeen.number': { $gt: blockNum },
+      type: { $in: [ContractType.ERC721, ContractType.ERC1155] },
+      'firstSeen.number': { $gte: fromNum, $lte: toNum },
     };
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     const count = await this.model.count(query);
     const result = await this.model
       .find(query)
-      .sort({ 'block.number': 1 })
+      // .sort({ 'block.number': 1 })
       .limit(limit)
       .skip(limit * page);
 
