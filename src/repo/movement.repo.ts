@@ -360,7 +360,7 @@ export default class MovementRepo {
 
   public async paginateNFTMovementsAfterBlock(blockNum: number, pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
-    let query = { 'nftTransfers.0': { $exists: true }, 'block.number': { $gt: blockNum } };
+    let query = { $or: [{ type: Token.ERC1155 }, { type: Token.ERC721 }], 'block.number': { $gt: blockNum } };
 
     const count = await this.model.count(query);
     const result = await this.model.aggregate([
