@@ -377,4 +377,13 @@ export default class MovementRepo {
     ]);
     return { count, result };
   }
+
+  public async findInvalidNFTMovements() {
+    let query = {
+      token: { $in: [Token.ERC1155, Token.ERC721] },
+      $or: [{ 'nftTransfers.0.tokenId': { $exists: false } }, { from: { $exists: false } }],
+    };
+
+    return this.model.find(query);
+  }
 }
