@@ -58,6 +58,7 @@ export default class ContractRepo {
       holdersCount: new BigNumber(0),
       transfersCount: new BigNumber(0),
       master,
+      owner: master,
       code,
       verified: false,
       creationTxHash,
@@ -143,5 +144,9 @@ export default class ContractRepo {
       .skip(limit * page);
 
     return { count, result };
+  }
+
+  public async findEmptyOwners() {
+    return this.model.find({ owner: { $exists: false } });
   }
 }

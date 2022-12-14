@@ -38,6 +38,7 @@ const schema = new mongoose.Schema<Contract>({
   },
 
   master: { type: String, required: true },
+  owner: { type: String, required: false },
   code: { type: String, required: true },
 
   verified: { type: Boolean, required: true, default: false },

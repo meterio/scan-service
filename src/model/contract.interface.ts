@@ -18,6 +18,7 @@ export interface Contract {
   transfersCount: BigNumber;
 
   master: string;
+  owner?: string;
   code: string;
 
   verified: Boolean;

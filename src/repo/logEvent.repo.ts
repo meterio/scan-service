@@ -17,6 +17,10 @@ export default class LogEventRepo {
     return this.model.find({ txHash, clauseIndex });
   }
 
+  public async findById(txHash: string, clauseIndex: number, logIndex: number) {
+    return this.model.findOne({ txHash, clauseIndex, logIndex });
+  }
+
   public async findByBlockNum(blockNum: number) {
     return this.model.find({ 'block.number': blockNum });
   }
