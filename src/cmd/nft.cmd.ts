@@ -1,11 +1,11 @@
 import { Network } from '../const';
-import { HeadRepo, NFTRepo, LogEventRepo, BlockRepo } from '../repo';
+import { HeadRepo, NFTRepo, LogEventRepo, BlockRepo, ContractRepo } from '../repo';
 import { Head, NFT } from '../model';
 import pino from 'pino';
 import { GetNetworkConfig, ZeroAddress } from '../const';
 import { InterruptedError, sleep } from '../utils';
 import { CMD } from './cmd';
-import { ERC1155ABI, ERC721ABI, ERC1155, ERC721, abi, ERC1155Metadata } from '@meterio/devkit';
+import { ERC1155ABI, ERC721ABI, ERC1155, ERC721, EIP173, EIP173ABI, abi, ERC1155Metadata } from '@meterio/devkit';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { NFTCache } from '../types/nftCache';
@@ -26,6 +26,7 @@ export class NFTCMD extends CMD {
   private nftRepo = new NFTRepo();
   private evtRepo = new LogEventRepo();
   private blockRepo = new BlockRepo();
+  private contractRepo = new ContractRepo();
 
   private nftCache: NFTCache;
 
@@ -90,6 +91,7 @@ export class NFTCMD extends CMD {
         );
         // begin import round from headNum+1 to tgtNum
 
+        await this.scanEIP173InRange(this.network, headNum, endNum);
         await this.scanERC721InRange(this.network, headNum, endNum);
         await this.scanERC1155SinglesInRange(this.network, headNum, endNum);
         await this.scanERC1155BatchsInRange(this.network, headNum, endNum);
@@ -310,6 +312,35 @@ export class NFTCMD extends CMD {
         status: 'new',
       };
       await this.nftCache.mint721(nft);
+    }
+  }
+
+  async scanEIP173InRange(network: Network, start, end: number): Promise<void> {
+    const transferEvts = await this.evtRepo.findByTopic0InBlockRangeSortAsc(
+      EIP173.OwnershipTransferred.signature,
+      start,
+      end
+    );
+    this.log.info({ count: transferEvts.length }, `searching ERC173 ownership transfer in blocks [${start}, ${end})`);
+    for (const evt of transferEvts) {
+      let decoded: abi.Decoded;
+      try {
+        decoded = EIP173.OwnershipTransferred.decode(evt.data, evt.topics);
+      } catch (e) {
+        this.log.warn(`error decoding OwnershipTransferred event`);
+        continue;
+      }
+
+      const contractAddress = evt.address.toLowerCase();
+      const previousOwner = decoded.previousOwner.toLowerCase();
+      const newOwner = decoded.newOwner.toLowerCase();
+
+      const contract = await this.contractRepo.findByAddress(contractAddress);
+      if (contract && (!contract.owner || contract.owner === previousOwner)) {
+        this.log.info(`Transfer ownership of contract ${contractAddress} from ${previousOwner} to ${newOwner}`);
+        contract.owner = newOwner;
+        await contract.save();
+      }
     }
   }
 }
