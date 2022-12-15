@@ -15,7 +15,8 @@ const runAsync = async (options) => {
   const contracts = await contractRepo.findEmptyOwners();
 
   for (const c of contracts) {
-    c.owner = c.master;
+    c.master = c.master.toLowerCase();
+    c.owner = c.owner.toLowerCase();
     await c.save();
   }
 };
