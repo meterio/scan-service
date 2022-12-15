@@ -27,6 +27,7 @@ export const METRIC_DEFS = [
   // Circulation
   { key: MetricName.MTR_CIRCULATION, type: MetricType.STRING, default: '0' },
   { key: MetricName.MTRG_CIRCULATION, type: MetricType.STRING, default: '0' },
+  { key: MetricName.MTRG_TOTALSUPPLY, type: MetricType.STRING, default: '0' },
 
   // Staking
   { key: MetricName.CANDIDATES, type: MetricType.STRING, default: '[]' },

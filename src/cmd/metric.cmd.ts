@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { BigNumber } from 'bignumber.js';
-import { Network } from '../const';
+import { Network, SubFromTotalSupply } from '../const';
 import {
   AccountRepo,
   AlertRepo,
@@ -535,29 +535,45 @@ export class MetricCMD extends CMD {
       await this.cache.update(MetricName.MTRG_STAKED_LOCKED, totalStakedLocked.toFixed(0));
 
       const accts = await this.accountRepo.findAll();
-      let mtr = new BigNumber(0);
-      let mtrg = new BigNumber(0);
+      let mtrCirculation = new BigNumber(0);
+      let mtrgCirculation = new BigNumber(0);
+      let mtrgTotalSupply = new BigNumber(0);
+
+      // add mtr to circulation
       for (const acct of accts) {
         // add mtr balance
-        if (!(acct.address in LockedMeterAddrs) && acct.mtrBalance.isGreaterThan(0)) {
-          mtr = mtr.plus(acct.mtrBalance);
-        }
-        // add mtr bounded balance
-        if (!(acct.address in LockedMeterAddrs) && acct.mtrBounded && acct.mtrBounded.isGreaterThan(0)) {
-          mtr = mtr.plus(acct.mtrBounded);
+        if (!(acct.address in LockedMeterAddrs)) {
+          if (acct.mtrBalance.isGreaterThan(0)) {
+            mtrCirculation = mtrCirculation.plus(acct.mtrBalance);
+          }
+          if (acct.mtrBounded && acct.mtrBounded.isGreaterThan(0)) {
+            mtrCirculation = mtrCirculation.plus(acct.mtrBounded);
+          }
         }
 
-        // add mtrg balance
-        if (!(acct.address in LockedMeterGovAddrs) && acct.mtrgBalance.isGreaterThan(0)) {
-          mtrg = mtrg.plus(acct.mtrgBalance);
+        // add mtrg to circulation
+        if (!(acct.address in LockedMeterGovAddrs)) {
+          if (acct.mtrgBalance.isGreaterThan(0)) {
+            mtrgCirculation = mtrgCirculation.plus(acct.mtrgBalance);
+          }
+          if (acct.mtrgBounded && acct.mtrgBounded.isGreaterThan(0)) {
+            mtrgCirculation = mtrgCirculation.plus(acct.mtrgBounded);
+          }
         }
-        // add mtrg bounded balance
-        if (!(acct.address in LockedMeterGovAddrs) && acct.mtrgBounded && acct.mtrgBounded.isGreaterThan(0)) {
-          mtrg = mtrg.plus(acct.mtrgBounded);
+
+        // add mtrg to total supply
+        if (!(acct.address in SubFromTotalSupply)) {
+          if (acct.mtrgBalance.isGreaterThan(0)) {
+            mtrgTotalSupply = mtrgTotalSupply.plus(acct.mtrgBalance);
+          }
+          if (acct.mtrgBounded && acct.mtrgBounded.isGreaterThan(0)) {
+            mtrgTotalSupply = mtrgTotalSupply.plus(acct.mtrgBounded);
+          }
         }
       }
-      await this.cache.update(MetricName.MTR_CIRCULATION, mtr.toFixed());
-      await this.cache.update(MetricName.MTRG_CIRCULATION, mtrg.toFixed());
+      await this.cache.update(MetricName.MTR_CIRCULATION, mtrCirculation.toFixed());
+      await this.cache.update(MetricName.MTRG_CIRCULATION, mtrgCirculation.toFixed());
+      await this.cache.update(MetricName.MTRG_TOTALSUPPLY, mtrgTotalSupply.toFixed());
 
       // Update rank information
       const mtrRanked = accts.sort((a, b) => {

@@ -38,6 +38,10 @@ export const LockedMeterGovAddrs: { [key: string]: true } = {
   '0x62e3e1df0430e6da83060b3cffc1adeb3792daf1': true,
 };
 
+export const SubFromTotalSupply: { [key: string]: true } = {
+  '0x46b77531b74ff31882c4636a35547535818e0baa': true, // Permanant Locked
+};
+
 export const LockedMeterAddrs: { [key: string]: true } = {
   ZeroAddress: true,
   // BridgePoolAddress: true,

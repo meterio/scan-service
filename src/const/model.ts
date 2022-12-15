@@ -36,4 +36,5 @@ export enum MetricName {
   MTRG_STAKED = 'mtrg_staked',
   MTRG_STAKED_LOCKED = 'mtrg_staked_locked',
   TX_FEE_BENEFICIARY = 'tx_fee_beneficiary',
+  MTRG_TOTALSUPPLY = 'mtrg_totalsupply',
 }

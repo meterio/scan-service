@@ -56,7 +56,8 @@ class HomeController extends BaseController {
   };
 
   private getMTRGTotalsupplyRaw = async (req: Request, res: Response) => {
-    return res.send(new BigNumber(40e6).toFixed(0));
+    const t = await this.metricRepo.findByKey(MetricName.MTRG_TOTALSUPPLY);
+    return res.send(new BigNumber(t.value).div(1e18).toFixed(0));
   };
 
   private getMTRGCirculating = async (req: Request, res: Response) => {
