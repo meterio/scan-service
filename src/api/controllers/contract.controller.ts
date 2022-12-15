@@ -1,4 +1,4 @@
-import { ContractFileRepo, ContractRepo } from '../../repo';
+import { ContractFileRepo, ContractRepo, NFTRepo } from '../../repo';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Network } from '../../const';
@@ -10,6 +10,7 @@ class ContractController extends BaseController {
   public router = Router();
   private contractFileRepo = new ContractFileRepo();
   private contractRepo = new ContractRepo();
+  private nftRepo = new NFTRepo();
 
   constructor(network: Network, standby: boolean) {
     super(network, standby);
@@ -24,7 +25,16 @@ class ContractController extends BaseController {
   private getContractByAddress = async (req: Request, res: Response) => {
     const { address } = req.params;
     const contract = await this.contractRepo.findByAddress(address);
-    return res.json({ contract: contract.toJSON() });
+    const tokens = await this.nftRepo.findByAddress(address);
+    let idMap = new Map();
+    let holderMap = new Map();
+
+    for (const t of tokens) {
+      idMap.set(t.tokenId, true);
+      holderMap.set(t.owner, true);
+    }
+
+    return res.json({ contract: { ...contract.toJSON(), holderCount: holderMap.size, tokenCount: idMap.size } });
   };
 
   private getContractFiles = async (req: Request, res: Response) => {
