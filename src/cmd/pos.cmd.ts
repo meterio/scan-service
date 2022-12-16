@@ -403,8 +403,17 @@ export class PosCMD extends CMD {
           break;
         } else {
           this.log.error({ err: e }, 'Error happened in loop: ', e);
+
+          const start = new Date().getTime();
+          let head = await this.headRepo.findByKey(this.name);
+          if (head) {
+            await this.cleanUpIncompleteData(head);
+          }
+          const elapsed = new Date().getTime() - start;
+
+          this.log.info(`clean up elapsed: ${elapsed / 1000} seconds`);
           this.log.error(`sleep for ${RECOVERY_INTERVAL / 1000 / 60} minutes, hope it will resolve`);
-          await sleep(RECOVERY_INTERVAL);
+          await sleep(RECOVERY_INTERVAL - elapsed);
         }
       }
     }
