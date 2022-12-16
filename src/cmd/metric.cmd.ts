@@ -851,6 +851,7 @@ export class MetricCMD extends CMD {
         // adjust total supply
         await this.adjustTotalSupply(index, every6h);
 
+        // adjust counts on tokens
         await this.adjustCountsOnTokens(index, every2h);
 
         index = (index + 1) % every24h; // clear up 24hours

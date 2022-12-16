@@ -177,22 +177,7 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
     const paginate = await this.contractRepo.paginateNFTInRange(Number(fromNum), Number(toNum), page, limit);
     return res.json({
       totalRows: paginate.count,
-      collections: paginate.result.map((c) => {
-        return {
-          type: ContractType[c.type],
-          address: c.address,
-          name: c.name,
-          symbol: c.symbol,
-          officialSite: c.officialSite,
-          totalSupply: c.totalSupply,
-          holderCount: c.holdersCount,
-          transfersCount: c.transfersCount,
-          master: c.master,
-          verified: c.verified,
-          creationTxHash: c.creationTxHash,
-          firstSeen: c.firstSeen,
-        };
-      }),
+      collections: paginate.result.map((c) => c.toJSON()),
     });
   };
 

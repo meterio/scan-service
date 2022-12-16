@@ -141,16 +141,9 @@ class AccountController extends BaseController {
       actJson.tokenSymbol = contract.symbol;
       actJson.tokenDecimals = contract.decimals;
       actJson.totalSupply = contract.totalSupply.toFixed();
-      let holderCount = 0;
-      if (contract.type === ContractType.ERC721 || contract.type === ContractType.ERC1155) {
-        holderCount = await this.nftRepo.countByAddress(address);
-      } else {
-        holderCount = await this.tokenBalanceRepo.countByTokenAddress(address);
-      }
-
-      const transferCount = await this.movementRepo.countByTokenAddress(address);
-      actJson.holdersCount = holderCount;
-      actJson.transfersCount = transferCount;
+      actJson.holdersCount = contract.holdersCount.toNumber();
+      actJson.transfersCount = contract.transfersCount.toNumber();
+      actJson.tokensCount = contract.tokensCount?.toNumber();
       actJson.master = contract.master;
       actJson.creationTxHash = contract.creationTxHash;
       actJson.firstSeen = contract.firstSeen;
@@ -278,8 +271,6 @@ class AccountController extends BaseController {
 
     let contractJson = contract.toJSON();
     delete contractJson.code;
-    delete contractJson.holdersCount;
-    delete contractJson.transfersCount;
     return res.json({
       token: contractJson,
       holders: paginate.result.map((t) => {
