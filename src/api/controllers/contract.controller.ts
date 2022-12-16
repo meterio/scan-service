@@ -25,16 +25,7 @@ class ContractController extends BaseController {
   private getContractByAddress = async (req: Request, res: Response) => {
     const { address } = req.params;
     const contract = await this.contractRepo.findByAddress(address);
-    const tokens = await this.nftRepo.findByAddress(address);
-    let idMap = new Map();
-    let holderMap = new Map();
-
-    for (const t of tokens) {
-      idMap.set(t.tokenId, true);
-      holderMap.set(t.owner, true);
-    }
-
-    return res.json({ contract: { ...contract.toJSON(), holderCount: holderMap.size, tokenCount: idMap.size } });
+    return res.json({ contract: { ...contract.toJSON() } });
   };
 
   private getContractFiles = async (req: Request, res: Response) => {

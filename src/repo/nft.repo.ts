@@ -219,7 +219,7 @@ export default class NFTRepo {
   }
 
   public async distinctCountTokenFilterByAddress(address: String) {
-    const dis = await this.model.distinct('token', { address: address.toLowerCase() });
+    const dis = await this.model.distinct('tokenId', { address: address.toLowerCase() });
     return dis.length;
   }
 

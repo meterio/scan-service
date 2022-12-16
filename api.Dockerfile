@@ -1,4 +1,4 @@
-FROM node:18-bullseye
+FROM node:19-bullseye
 
 RUN npm install -g pm2
 RUN pm2 install typescript
