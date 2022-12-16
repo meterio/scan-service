@@ -30,6 +30,13 @@ const schema = new mongoose.Schema<Contract>({
     set: (bnum: BigNumber) => bnum.toFixed(0),
     required: true,
   },
+  tokensCount: {
+    type: String,
+    get: (num: string) => new BigNumber(num),
+    set: (bnum: BigNumber) => bnum.toFixed(0),
+    default: '0',
+    required: false,
+  },
   transfersCount: {
     type: String,
     get: (num: string) => new BigNumber(num),

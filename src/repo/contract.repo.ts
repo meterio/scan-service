@@ -34,6 +34,10 @@ export default class ContractRepo {
     return this.model.find({ type: { $in: [ContractType.ERC20, ContractType.ERC721, ContractType.ERC1155] } });
   }
 
+  public async findAllNFTTokens() {
+    return this.model.find({ type: { $in: [ContractType.ERC721, ContractType.ERC1155] } });
+  }
+
   public async create(
     type: ContractType,
     address: string,

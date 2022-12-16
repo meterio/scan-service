@@ -217,4 +217,14 @@ export default class NFTRepo {
 
     return { count, result };
   }
+
+  public async distinctCountTokenFilterByAddress(address: String) {
+    const dis = await this.model.distinct('token', { address: address.toLowerCase() });
+    return dis.length;
+  }
+
+  public async distinctCountOwnerFilterByAddress(address: String) {
+    const dis = await this.model.distinct('owner', { address: address.toLowerCase() });
+    return dis.length;
+  }
 }

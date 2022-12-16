@@ -16,6 +16,7 @@ export interface Contract {
 
   holdersCount: BigNumber;
   transfersCount: BigNumber;
+  tokensCount?: BigNumber;
 
   master: string;
   owner?: string;

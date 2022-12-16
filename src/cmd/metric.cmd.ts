@@ -11,6 +11,9 @@ import {
   ValidatorRepo,
   ABIFragmentRepo,
   ContractFileRepo,
+  NFTRepo,
+  MovementRepo,
+  TokenBalanceRepo,
 } from '../repo';
 import { ContractFile, Validator, Bucket } from '../model';
 import { ERC20 } from '@meterio/devkit/dist';
@@ -67,6 +70,9 @@ export class MetricCMD extends CMD {
   private blockRepo = new BlockRepo();
   private alertRepo = new AlertRepo();
   private headRepo = new HeadRepo();
+  private nftRepo = new NFTRepo();
+  private tokenBalanceRepo = new TokenBalanceRepo();
+  private movementRepo = new MovementRepo();
   private contractRepo = new ContractRepo();
   private abiFragmentRepo = new ABIFragmentRepo();
   private contractFileRepo = new ContractFileRepo();
@@ -729,6 +735,66 @@ export class MetricCMD extends CMD {
     }
   }
 
+  private async adjustCountsOnTokens(index: number, interval: number) {
+    if (index % interval === 0) {
+      const contracts = await this.contractRepo.findAllNFTTokens();
+      console.log(`start adjust counts on  ${contracts.length} nft token contracts...`);
+      let updatedNFT = 0;
+      for (const c of contracts) {
+        try {
+          let updated = false;
+          const ownerCount = await this.nftRepo.distinctCountOwnerFilterByAddress(c.address);
+          const tokenCount = await this.nftRepo.distinctCountTokenFilterByAddress(c.address);
+          const transferCount = await this.movementRepo.countNFTTxsByAddress(c.address);
+
+          if (c.holdersCount && !c.holdersCount.isEqualTo(ownerCount)) {
+            c.holdersCount = new BigNumber(ownerCount);
+            updated = true;
+          }
+          if (!c.tokensCount || !c.tokensCount.isEqualTo(tokenCount)) {
+            c.tokensCount = new BigNumber(tokenCount);
+            updated = true;
+          }
+          if (c.transfersCount || !c.transfersCount.isEqualTo(transferCount)) {
+            c.transfersCount = new BigNumber(transferCount);
+            updated = true;
+          }
+          if (updated) {
+            await c.save();
+            updatedNFT++;
+            console.log(`updated counts on nft ${c.address}`);
+          }
+        } catch (e) {
+          console.log('ignore error: ', e);
+        }
+      }
+      console.log(`Updated ${updatedNFT} nft token contracts`);
+
+      let updatedERC20 = 0;
+      const erc20s = await this.contractRepo.findByType(ContractType.ERC20);
+      for (const c of erc20s) {
+        let updated = false;
+        const ownerCount = await this.tokenBalanceRepo.countERC20ByAddress(c.address);
+        const transferCount = await this.movementRepo.countERC20TxsByAddress(c.address);
+        if (c.holdersCount && !c.holdersCount.isEqualTo(ownerCount)) {
+          c.holdersCount = new BigNumber(ownerCount);
+          updated = true;
+        }
+        c.tokensCount = new BigNumber(0);
+        if (c.transfersCount || !c.transfersCount.isEqualTo(transferCount)) {
+          c.transfersCount = new BigNumber(transferCount);
+          updated = true;
+        }
+        if (updated) {
+          await c.save();
+          updatedERC20++;
+          console.log(`updated counts on erc20 ${c.address}`);
+        }
+      }
+      console.log(`Updated ${updatedNFT} nft token contracts`);
+    }
+  }
+
   public async loop() {
     let index = 0;
 
@@ -784,6 +850,8 @@ export class MetricCMD extends CMD {
 
         // adjust total supply
         await this.adjustTotalSupply(index, every6h);
+
+        await this.adjustCountsOnTokens(index, every2h);
 
         index = (index + 1) % every24h; // clear up 24hours
       } catch (e) {
