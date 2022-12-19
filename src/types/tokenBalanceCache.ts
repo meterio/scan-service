@@ -1,9 +1,10 @@
 import { BigNumber } from 'bignumber.js';
 import { Network } from '../const';
 import { NFTBalance, BlockConcise, TokenBalance } from '../model';
-import { TokenBalanceRepo } from '../repo';
+import { ContractRepo, MovementRepo, TokenBalanceRepo } from '../repo';
 import { ZeroAddress } from '../const';
 import { Pos } from '../utils';
+import PromisePool from '@supercharge/promise-pool/dist';
 
 const printNFT = (bals: NFTBalance[], deltas: NFTBalance[]) => {
   if (bals.length <= 0) {
@@ -65,6 +66,8 @@ export const mergeNFTBalances = (origin: NFTBalance[], delta: NFTBalance[], plus
 export class TokenBalanceCache {
   private bals: { [key: string]: TokenBalance & { save(); remove() } } = {};
   private tokenBalanceRepo = new TokenBalanceRepo();
+  private contractRepo = new ContractRepo();
+  private movementRepo = new MovementRepo();
   private pos: Pos;
 
   // normally we could just update the nftBalances in bals map
@@ -180,7 +183,6 @@ export class TokenBalanceCache {
 
   public async saveToDB() {
     const count = Object.keys(this.bals).length;
-    const nftCount = Object.keys(this.nfts).length;
     if (count > 0) {
       console.log(`saving ${count} NFTBalances`);
       for (const key in this.nfts) {
@@ -202,6 +204,36 @@ export class TokenBalanceCache {
         })
       );
       console.log(`saved ${count} NFTBalances to DB`);
+
+      await PromisePool.withConcurrency(4)
+        .for(Object.values(this.bals))
+        .process(async (b) => {
+          await this.updateCounts(b.tokenAddress);
+        });
+    }
+  }
+
+  async updateCounts(address: string) {
+    const c = await this.contractRepo.findByAddress(address);
+    let updated = false;
+    const ownerCount = await this.tokenBalanceRepo.countERC20ByAddress(c.address);
+    const transferCount = await this.movementRepo.countERC20TxsByAddress(c.address);
+    if (c.holdersCount && !c.holdersCount.isEqualTo(ownerCount)) {
+      c.holdersCount = new BigNumber(ownerCount);
+      updated = true;
+    }
+    c.tokensCount = new BigNumber(0);
+    if (c.transfersCount || !c.transfersCount.isEqualTo(transferCount)) {
+      c.transfersCount = new BigNumber(transferCount);
+      updated = true;
+    }
+    if (updated) {
+      await c.save();
+      console.log(
+        `updated counts on erc20 ${c.address} holders=${c.holdersCount.toFixed(0)} transfers=${c.transfersCount.toFixed(
+          0
+        )}`
+      );
     }
   }
 

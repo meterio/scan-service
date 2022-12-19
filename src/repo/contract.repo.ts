@@ -61,6 +61,7 @@ export default class ContractRepo {
       totalSupply,
       holdersCount: new BigNumber(0),
       transfersCount: new BigNumber(0),
+      tokensCount: new BigNumber(0),
       master: master.toLowerCase(),
       owner: master.toLowerCase(),
       code,

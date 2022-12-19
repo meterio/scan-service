@@ -569,6 +569,7 @@ export class PosCMD extends CMD {
       totalSupply: new BigNumber(0),
       holdersCount: new BigNumber(0),
       transfersCount: new BigNumber(0),
+      tokensCount: new BigNumber(0),
       creationTxHash: txHash,
       creationInputHash,
       master: master.toLowerCase(),

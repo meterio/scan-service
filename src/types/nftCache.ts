@@ -1,7 +1,8 @@
 import { Network } from '../const';
 import { NFT } from '../model';
-import { NFTRepo } from '../repo';
+import { ContractRepo, MovementRepo, NFTRepo } from '../repo';
 import axios from 'axios';
+import BigNumber from 'bignumber.js';
 import {
   S3Client,
   PutObjectCommand,
@@ -33,6 +34,8 @@ export class NFTCache {
   private minted: { [key: string]: NFT } = {};
   private updated: { [key: string]: NFT & Document<any, any, any> } = {};
   private repo = new NFTRepo();
+  private contractRepo = new ContractRepo();
+  private movementRepo = new MovementRepo();
   private network: Network;
 
   constructor(network: Network) {
@@ -207,6 +210,7 @@ export class NFTCache {
   }
 
   public async saveToDB() {
+    // save minted nft
     const mintedCount = Object.keys(this.minted).length;
     if (mintedCount > 0) {
       console.log(`Start to update info for ${mintedCount} nfts`);
@@ -243,6 +247,7 @@ export class NFTCache {
       console.log(`saved ${mintedCount} minted NFTs to DB`);
     }
 
+    // save updated nfts
     const updatedCount = Object.keys(this.updated).length;
     if (updatedCount > 0) {
       await PromisePool.withConcurrency(4)
@@ -260,6 +265,20 @@ export class NFTCache {
         });
       console.log(`saved ${updatedCount} updated NFTs to DB`);
     }
+
+    const addrMap = {};
+    Object.values(this.minted).map((nft) => {
+      addrMap[nft.address] = true;
+    });
+    Object.values(this.updated).map((nft) => {
+      addrMap[nft.address] = true;
+    });
+
+    await PromisePool.withConcurrency(4)
+      .for(Object.keys(addrMap))
+      .process(async (address, index) => {
+        await this.updateCounts(address);
+      });
   }
 
   convertUrl(uri: string): string {
@@ -383,6 +402,39 @@ export class NFTCache {
     nft.mediaType = mediaType;
     nft.mediaURI = cachedMediaURI;
     nft.status = 'cached';
+  }
+
+  private async updateCounts(address: string) {
+    let updated = false;
+    const c = await this.contractRepo.findByAddress(address);
+    const ownerCount = await this.repo.distinctCountOwnerFilterByAddress(address);
+    const tokenCount = await this.repo.distinctCountTokenFilterByAddress(address);
+    const transferCount = await this.movementRepo.countNFTTxsByAddress(address);
+
+    if (c.holdersCount && !c.holdersCount.isEqualTo(ownerCount)) {
+      c.holdersCount = new BigNumber(ownerCount);
+      updated = true;
+    }
+    if (!c.tokensCount) {
+      c.tokensCount = new BigNumber(0);
+      updated = true;
+    }
+    if (c.tokensCount || !c.tokensCount.isEqualTo(tokenCount)) {
+      c.tokensCount = new BigNumber(tokenCount);
+      updated = true;
+    }
+    if (c.transfersCount || !c.transfersCount.isEqualTo(transferCount)) {
+      c.transfersCount = new BigNumber(transferCount);
+      updated = true;
+    }
+    if (updated) {
+      await c.save();
+      console.log(
+        `updated counts on nft ${c.address} tokens=${c.tokensCount.toFixed(0)} holders=${c.holdersCount.toFixed(
+          0
+        )} transfers=${c.transfersCount.toFixed(0)}`
+      );
+    }
   }
 
   public clean() {
