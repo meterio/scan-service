@@ -218,10 +218,17 @@ export class NFTCache {
         .for(Object.keys(this.minted))
         .process(async (key, index, pool) => {
           const nft = this.minted[key];
-          try {
-            await this.updateNFTInfo(nft);
-          } catch (e) {
-            console.log(`${index + 1}/${mintedCount}| Error: ${e.message} for [${nft.tokenId}] of ${nft.address} `);
+          for (let i = 0; i < 3; i++) {
+            try {
+              if (i > 0) {
+                console.log(`retry ${i + 1} time to update NFT Info for [${nft.tokenId}] of ${nft.address}`);
+              }
+              await this.updateNFTInfo(nft);
+              return;
+            } catch (e) {
+              console.log(`${index + 1}/${mintedCount}| Error: ${e.message} for [${nft.tokenId}] of ${nft.address} `);
+              continue;
+            }
           }
         });
       let visited = {};

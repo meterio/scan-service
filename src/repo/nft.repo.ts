@@ -17,6 +17,10 @@ export default class NFTRepo {
     return this.model.find({ address: address.toLowerCase(), tokenId });
   }
 
+  public async findUncached() {
+    return this.model.find({ status: 'new', tokenURI: /ipfs:.+/ });
+  }
+
   public async findByTokenIds(address: string, tokenIds: string[]) {
     return this.model.find({ address: address.toLowerCase(), tokenId: { $in: tokenIds } });
   }
