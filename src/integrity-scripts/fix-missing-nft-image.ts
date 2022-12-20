@@ -19,6 +19,8 @@ const runAsync = async (options) => {
   for (const nft of nfts) {
     try {
       await nftCache.updateNFTInfo(nft);
+      console.log(`updated NFT ${nft.address}[${nft.tokenId}]`, nft);
+      await nft.save();
     } catch (e) {
       console.log(`could not cache nft image for [${nft.tokenId}] on ${nft.address} `, e);
     }
