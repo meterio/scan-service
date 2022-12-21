@@ -20,6 +20,7 @@ import {
 import axios from 'axios';
 import { Network } from '../../const';
 import { BaseController } from './baseController';
+import BigNumber from 'bignumber.js';
 
 class KnownController extends BaseController {
   public path = '/api/knowns';
@@ -98,6 +99,9 @@ class KnownController extends BaseController {
     const { data } = fileRes;
     contract.verified = true;
     contract.status = data.status;
+    if (!contract.tokensCount) {
+      contract.tokensCount = new BigNumber(0);
+    }
 
     let contractFiles: ContractFile[] = [];
     for (const file of data.files) {
