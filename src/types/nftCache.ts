@@ -68,9 +68,9 @@ export class NFTCache {
       }
     }
 
-    console.log(`MINTED: ${key} in mint721`);
+    // console.log(`MINTED: ${key} in mint721`);
     this.minted[key] = nft;
-    console.log(JSON.stringify(this.minted[key]));
+    // console.log(JSON.stringify(this.minted[key]));
   }
 
   public async mint1155(nft: NFT) {
@@ -93,9 +93,9 @@ export class NFTCache {
       }
     }
 
-    console.log(`MINTED ${key} in mint1155`);
+    // console.log(`MINTED ${key} in mint1155`);
     this.minted[key] = nft;
-    console.log(JSON.stringify(this.minted[key]));
+    // console.log(JSON.stringify(this.minted[key]));
   }
 
   public async transfer721(tokenAddress: string, tokenId: string, from: string, to: string) {
@@ -146,6 +146,7 @@ export class NFTCache {
     const key = this.key1155(tokenAddress, tokenId, from);
 
     console.log(`Transfer ERC1155 ${tokenAddress}[${tokenId}:${value}] from ${from} to ${to}`);
+    // if token exists in dirty cache
     if (key in this.updated) {
       const nft = this.updated[key];
       if (nft.type !== 'ERC1155') {
@@ -166,6 +167,7 @@ export class NFTCache {
       return;
     }
 
+    // if token exists in minted cache
     if (key in this.minted) {
       const nft = this.minted[key];
       if (nft.type !== 'ERC1155') {

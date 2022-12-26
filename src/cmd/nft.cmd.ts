@@ -211,7 +211,7 @@ export class NFTCMD extends CMD {
 
       if (from !== ZeroAddress) {
         this.log.info({ txHash: evt.txHash }, `handle transfer ERC1155 ${tokenStr}`);
-        await this.nftCache.transfer1155(tokenAddress, tokenId, from, to, 1);
+        await this.nftCache.transfer1155(tokenAddress, tokenId, from, to, value);
         continue;
       }
 
@@ -262,7 +262,7 @@ export class NFTCMD extends CMD {
       try {
         decoded = ERC721.Transfer.decode(evt.data, evt.topics);
       } catch (e) {
-        this.log.warn(`error decoding Transfer event`);
+        this.log.debug(`error decoding Transfer event`);
         continue;
       }
 
