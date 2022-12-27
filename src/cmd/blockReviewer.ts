@@ -125,10 +125,19 @@ export abstract class TxBlockReviewer extends CMD {
           if (this.shutdown) {
             throw new InterruptedError();
           }
+          let start = new Date().getTime();
           const blk = await this.blockRepo.findBlockWithTxFrom(num);
+          let end = new Date().getTime();
+          console.log(`findBlockWithTxFrom elapsed=${end - start}`);
+          start = end;
+
           if (!blk || blk.number > localBestNum || blk.number > endNum) {
             // update head before exit current loop
             let endBlock = await this.blockRepo.findByNumber(endNum);
+            end = new Date().getTime();
+            console.log(`findByNumber elapsed=${end - start}`);
+            start = end;
+
             // head = await this.headRepo.update(this.name, endBlock.number, endBlock.hash);
             head.num = endBlock.number;
             head.hash = endBlock.hash;
