@@ -9,7 +9,7 @@ import { InterruptedError, sleep } from '../utils';
 import { CMD } from './cmd';
 
 const FASTFORWARD_INTERVAL = 500;
-const NORMAL_INTERVAL = 5000;
+const NORMAL_INTERVAL = 15000;
 const PRELOAD_WINDOW = 5;
 const LOOP_WINDOW = 100;
 
@@ -108,6 +108,11 @@ export class PowCMD extends CMD {
         } else {
           fastforward = true;
         }
+
+        if (headNum + 1 > tgtNum) {
+          this.log.info({ best: bestNum, head: headNum }, `skip this round`);
+          continue;
+        }
         this.log.info(
           { best: bestNum, head: headNum },
           `start import PoW block from height ${headNum + 1} to ${tgtNum}`
@@ -118,6 +123,10 @@ export class PowCMD extends CMD {
             throw new InterruptedError();
           }
           const blk = await this.getBlockFromRPC(num);
+          console.log(blk);
+          if (!blk) {
+            continue;
+          }
           await this.processBlock(blk);
           this.log.info({ height: blk.height, hash: blk.hash }, 'imported PoW block');
 

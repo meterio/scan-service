@@ -54,7 +54,9 @@ export class Pow {
       const b = await func();
 
       // cache the block
-      this.cache.set(key, b);
+      if (b) {
+        this.cache.set(key, b);
+      }
       return b;
     };
     return cacheOrLoad(() => {
@@ -90,20 +92,26 @@ export class Pow {
   }
 
   private async getBlockRPC(height: number): Promise<PowBlock | null> {
-    const hash = await this.btc.getBlockHash(height);
-    const blk = await this.btc.getBlock(hash);
-    const result = {
-      ...blk,
-      difficulty: new BigNumber(blk.difficulty),
-      nonce: new BigNumber(blk.nonce),
-      medianTime: new BigNumber(blk.mediantime),
-      strippedSize: blk.strippedsize,
-      previousBlockHash: blk.previousblockhash,
-      nextBlockHash: blk.nextblockhash,
-      chainWork: blk.chainwork,
-      merkleRoot: blk.merkleroot,
-    };
-    return result;
+    try {
+      const hash = await this.btc.getBlockHash(height);
+      const blk = await this.btc.getBlock(hash);
+      const result = {
+        ...blk,
+        difficulty: new BigNumber(blk.difficulty),
+        nonce: new BigNumber(blk.nonce),
+        medianTime: new BigNumber(blk.mediantime),
+        strippedSize: blk.strippedsize,
+        previousBlockHash: blk.previousblockhash,
+        nextBlockHash: blk.nextblockhash,
+        chainWork: blk.chainwork,
+        merkleRoot: blk.merkleroot,
+      };
+
+      return result;
+    } catch (e) {
+      // console.log('rpc error for height ' + height, e.message);
+      return null;
+    }
   }
 
   private async getTransactionRPC(txhash: string): Promise<PowTx | null> {
