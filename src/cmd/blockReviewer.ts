@@ -26,8 +26,9 @@ export abstract class TxBlockReviewer extends CMD {
   protected accountRepo = new AccountRepo();
   protected movementRepo = new MovementRepo();
   protected committeeRepo = new CommitteeRepo();
+  protected normalInterval = NORMAL_INTERVAL;
 
-  constructor(net: Network) {
+  constructor(net: Network, normalInterval: number) {
     super();
     this.log = pino({
       transport: {
@@ -36,6 +37,7 @@ export abstract class TxBlockReviewer extends CMD {
     });
     this.network = net;
     this.pos = new Pos(net);
+    this.normalInterval = normalInterval;
   }
 
   protected async processGenesis(): Promise<void> {
@@ -95,7 +97,7 @@ export abstract class TxBlockReviewer extends CMD {
         if (fastforward) {
           await sleep(FASTFORWARD_INTERVAL);
         } else {
-          await sleep(NORMAL_INTERVAL);
+          await sleep(this.normalInterval);
         }
         let head = await this.headRepo.findByKey(this.name);
         if (!head) {
@@ -112,7 +114,6 @@ export abstract class TxBlockReviewer extends CMD {
         } else {
           fastforward = true;
         }
-        console.log(headNum, endNum);
 
         if (headNum > endNum) {
           continue;
@@ -132,6 +133,7 @@ export abstract class TxBlockReviewer extends CMD {
             head.num = endBlock.number;
             head.hash = endBlock.hash;
             await head.save();
+            console.log('nothing to process, update head to ', endBlock.number);
             break;
           }
           await this.processBlock(blk);

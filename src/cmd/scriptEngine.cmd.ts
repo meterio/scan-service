@@ -28,6 +28,7 @@ import { GetNetworkConfig, Token } from '../const';
 
 import { TxBlockReviewer } from './blockReviewer';
 
+const NORMAL_INTERVAL = 10000;
 export class ScriptEngineCMD extends TxBlockReviewer {
   protected auctionRepo = new AuctionRepo();
   protected auctionSummaryRepo = new AuctionSummaryRepo();
@@ -39,7 +40,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
   protected candidateRepo = new CandidateRepo();
 
   constructor(net: Network) {
-    super(net);
+    super(net, NORMAL_INTERVAL);
     this.log = pino({
       transport: {
         target: 'pino-pretty',
