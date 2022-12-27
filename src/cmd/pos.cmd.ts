@@ -354,8 +354,14 @@ export class PosCMD extends CMD {
         fastforward = endNum < bestNum;
 
         if (endNum <= headNum) {
+          this.log.info(
+            { best: bestNum, head: headNum, mode: fastforward ? 'fast-forward' : 'normal' },
+            `skip this import round`
+          );
+          await sleep(NORMAL_INTERVAL);
           continue;
         }
+
         this.log.info(
           { best: bestNum, head: headNum, mode: fastforward ? 'fast-forward' : 'normal' },
           `start import PoS block from number ${headNum + 1} to ${endNum}`
@@ -468,16 +474,12 @@ export class PosCMD extends CMD {
       const first = this.blocksCache[0];
       const last = this.blocksCache[this.blocksCache.length - 1];
       await this.blockRepo.bulkInsert(...this.blocksCache);
-      this.log.info(`saved ${this.blocksCache.length} blocks`);
+      // this.log.info(`saved ${this.blocksCache.length} blocks`);
       // update head
       await this.updateHead(last.number, last.hash);
-      this.log.info(`updated head to ${last.number}`);
 
-      if (first.number === last.number) {
-        this.log.info({ first: first.number, last: last.number }, `saved ${last.number - first.number + 1} blocks`);
-      } else {
-        this.log.info({ first: first.number, last: last.number }, `saved ${last.number - first.number + 1} blocks`);
-      }
+      this.log.info(`saved ${this.blocksCache.length - 1} blocks in [${first.number}, ${last.number}]`);
+      this.log.info(`update head to ${last.number}`);
     }
     this.log.info('handling rebasing');
     await this.handleRebasing();
@@ -490,7 +492,7 @@ export class PosCMD extends CMD {
       return await this.headRepo.create(this.name, num, hash);
     } else {
       let head = await this.headRepo.findByKey(this.name);
-      this.log.info({ num: num }, 'update head');
+      // this.log.info({ num: num }, 'update head');
       // head = await this.headRepo.update(this.name, res.block.number, res.block.hash);
       head.num = num;
       head.hash = hash;

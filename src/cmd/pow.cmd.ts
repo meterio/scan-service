@@ -113,7 +113,7 @@ export class PowCMD extends CMD {
         }
 
         if (headNum + 1 > tgtNum) {
-          this.log.info({ best: bestNum, head: headNum }, `skip this round`);
+          this.log.info({ best: bestNum, head: headNum }, `skip this import round`);
           continue;
         }
         this.log.info(
