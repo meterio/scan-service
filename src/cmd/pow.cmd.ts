@@ -67,7 +67,10 @@ export class PowCMD extends CMD {
     // preload blocks
     (async () => {
       for (let i = 1; i <= PRELOAD_WINDOW; i++) {
-        await this.pow.getBlock(num + i);
+        const blk = await this.pow.getBlock(num + i);
+        if (!blk) {
+          return;
+        }
       }
     })().catch();
     return b;
