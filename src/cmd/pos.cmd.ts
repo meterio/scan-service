@@ -363,7 +363,7 @@ export class PosCMD extends CMD {
         }
 
         this.log.info(
-          { best: bestNum, head: headNum, mode: fastforward ? 'fast-forward' : 'normal' },
+          { mode: fastforward ? 'fast-forward' : 'normal' },
           `start import PoS block from number ${headNum + 1} to ${endNum}`
         );
         // begin import round from headNum+1 to tgtNum
@@ -478,7 +478,7 @@ export class PosCMD extends CMD {
       // update head
       await this.updateHead(last.number, last.hash);
 
-      this.log.info(`saved ${this.blocksCache.length - 1} blocks in [${first.number}, ${last.number}]`);
+      this.log.info(`saved ${this.blocksCache.length} blocks in [${first.number}, ${last.number}]`);
       this.log.info(`update head to ${last.number}`);
     }
     this.log.info('handling rebasing');
