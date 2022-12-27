@@ -146,26 +146,6 @@ export class NFTCache {
     const key = this.key1155(tokenAddress, tokenId, from);
 
     console.log(`Transfer ERC1155 ${tokenAddress}[${tokenId}:${value}] from ${from} to ${to}`);
-    // if token exists in dirty cache
-    if (key in this.updated) {
-      const nft = this.updated[key];
-      if (nft.type !== 'ERC1155') {
-        console.log(`[SKIP] transfer 1155 with non-1155 token ${key}`);
-        return;
-      }
-      if (nft.value < value) {
-        throw new NotEnoughBalance(`${key} in updated, expected:${value}, actual:${nft.value}`);
-      } else if (nft.value === value) {
-        nft.owner = to;
-      } else {
-        const mintedKey = this.key1155(tokenAddress, tokenId, to);
-        console.log(`MINTED ${key} in transfer1155 with key in upadted`);
-        this.minted[mintedKey] = { ...nft.toJSON(), owner: to, value };
-        console.log(JSON.stringify(this.minted[mintedKey]));
-        nft.value -= value;
-      }
-      return;
-    }
 
     // if token exists in minted cache
     if (key in this.minted) {
@@ -179,35 +159,62 @@ export class NFTCache {
       } else if (nft.value === value) {
         nft.owner = to;
       } else {
-        const mintedKey = this.key1155(tokenAddress, tokenId, to);
-        console.log(`MINTED ${key} in transfer1155 with key in minted`);
-        this.minted[mintedKey] = { ...nft, owner: to, value };
-        console.log(JSON.stringify(this.minted[mintedKey]));
+        const toNFTKey = this.key1155(tokenAddress, tokenId, to);
+        let toNFT = await this.repo.findByIDWithOwner(tokenAddress, tokenId, to);
+        if (toNFT) {
+          if (toNFTKey in this.updated) {
+            toNFT = this.updated[toNFTKey];
+          }
+          toNFT.value += value;
+          this.updated[toNFTKey] = toNFT;
+        } else {
+          console.log(`MINTED ${key} in transfer1155 with key in updated`);
+          this.minted[toNFTKey] = { ...nft, owner: to, value };
+        }
         nft.value -= value;
       }
       return;
     }
 
-    const nft = await this.repo.findByIDWithOwner(tokenAddress, tokenId, from);
-    if (nft) {
-      if (nft.type !== 'ERC1155') {
-        console.log(`[SKIP] transfer 1155 with non-1155 token ${key}`);
-        return;
-      }
-      if (nft.value < value) {
-        throw new NotEnoughBalance(`${key} in db, expected:${value}, actual:${nft.value}`);
-      } else if (nft.value === value) {
-        nft.owner = to;
-        this.updated[key] = nft;
-      } else {
-        const mintedKey = this.key1155(tokenAddress, tokenId, to);
-        console.log(`MINTED ${key} in transfer1155`);
-        this.minted[mintedKey] = { ...nft.toJSON(), owner: to, value };
-        console.log(JSON.stringify(this.minted[mintedKey]));
-        nft.value -= value;
-        this.updated[key] = nft;
-      }
+    // if token exists in dirty cache
+    let fromNFT: NFT & Document<any, any, any>;
+    if (key in this.updated) {
+      fromNFT = this.updated[key];
+    } else {
+      fromNFT = await this.repo.findByIDWithOwner(tokenAddress, tokenId, from);
+    }
+
+    if (!fromNFT) {
+      console.log(`[SKIP] ERC1155 token ${key} not exist`);
       return;
+    }
+
+    if (fromNFT.type !== 'ERC1155') {
+      console.log(`[SKIP] transfer 1155 with non-1155 token ${key}`);
+      return;
+    }
+
+    if (fromNFT.value < value) {
+      throw new NotEnoughBalance(`${key}, expected:${value}, actual:${fromNFT.value}`);
+    } else if (fromNFT.value === value) {
+      fromNFT.owner = to;
+      this.updated[key] = fromNFT;
+    } else {
+      const toNFTKey = this.key1155(tokenAddress, tokenId, to);
+      let toNFT = await this.repo.findByIDWithOwner(tokenAddress, tokenId, to);
+      if (toNFT) {
+        if (toNFTKey in this.updated) {
+          toNFT = this.updated[toNFTKey];
+        }
+        toNFT.value += value;
+        this.updated[toNFTKey] = toNFT;
+      } else {
+        console.log(`MINTED ${key} in transfer1155 with key in updated`);
+        this.minted[toNFTKey] = { ...fromNFT.toJSON(), owner: to, value };
+      }
+
+      fromNFT.value -= value;
+      this.updated[key] = fromNFT;
     }
   }
 
