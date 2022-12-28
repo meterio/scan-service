@@ -272,6 +272,9 @@ export class ScriptEngineCMD extends TxBlockReviewer {
           this.log.info(`handle staking candidate or candidateUpdate`);
           const pk = body.candidatePubKey.toString();
           const items = pk.split(':::');
+          if (items.length !== 2) {
+            continue;
+          }
           const ecdsaPK = items[0];
           const blsPK = items[1];
           const address = body.candidateAddr.toLowerCase();
