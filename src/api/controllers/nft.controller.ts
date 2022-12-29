@@ -162,12 +162,20 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
     delete token[0]._id;
     delete contract.code;
     delete contract._id;
-    return res.json({
+    let totalValue = 0;
+    token.map((t) => {
+      totalValue += t.value;
+    });
+    let result = {
       name: contract.name,
       symbol: contract.symbol,
       master: contract.master,
       ...token[0].toJSON(),
-    });
+      value: totalValue,
+      ownerCount: token.length,
+      ownedBy: token.map((t) => ({ owner: t.owner, value: t.value })),
+    };
+    return res.json(result);
   };
 
   private getNFTCollectionsInRange = async (req: Request, res: Response) => {
