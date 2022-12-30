@@ -86,15 +86,15 @@ export class NFTCMD extends CMD {
         const endBlock = await this.blockRepo.findByNumber(endNum);
 
         this.log.info(
-          { best: bestNum, head: headNum, mode: fastforward ? 'fast-forward' : 'normal' },
-          `start import NFTs from number ${headNum} to ${endNum}`
+          { best: bestNum, mode: fastforward ? 'fast-forward' : 'normal' },
+          `start import NFTs from number ${headNum + 1} to ${endNum}`
         );
         // begin import round from headNum+1 to tgtNum
 
-        await this.scanEIP173InRange(this.network, headNum, endNum);
-        await this.scanERC721InRange(this.network, headNum, endNum);
-        await this.scanERC1155SinglesInRange(this.network, headNum, endNum);
-        await this.scanERC1155BatchsInRange(this.network, headNum, endNum);
+        await this.scanEIP173InRange(this.network, headNum + 1, endNum);
+        await this.scanERC721InRange(this.network, headNum + 1, endNum);
+        await this.scanERC1155SinglesInRange(this.network, headNum + 1, endNum);
+        await this.scanERC1155BatchsInRange(this.network, headNum + 1, endNum);
 
         await this.nftCache.saveToDB();
         await this.updateHead(endBlock.number, endBlock.hash);
