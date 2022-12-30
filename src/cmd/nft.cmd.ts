@@ -337,8 +337,12 @@ export class NFTCMD extends CMD {
 
       const contract = await this.contractRepo.findByAddress(contractAddress);
       if (contract && (!contract.owner || contract.owner === previousOwner)) {
+        console.log(contract);
         this.log.info(`Transfer ownership of contract ${contractAddress} from ${previousOwner} to ${newOwner}`);
         contract.owner = newOwner;
+        if (!contract.tokensCount) {
+          contract.tokensCount = new BigNumber(0);
+        }
         await contract.save();
       }
     }
