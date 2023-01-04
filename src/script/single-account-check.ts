@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 require('../utils/validateEnv');
 import { BigNumber } from 'bignumber.js';
-import { Network } from '../const';
+import { Network, WMTRDeposit, WMTRWithdrawal } from '../const';
 import { disconnectDB } from '../utils/db';
 import { BoundEvent, GetNetworkConfig, UnboundEvent } from '../const';
 import { Net, Pos, fromWei } from '../utils';
 import { Balance } from './types/balance';
+import { ERC20 } from '@meterio/devkit';
 
 const network = Network.MainNet;
 const posConfig = GetNetworkConfig(network);
@@ -13,6 +14,7 @@ const net = new Net(posConfig.posUrl);
 const pos = new Pos(network);
 const MTRGSysContratAddr = '0x228ebBeE999c6a7ad74A6130E81b12f9Fe237Ba3'.toLowerCase();
 const MTRSysContratAddr = '0x687A6294D0D6d63e751A059bf1ca68E4AE7B13E2'.toLowerCase();
+const WMTRAddr = '0x160361ce13ec33c993b5cca8f62b6864943eb083'.toLowerCase();
 const args = process.argv.slice(2);
 const receipts = {};
 
@@ -150,16 +152,16 @@ const processAccount = async () => {
   const evtRes = await net.http<any>('POST', 'logs/event', {
     body: {
       criteriaSet: [
-        {
-          topic0: '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', // erc20 transfer out
-          topic1: acctAddressBytes32,
-        },
-        {
-          topic0: '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', // erc20 transfer in
-          topic2: acctAddressBytes32,
-        },
-        { topic0: '0xcd509811b292f7fa41cc2c45a621fcd510e31a4dd5b0bb6b8b1ee3622a59e67d', topic2: acctAddressBytes32 }, // bound
-        { topic0: '0x745b53e5ab1a6d7d25f17a8ed30cbd14d6706acb1b397c7766de275d7c9ba232', topic2: acctAddressBytes32 }, // unbound
+        // erc20 transfer out
+        { topic0: ERC20.Transfer.signature, topic1: acctAddressBytes32 },
+        // erc20 transfer in
+        { topic0: ERC20.Transfer.signature, topic2: acctAddressBytes32 },
+        // bound
+        { topic0: BoundEvent.signature, topic2: acctAddressBytes32 },
+        // unbound
+        { topic0: UnboundEvent.signature, topic2: acctAddressBytes32 },
+        // { topic0: WMTRDeposit.signature, topic1: acctAddressBytes32 },
+        // { topic0: WMTRWithdrawal.signature, topic1: acctAddressBytes32 },
       ],
       range: {
         unit: 'block',
@@ -187,12 +189,17 @@ const processAccount = async () => {
       receipts[txID] = receipt;
     }
     if ('topics' in o) {
-      if (o.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
+      if (
+        o.topics[0] ===
+        ERC20.Transfer.signature /*'0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'*/
+      ) {
         d = await handleEvent(o, receipt);
         if (!d) {
           continue;
         }
-      } else if (o.topics[0] === '0xcd509811b292f7fa41cc2c45a621fcd510e31a4dd5b0bb6b8b1ee3622a59e67d') {
+      } else if (
+        o.topics[0] === BoundEvent.signature /*'0xcd509811b292f7fa41cc2c45a621fcd510e31a4dd5b0bb6b8b1ee3622a59e67d'*/
+      ) {
         // handle bound
         const decoded = BoundEvent.decode(o.data, o.topics);
         console.log('Bound ', new BigNumber(decoded.amount).toFixed(), 'token:', decoded.token);
@@ -202,7 +209,9 @@ const processAccount = async () => {
           balance.boundMTR(decoded.amount);
         }
         continue;
-      } else if (o.topics[0] === '0x745b53e5ab1a6d7d25f17a8ed30cbd14d6706acb1b397c7766de275d7c9ba232') {
+      } else if (
+        o.topics[0] === UnboundEvent.signature /*'0x745b53e5ab1a6d7d25f17a8ed30cbd14d6706acb1b397c7766de275d7c9ba232'*/
+      ) {
         // handle unbound
         const decoded = UnboundEvent.decode(o.data, o.topics);
         console.log('Unbound ', new BigNumber(decoded.amount).toFixed(), 'token:', decoded.token);
@@ -211,6 +220,16 @@ const processAccount = async () => {
         } else {
           balance.unboundMTR(decoded.amount);
         }
+        continue;
+      } else if (o.topics[0] === WMTRDeposit.signature) {
+        const decoded = WMTRDeposit.decode(o.data, o.topics);
+        balance.minusMTR(decoded.amount);
+        console.log(`Deposit`, fromWei(decoded.amount), 'token: MTR');
+        continue;
+      } else if (o.topics[0] === WMTRWithdrawal.signature) {
+        const decoded = WMTRWithdrawal.decode(o.data, o.topics);
+        balance.plusMTR(decoded.amount);
+        console.log(`Withdraw`, fromWei(decoded.amount), 'token: MTR');
         continue;
       }
     } else {
@@ -224,12 +243,12 @@ const processAccount = async () => {
       } ${d.isSend ? d.recipient : d.sender}`
     );
     console.log(receipt.meta.txID);
-    if (d.paid.isGreaterThan(0)) {
-      console.log(`Fee: ${fromWei(d.paid)} MTR`);
-    }
     balance.plusMTR(d.mtrDelta);
     balance.plusMTRG(d.mtrgDelta);
-    balance.minusMTR(d.paid);
+    if (d.paid.isGreaterThan(0) && d.sender.toLowerCase() === receipt.gasPayer.toLowerCase()) {
+      console.log(`Fee: ${fromWei(d.paid)} MTR`);
+      balance.minusMTR(d.paid);
+    }
     console.log(`Balance after ${balance.String()}`);
     if (d.isSysContract) {
       d.isSend ? scSend++ : scRecv++;

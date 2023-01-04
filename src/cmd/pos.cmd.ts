@@ -1256,7 +1256,8 @@ export class PosCMD extends CMD {
     await this.updateMovements(tx, blockConcise);
 
     // update accounts with WMTR wrap
-    await this.updateWMTR(tx, blockConcise);
+    // skip WMTR handling because this duplicates with native transfer
+    // await this.updateWMTR(tx, blockConcise);
 
     await this.updateLogs(tx, blockConcise);
 
