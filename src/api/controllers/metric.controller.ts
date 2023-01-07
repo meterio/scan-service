@@ -61,7 +61,7 @@ class MetricController extends BaseController {
     const totalStaked = map[MetricName.MTRG_STAKED];
     const totalStakedLocked = map[MetricName.MTRG_STAKED_LOCKED];
 
-    const nonZeroCount = await this.accountRepo.countNonZero();
+    const count = await this.accountRepo.count();
     return {
       pos: {
         best: Number(map[MetricName.POS_BEST]),
@@ -71,7 +71,7 @@ class MetricController extends BaseController {
         avgBlockTime: avgBlockTime,
         txsCount,
         inflation: '5%',
-        addressCount: nonZeroCount,
+        addressCount: count,
       },
       staking: {
         buckets: Number(map[MetricName.BUCKET_COUNT]),
