@@ -62,6 +62,7 @@ class TxController extends BaseController {
       txs: Object.values(digestMap)
         .map((tx) => ({
           ...tx,
+          method: methodMap[tx.method]
         }))
         .sort((a, b) => (a.block.number > b.block.number ? -1 : 1)),
     });
