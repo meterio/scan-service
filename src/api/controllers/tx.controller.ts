@@ -57,12 +57,23 @@ class TxController extends BaseController {
     const methods = await this.abiFragmentRepo.findAllFunctions();
     let methodMap = {};
     methods.forEach((m) => (methodMap[m.signature] = m.name));
+
+    const addresses = []
+    for (const tx of Object.values(digestMap)) {
+      addresses.push(tx.from, tx.to)
+    }
+
+    const contracts = await this.contractRepo.findByAddressList(addresses);
+    const existAddrs = contracts.map(c => c.address);
+    
     return res.json({
       totalRows: paginate.count,
       txs: Object.values(digestMap)
         .map((tx) => ({
           ...tx,
-          method: methodMap[tx.method] || tx.method
+          method: methodMap[tx.method] || tx.method,
+          fromIsContract: existAddrs.includes(tx.from),
+          toIsContract: existAddrs.includes(tx.to)
         }))
         .sort((a, b) => (a.block.number > b.block.number ? -1 : 1)),
     });

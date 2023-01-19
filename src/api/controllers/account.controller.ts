@@ -194,6 +194,15 @@ class AccountController extends BaseController {
     if (!paginate.result) {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
+
+    const addresses = []
+    for (const tx of paginate.result) {
+      addresses.push(tx.from, tx.to)
+    }
+
+    const contracts = await this.contractRepo.findByAddressList(addresses);
+    const existAddrs = contracts.map(c => c.address);
+
     const methods = await this.abiFragmentRepo.findAllFunctions();
     let methodMap = {};
     methods.forEach((m) => {
@@ -201,7 +210,12 @@ class AccountController extends BaseController {
     });
     return res.json({
       totalRows: paginate.count,
-      txs: paginate.result.map((tx) => tx.toJSON()).map((tx) => ({ ...tx, method: methodMap[tx.method] || tx.method })),
+      txs: paginate.result.map((tx) => tx.toJSON()).map((tx) => ({ 
+        ...tx,
+        method: methodMap[tx.method] || tx.method,
+        fromIsContract: existAddrs.includes(tx.from),
+        toIsContract: existAddrs.includes(tx.to)
+      })),
     });
   };
 
@@ -397,10 +411,23 @@ class AccountController extends BaseController {
 
     if (contract) {
       const paginate = await this.movementRepo.paginateByTokenAddress(address, page, limit);
+
+      const addresses = []
+      for (const tx of paginate.result) {
+        addresses.push(tx.from, tx.to)
+      }
+
+      const contracts = await this.contractRepo.findByAddressList(addresses);
+      const existAddrs = contracts.map(c => c.address);
+      
       return res.json({
         totalRows: paginate.count,
         contract: contract.toJSON(),
-        transfers: paginate.result.map((t) => t.toJSON()),
+        transfers: paginate.result.map((t) => ({
+          ...t.toJSON(),
+          fromIsContract: existAddrs.includes(t.from),
+          toIsContract: existAddrs.includes(t.to)
+        })),
       });
     }
     return res.json({
@@ -428,6 +455,14 @@ class AccountController extends BaseController {
       feeMap[tx.hash] = tx.paid.toFixed(0);
     });
 
+    const addresses = []
+    for (const tx of paginate.result) {
+      addresses.push(tx.from, tx.to)
+    }
+
+    const contracts = await this.contractRepo.findByAddressList(addresses);
+    const existAddrs = contracts.map(c => c.address);
+
     return res.json({
       totalRows: paginate.count,
       txs: paginate.result.map((m) => {
@@ -439,6 +474,8 @@ class AccountController extends BaseController {
         m.contractType = m.contract.type;
         m.fee = feeMap[m.txHash];
         delete m.contract;
+        m.fromIsContract = existAddrs.includes(m.from);
+        m.toIsContract = existAddrs.includes(m.to);
         return m;
       }),
     });
@@ -605,11 +642,24 @@ class AccountController extends BaseController {
       methodMap[m.signature] = m.name;
     });
 
+    const addresses = []
+    for (const tx of paginate.result) {
+      addresses.push(tx.from, tx.to)
+    }
+
+    const contracts = await this.contractRepo.findByAddressList(addresses);
+    const existAddrs = contracts.map(c => c.address);
+
     return res.json({
       totalRows: paginate.count,
       rows: paginate.result.map((r) => {
         const method = methodMap[r.signature];
-        return { ...r.toJSON(), method: method || r.signature || '' };
+        return { 
+          ...r.toJSON(),
+          method: method || r.signature || '',
+          fromIsContract: existAddrs.includes(r.from),
+          toIsContract: existAddrs.includes(r.to)
+        };
       }),
     });
   };
