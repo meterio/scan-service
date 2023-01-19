@@ -14,6 +14,10 @@ export default class ContractRepo {
     return this.model.find();
   }
 
+  public async count() {
+    return this.model.estimatedDocumentCount();
+  }
+
   public async findByType(type: ContractType) {
     return this.model.find({ type });
   }

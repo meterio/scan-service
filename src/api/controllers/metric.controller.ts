@@ -1,5 +1,14 @@
 import { BigNumber } from 'bignumber.js';
-import { AccountRepo, BlockRepo, HeadRepo, MetricRepo, MovementRepo, TxRepo, ValidatorRepo } from '../../repo';
+import {
+  AccountRepo,
+  BlockRepo,
+  ContractRepo,
+  HeadRepo,
+  MetricRepo,
+  MovementRepo,
+  TxRepo,
+  ValidatorRepo,
+} from '../../repo';
 import { Validator } from '../../model';
 import axios from 'axios';
 import { Request, Response, Router } from 'express';
@@ -20,6 +29,7 @@ class MetricController extends BaseController {
   private movementRepo = new MovementRepo();
   private accountRepo = new AccountRepo();
   private validatorRepo = new ValidatorRepo();
+  private contractRepo = new ContractRepo();
 
   constructor(network: Network, standby: boolean) {
     super(network, standby);
@@ -61,7 +71,8 @@ class MetricController extends BaseController {
     const totalStaked = map[MetricName.MTRG_STAKED];
     const totalStakedLocked = map[MetricName.MTRG_STAKED_LOCKED];
 
-    const count = await this.accountRepo.count();
+    const accountCount = await this.accountRepo.count();
+    const contractCount = await this.contractRepo.count();
     return {
       pos: {
         best: Number(map[MetricName.POS_BEST]),
@@ -71,7 +82,7 @@ class MetricController extends BaseController {
         avgBlockTime: avgBlockTime,
         txsCount,
         inflation: '5%',
-        addressCount: count,
+        addressCount: accountCount + contractCount,
       },
       staking: {
         buckets: Number(map[MetricName.BUCKET_COUNT]),
