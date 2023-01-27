@@ -685,6 +685,16 @@ export class MetricCMD extends CMD {
           contractFiles.map((c) => ({ name: c.name, path: c.path }))
         );
         await this.contractFileRepo.bulkUpsert(...contractFiles);
+        if (!c.tokensCount) {
+          c.tokensCount = new BigNumber(0);
+        }
+        if (!c.transfersCount) {
+          c.transfersCount = new BigNumber(0);
+        }
+        if (!c.holdersCount) {
+          c.holdersCount = new BigNumber(0);
+        }
+
         await c.save();
         const relateds = await this.contractRepo.findUnverifiedContractsWithCreationInputHash(c.creationInputHash);
         for (const rc of relateds) {
