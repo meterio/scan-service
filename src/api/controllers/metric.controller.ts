@@ -59,7 +59,7 @@ class MetricController extends BaseController {
 
   private getPosData = async () => {
     let map = await this.getMetricMap();
-    const paginate = await this.blockRepo.paginateAll(1, 20);
+    const paginate = await this.blockRepo.paginateAll(1, 1000);
     let avgBlockTime = 2;
     if (paginate && paginate.count > 2) {
       const last = paginate.result[0];

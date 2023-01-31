@@ -256,6 +256,12 @@ class ValidatorController extends BaseController {
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const paginate = await this.validatorRepo.paginateJailedByFilter(filter, page, limit, sort);
+    for (const j of paginate.result) {
+      if (('' + j.jailedTime).length < 10) {
+        const blk = await this.blockRepo.findByNumber(j.jailedTime);
+        j.jailedTime = blk.timestamp;
+      }
+    }
     return res.json({
       totalRows: paginate.count,
       jailed: paginate.result.map(this.convertJailed),
