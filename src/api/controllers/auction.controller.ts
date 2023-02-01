@@ -33,8 +33,8 @@ class AuctionController extends BaseController {
     if (!present) {
       return res.json({ present: {} });
     }
-    const bids = await this.bidRepo.findByAuctionID(present.id);
-    res.json({ present: present.toSummary(), bids });
+    // const bids = await this.bidRepo.findByAuctionID(present.id);
+    res.json({ present: present.toSummary() });
   };
 
   private getPastAuctions = async (req: Request, res: Response) => {
