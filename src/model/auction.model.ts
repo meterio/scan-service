@@ -59,7 +59,7 @@ const auctionSchema = new mongoose.Schema<Auction>({
     required: true,
   },
 
-  pending: { type: Boolean, required: true, default: false },
+  pending: { type: Boolean, required: true, default: false, index: true },
   bidCount: { type: Number, required: true },
   autobidTotal: {
     type: String,

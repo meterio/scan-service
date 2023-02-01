@@ -17,8 +17,8 @@ const runAsync = async (options) => {
   await checkNetworkWithDB(network);
   const pos = new Pos(network);
 
-  const from = 33066091;
-  const to = 33048389;
+  const from = 33066877;
+  const to = 33011082;
 
   let cur = from;
   for (; cur > to; ) {
@@ -34,6 +34,9 @@ const runAsync = async (options) => {
     }
 
     for (const tx of present.auctionTxs) {
+      if (tx.txid in visited) {
+        continue;
+      }
       const savedBid = await bidRepo.findById(tx.txid);
       if (!savedBid) {
         let bid: Bid = {
