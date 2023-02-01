@@ -63,7 +63,7 @@ const runAsync = async (options) => {
     }
 
     const auction = await auctionRepo.findByID(present.auctionID);
-    if (auction) {
+    if (auction && present.auctionTxs.length > auction.bidCount) {
       auction.bidCount = present.auctionTxs.length;
       auction.receivedMTR = new BigNumber(present.receivedMTR);
       auction.actualPrice = auction.receivedMTR.times(1e18).dividedBy(auction.releasedMTRG).dividedBy(1e18);
