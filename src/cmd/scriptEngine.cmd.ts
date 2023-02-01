@@ -350,7 +350,27 @@ export class ScriptEngineCMD extends TxBlockReviewer {
               if (atx.txid in visited) {
                 continue;
               }
-              const savedBid = await this.bidRepo.findById(atx.txid);
+              let savedBid = await this.bidRepo.findById(atx.txid);
+
+              if (!savedBid) {
+                let bid: Bid = {
+                  id: atx.txid,
+                  address: atx.address,
+                  amount: atx.amount,
+                  type: atx.type,
+                  timestamp: atx.timestamp,
+                  nonce: new BigNumber(atx.nonce),
+
+                  auctionID: present.auctionID,
+                  epoch,
+                  blockNum,
+                  txHash: tx.hash,
+                  clauseIndex,
+
+                  pending: true,
+                };
+                savedBid = await this.bidRepo.create(bid);
+              }
               let reward: EpochReward = {
                 epoch,
                 blockNum,
