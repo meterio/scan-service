@@ -360,6 +360,16 @@ export class ScriptEngineCMD extends TxBlockReviewer {
             for (const atx of prePresent.auctionTxs) {
               visited[atx.txid] = true;
             }
+            const auction = await this.auctionRepo.findByID(present.auctionID);
+            if (auction) {
+              auction.bidCount = present.auctionTxs.length;
+              auction.receivedMTR = new BigNumber(present.receivedMTR);
+              auction.actualPrice = auction.receivedMTR.times(1e18).dividedBy(auction.releasedMTRG).dividedBy(1e18);
+              if (auction.actualPrice.isLessThan(present.reservedPrice)) {
+                auction.actualPrice = new BigNumber(present.reservedPrice);
+              }
+              await auction.save();
+            }
             for (const atx of present.auctionTxs) {
               if (atx.type != 'autobid') {
                 continue;
@@ -370,7 +380,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
               let savedBid = await this.bidRepo.findById(atx.txid);
 
               if (!savedBid) {
-                this.log.info('saved new bid', atx.txid);
+                this.log.info({ txid: atx.txid }, 'saved new bid');
                 let bid: Bid = {
                   id: atx.txid,
                   address: atx.address,
