@@ -27,6 +27,7 @@ import {
 import { GetNetworkConfig, Token } from '../const';
 
 import { TxBlockReviewer } from './blockReviewer';
+import { PassThrough } from 'stream';
 
 const NORMAL_INTERVAL = 10000;
 export class ScriptEngineCMD extends TxBlockReviewer {
@@ -369,6 +370,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
               let savedBid = await this.bidRepo.findById(atx.txid);
 
               if (!savedBid) {
+                this.log.info('saved new bid', atx.txid);
                 let bid: Bid = {
                   id: atx.txid,
                   address: atx.address,
