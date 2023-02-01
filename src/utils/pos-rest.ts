@@ -433,9 +433,13 @@ export class Pos {
   public async getLastAuctionSummary(revision: number | string) {
     return this.httpGet<Pos.AuctionSummary>(`auction/last/summary?revision=${revision}`);
   }
-  public async getPresentAuction() {
+  public async getPresentAuction(revision?: number) {
+    if (revision) {
+      return this.httpGet<Pos.Auction>(`auction/present?revision=${revision}`);
+    }
     return this.httpGet<Pos.Auction>(`auction/present`);
   }
+
   public async getPresentAuctionByRevision(revision: number) {
     return this.httpGet<Pos.Auction>(`auction/present?revision=${revision}`);
   }
