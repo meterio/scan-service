@@ -129,7 +129,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
                 endHeight: endedAuction.endHeight,
                 endEpoch: endedAuction.endEpoch,
                 sequence: endedAuction.sequence,
-                createTime: endedAuction.createTime,
+                createTime: blk.timestamp,
                 releasedMTRG: new BigNumber(endedAuction.releasedMTRG),
                 reservedMTRG: new BigNumber(endedAuction.reservedMTRG),
                 reservedPrice: new BigNumber(endedAuction.reservedPrice),
@@ -147,10 +147,26 @@ export class ScriptEngineCMD extends TxBlockReviewer {
             let userbidTotal = new BigNumber(0);
             for (const [i, t] of txs.entries()) {
               // const d = dists[i];
-              const bid = await this.bidRepo.findById(t.txid);
+              let bid = await this.bidRepo.findById(t.txid);
               if (!bid) {
                 this.log.info('Bid not found! probably missed one bid');
-                continue;
+                const newBid: Bid = {
+                  id: t.txid,
+                  address: t.address,
+                  amount: t.amount,
+                  type: t.type,
+                  timestamp: t.timestamp,
+                  nonce: new BigNumber(t.nonce),
+
+                  auctionID: tgtAuction.id,
+                  epoch,
+                  blockNum,
+                  txHash: tx.hash,
+                  clauseIndex,
+
+                  pending: true,
+                };
+                bid = await this.bidRepo.create(newBid);
               }
               // if (bid.address.toLowerCase() !== d.address.toLowerCase()) {
               //   this.log.info('Address mismatch! probably the order is different');
