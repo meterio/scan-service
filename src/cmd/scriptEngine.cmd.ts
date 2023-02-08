@@ -217,7 +217,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
               auctionStartClauseIndex: clauseIndex,
 
               sequence: curAuction.sequence,
-              createTime: curAuction.createTime,
+              createTime: blk.timestamp,
               releasedMTRG: new BigNumber(curAuction.releasedMTRG),
               reservedMTRG: new BigNumber(curAuction.reservedMTRG),
               reservedPrice: new BigNumber(curAuction.reservedPrice),
