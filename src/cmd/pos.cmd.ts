@@ -1313,7 +1313,10 @@ export class PosCMD extends CMD {
           const node = item[0];
           const suffix = item[1];
           const name = node.type.toLowerCase() + '_' + suffix;
-          const signature = node.input.substring(0, 10);
+          let signature = '';
+          if (node.input) {
+            signature = node.input.substring(0, 10);
+          }
           if (['CALL', 'CREATE', 'CREATE2'].includes(node.type)) {
             this.internalTxCache.push({
               txHash: tx.id,
