@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 
 import { abi, cry, ERC20, ERC1155, ERC721 } from '@meterio/devkit';
 import { ScriptEngine } from '@meterio/devkit';
-import { EmptyBytes32, Network } from '../const';
+import { AdminChangedEvent, BeaconUpgradedEvent, EmptyBytes32, Network, UpgradedEvent } from '../const';
 import {
   BlockRepo,
   BoundRepo,
@@ -634,6 +634,80 @@ export class PosCMD extends CMD {
     }
     this.log.info(c, 'found contract: ');
     this.contractsCache.push(c);
+  }
+
+  async handleERC1967Events(evt: Flex.Meter.Event) {
+    if (evt.topics && evt.topics[0] && evt.topics[0] == UpgradedEvent.signature) {
+      const decoded = UpgradedEvent.decode(evt.data, evt.topics);
+      let inCache = false;
+      for (const c of this.contractsCache) {
+        if (c.address.toLowerCase() === evt.address.toLowerCase()) {
+          if (c.implAddr !== decoded.implementation) {
+            c.prevImplAddr = c.implAddr;
+            c.implAddr = decoded.implementation;
+            this.log.info(
+              { prevImplAddr: c.prevImplAddr, implAddr: c.implAddr },
+              `update impl for proxy ${evt.address} in cache`
+            );
+            inCache = true;
+            break;
+          }
+        }
+      }
+      if (!inCache) {
+        let c = await this.contractRepo.findByAddress(evt.address);
+        if (c && c.implAddr !== decoded.implementation) {
+          c.prevImplAddr = c.implAddr;
+          c.implAddr = decoded.implementation;
+          this.log.info(
+            { prevImplAddr: c.prevImplAddr, implAddr: c.implAddr },
+            `update impl for proxy ${evt.address} in db`
+          );
+          await c.save();
+        }
+      }
+    }
+    if (evt.topics && evt.topics[0] && evt.topics[0] == BeaconUpgradedEvent.signature) {
+      const decoded = BeaconUpgradedEvent.decode(evt.data, evt.topics);
+      let inCache = false;
+      for (const c of this.contractsCache) {
+        if (c.address.toLowerCase() === evt.address.toLowerCase()) {
+          c.beaconAddr = decoded.beacon;
+          this.log.info({ beaconAddr: c.beaconAddr }, `update beacon for proxy ${evt.address} in cache`);
+
+          inCache = true;
+          break;
+        }
+      }
+      if (!inCache) {
+        let c = await this.contractRepo.findByAddress(evt.address);
+        if (c && c.beaconAddr !== decoded.beacon) {
+          c.beaconAddr = decoded.beacon;
+          this.log.info({ beaconAddr: c.beaconAddr }, `update beacon for proxy ${evt.address} in db`);
+          await c.save();
+        }
+      }
+    }
+    if (evt.topics && evt.topics[0] && evt.topics[0] == AdminChangedEvent.signature) {
+      const decoded = AdminChangedEvent.decode(evt.data, evt.topics);
+      let inCache = false;
+      for (const c of this.contractsCache) {
+        if (c.address.toLowerCase() === evt.address.toLowerCase()) {
+          c.adminAddr = decoded.newAdmin;
+          this.log.info({ adminAddr: c.adminAddr }, `update admin for proxy ${evt.address} in cache`);
+          inCache = true;
+          break;
+        }
+      }
+      if (!inCache) {
+        let c = await this.contractRepo.findByAddress(evt.address);
+        if (c && c.adminAddr !== decoded.newAdmin) {
+          c.adminAddr = decoded.newAdmin;
+          this.log.info({ adminAddr: c.adminAddr }, `update admin for proxy ${evt.address} in db`);
+          await c.save();
+        }
+      }
+    }
   }
 
   async handleBound(
@@ -1333,6 +1407,9 @@ export class PosCMD extends CMD {
         }
 
         await this.handleContractCreation(evt, tx.id, blockConcise, clauseTrace);
+
+        // ### Handle proxy events for ERC-1967
+        await this.handleERC1967Events(evt);
 
         // ### Handle staking bound event
         await this.handleBound(evt, tx.id, clauseIndex, logIndex, blockConcise);

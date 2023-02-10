@@ -142,6 +142,35 @@ export const WMTRWithdrawal = new abi.Event({
 export const BoundEvent = new abi.Event(BoundABI);
 export const UnboundEvent = new abi.Event(UnboundABI);
 
+// ERC 1967 Events
+const UpgradedABI: abi.Event.Definition = {
+  anonymous: false,
+  inputs: [{ indexed: true, name: 'implementation', type: 'address' }],
+  name: 'Upgraded',
+  type: 'event',
+};
+
+const BeaconUpgradedABI: abi.Event.Definition = {
+  anonymous: false,
+  inputs: [{ indexed: true, name: 'beacon', type: 'address' }],
+  name: 'BeaconUpgraded',
+  type: 'event',
+};
+
+const AdminChangedABI: abi.Event.Definition = {
+  anonymous: false,
+  inputs: [
+    { indexed: false, name: 'previousAdmin', type: 'address' },
+    { indexed: false, name: 'newAdmin', type: 'address' },
+  ],
+  name: 'AdminChanged',
+  type: 'event',
+};
+
+export const UpgradedEvent = new abi.Event(UpgradedABI);
+export const BeaconUpgradedEvent = new abi.Event(BeaconUpgradedABI);
+export const AdminChangedEvent = new abi.Event(AdminChangedABI);
+
 export const authority = {
   first: new abi.Function(firstABI),
   get: new abi.Function(getABI),
