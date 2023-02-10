@@ -637,76 +637,81 @@ export class PosCMD extends CMD {
   }
 
   async handleERC1967Events(evt: Flex.Meter.Event) {
-    if (evt.topics && evt.topics[0] && evt.topics[0] == UpgradedEvent.signature) {
-      const decoded = UpgradedEvent.decode(evt.data, evt.topics);
-      let inCache = false;
-      for (const c of this.contractsCache) {
-        if (c.address.toLowerCase() === evt.address.toLowerCase()) {
-          if (c.implAddr !== decoded.implementation) {
+    try {
+      if (evt.topics && evt.topics[0] && evt.topics[0] == UpgradedEvent.signature) {
+        const decoded = UpgradedEvent.decode(evt.data, evt.topics);
+        let inCache = false;
+        for (const c of this.contractsCache) {
+          if (c.address.toLowerCase() === evt.address.toLowerCase()) {
+            if (c.implAddr !== decoded.implementation) {
+              c.prevImplAddr = c.implAddr;
+              c.implAddr = decoded.implementation;
+              this.log.info(
+                { prevImplAddr: c.prevImplAddr, implAddr: c.implAddr },
+                `update impl for proxy ${evt.address} in cache`
+              );
+              inCache = true;
+              break;
+            }
+          }
+        }
+        if (!inCache) {
+          let c = await this.contractRepo.findByAddress(evt.address);
+          if (c && c.implAddr !== decoded.implementation) {
             c.prevImplAddr = c.implAddr;
             c.implAddr = decoded.implementation;
             this.log.info(
               { prevImplAddr: c.prevImplAddr, implAddr: c.implAddr },
-              `update impl for proxy ${evt.address} in cache`
+              `update impl for proxy ${evt.address} in db`
             );
+            await c.save();
+          }
+        }
+      }
+      if (evt.topics && evt.topics[0] && evt.topics[0] == BeaconUpgradedEvent.signature) {
+        const decoded = BeaconUpgradedEvent.decode(evt.data, evt.topics);
+        let inCache = false;
+        for (const c of this.contractsCache) {
+          if (c.address.toLowerCase() === evt.address.toLowerCase()) {
+            c.beaconAddr = decoded.beacon;
+            this.log.info({ beaconAddr: c.beaconAddr }, `update beacon for proxy ${evt.address} in cache`);
+
             inCache = true;
             break;
           }
         }
-      }
-      if (!inCache) {
-        let c = await this.contractRepo.findByAddress(evt.address);
-        if (c && c.implAddr !== decoded.implementation) {
-          c.prevImplAddr = c.implAddr;
-          c.implAddr = decoded.implementation;
-          this.log.info(
-            { prevImplAddr: c.prevImplAddr, implAddr: c.implAddr },
-            `update impl for proxy ${evt.address} in db`
-          );
-          await c.save();
+        if (!inCache) {
+          let c = await this.contractRepo.findByAddress(evt.address);
+          if (c && c.beaconAddr !== decoded.beacon) {
+            c.beaconAddr = decoded.beacon;
+            this.log.info({ beaconAddr: c.beaconAddr }, `update beacon for proxy ${evt.address} in db`);
+            await c.save();
+          }
         }
       }
-    }
-    if (evt.topics && evt.topics[0] && evt.topics[0] == BeaconUpgradedEvent.signature) {
-      const decoded = BeaconUpgradedEvent.decode(evt.data, evt.topics);
-      let inCache = false;
-      for (const c of this.contractsCache) {
-        if (c.address.toLowerCase() === evt.address.toLowerCase()) {
-          c.beaconAddr = decoded.beacon;
-          this.log.info({ beaconAddr: c.beaconAddr }, `update beacon for proxy ${evt.address} in cache`);
-
-          inCache = true;
-          break;
+      if (evt.topics && evt.topics[0] && evt.topics[0] == AdminChangedEvent.signature) {
+        const decoded = AdminChangedEvent.decode(evt.data, evt.topics);
+        let inCache = false;
+        for (const c of this.contractsCache) {
+          if (c.address.toLowerCase() === evt.address.toLowerCase()) {
+            c.adminAddr = decoded.newAdmin;
+            this.log.info({ adminAddr: c.adminAddr }, `update admin for proxy ${evt.address} in cache`);
+            inCache = true;
+            break;
+          }
+        }
+        if (!inCache) {
+          let c = await this.contractRepo.findByAddress(evt.address);
+          if (c && c.adminAddr !== decoded.newAdmin) {
+            c.adminAddr = decoded.newAdmin;
+            this.log.info({ adminAddr: c.adminAddr }, `update admin for proxy ${evt.address} in db`);
+            await c.save();
+          }
         }
       }
-      if (!inCache) {
-        let c = await this.contractRepo.findByAddress(evt.address);
-        if (c && c.beaconAddr !== decoded.beacon) {
-          c.beaconAddr = decoded.beacon;
-          this.log.info({ beaconAddr: c.beaconAddr }, `update beacon for proxy ${evt.address} in db`);
-          await c.save();
-        }
-      }
-    }
-    if (evt.topics && evt.topics[0] && evt.topics[0] == AdminChangedEvent.signature) {
-      const decoded = AdminChangedEvent.decode(evt.data, evt.topics);
-      let inCache = false;
-      for (const c of this.contractsCache) {
-        if (c.address.toLowerCase() === evt.address.toLowerCase()) {
-          c.adminAddr = decoded.newAdmin;
-          this.log.info({ adminAddr: c.adminAddr }, `update admin for proxy ${evt.address} in cache`);
-          inCache = true;
-          break;
-        }
-      }
-      if (!inCache) {
-        let c = await this.contractRepo.findByAddress(evt.address);
-        if (c && c.adminAddr !== decoded.newAdmin) {
-          c.adminAddr = decoded.newAdmin;
-          this.log.info({ adminAddr: c.adminAddr }, `update admin for proxy ${evt.address} in db`);
-          await c.save();
-        }
-      }
+    } catch (e) {
+      this.log.error(e, 'could not handle ERC-1967');
+      return;
     }
   }
 
