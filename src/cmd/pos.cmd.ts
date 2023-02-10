@@ -504,8 +504,7 @@ export class PosCMD extends CMD {
     evt: Flex.Meter.Event,
     txHash: string,
     blockConcise: BlockConcise,
-    clauseIndex: number,
-    clauseData: string
+    tracer: Pos.CallTracerOutput | undefined
   ) {
     if (!evt.topics || evt.topics[0] !== prototype.$Master.signature) {
       return;
@@ -526,10 +525,8 @@ export class PosCMD extends CMD {
     let status = '';
     let creationInputHash = '';
 
-    if (isTraceable(clauseData)) {
+    if (tracer) {
       try {
-        const tracer = await this.pos.traceClause(blockConcise.hash, txHash, clauseIndex);
-
         // find creationInput in tracing
         let q = [tracer];
         while (q.length) {
@@ -557,7 +554,7 @@ export class PosCMD extends CMD {
           verifiedFrom = verifiedContract.address;
         }
       } catch (e) {
-        this.log.error({ err: e }, 'could not get tracing ');
+        this.log.error({ err: e }, 'decode tracing error');
       }
     }
 
@@ -1263,28 +1260,6 @@ export class PosCMD extends CMD {
 
     this.updateTxDigests(tx, blockConcise, txIndex);
 
-    // prepare events and outputs
-    for (const [clauseIndex, o] of tx.outputs.entries()) {
-      // ----------------------------------
-      // Handle events
-      // ----------------------------------
-      for (const [logIndex, evt] of o.events.entries()) {
-        // rebasing events (by AMPL)
-        if (evt.topics[0] === '0x72725a3b1e5bd622d6bcd1339bb31279c351abe8f541ac7fd320f24e1b1641f2') {
-          this.rebasingsCache.push(evt.address);
-        }
-
-        // ### Handle contract creation
-        await this.handleContractCreation(evt, tx.id, blockConcise, clauseIndex, tx.clauses[clauseIndex].data);
-
-        // ### Handle staking bound event
-        await this.handleBound(evt, tx.id, clauseIndex, logIndex, blockConcise);
-
-        // ### Handle staking unbound event
-        await this.handleUnbound(evt, tx.id, clauseIndex, logIndex, blockConcise);
-      } // End of handling events
-    }
-
     let traces: TraceOutput[] = [];
     let outputs: TxOutput[] = [];
     let vmError: VMError | null = null;
@@ -1297,6 +1272,36 @@ export class PosCMD extends CMD {
       const o = await this.getTxOutputs(tx, blockConcise, txIndex);
       outputs = o.outputs;
       traces = o.traces;
+    }
+
+    // prepare events and outputs
+    for (const [clauseIndex, o] of tx.outputs.entries()) {
+      // ----------------------------------
+      // Handle events
+      // ----------------------------------
+      for (const [logIndex, evt] of o.events.entries()) {
+        // rebasing events (by AMPL)
+        if (evt.topics[0] === '0x72725a3b1e5bd622d6bcd1339bb31279c351abe8f541ac7fd320f24e1b1641f2') {
+          this.rebasingsCache.push(evt.address);
+        }
+
+        // ### Handle contract creation
+        let clauseTrace: Pos.CallTracerOutput | undefined = undefined;
+        for (const trace of traces) {
+          if (trace.clauseIndex === clauseIndex) {
+            clauseTrace = JSON.parse(trace.json) as Pos.CallTracerOutput;
+            break;
+          }
+        }
+
+        await this.handleContractCreation(evt, tx.id, blockConcise, clauseTrace);
+
+        // ### Handle staking bound event
+        await this.handleBound(evt, tx.id, clauseIndex, logIndex, blockConcise);
+
+        // ### Handle staking unbound event
+        await this.handleUnbound(evt, tx.id, clauseIndex, logIndex, blockConcise);
+      } // End of handling events
     }
 
     // extract internal txs from traces
