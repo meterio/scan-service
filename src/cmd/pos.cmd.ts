@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 
 import { abi, cry, ERC20, ERC1155, ERC721 } from '@meterio/devkit';
 import { ScriptEngine } from '@meterio/devkit';
-import { Network } from '../const';
+import { EmptyBytes32, Network } from '../const';
 import {
   BlockRepo,
   BoundRepo,
@@ -78,6 +78,17 @@ const NORMAL_INTERVAL = 2000; // 2 seconds gap between each loop
 const PRELOAD_WINDOW = 100;
 const LOOP_WINDOW = 100;
 const RECOVERY_INTERVAL = 5 * 60 * 1000; // 5 min for recovery
+
+// ERC-1967 standard (Proxy Storage Slots)
+// https://eips.ethereum.org/EIPS/eip-1967
+const Logic_StorageSlot = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
+const Beacon_StorageSlot = '0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50';
+const Admin_StorageSlot = '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103';
+
+// ERC-1167 standard (Minimal Proxy Contract)
+// https://eips.ethereum.org/EIPS/eip-1967
+// address embeded at bytes 10 to 29 (inclusive)
+const Minimal_Proxy = '363d3d373d3d3d363d73bebebebebebebebebebebebebebebebebebebebe5af43d82803e903d91602b57fd5bf3';
 
 const revertReasonSelector = '0x' + cry.keccak256('Error(string)').toString('hex').slice(0, 8);
 const panicErrorSelector = '0x' + cry.keccak256('Panic(uint256)').toString('hex').slice(0, 8);
@@ -579,6 +590,33 @@ export class PosCMD extends CMD {
       verifiedFrom,
       firstSeen: blockConcise,
     };
+
+    // proxy detection
+    const implAddr = await this.pos.getStorage(evt.address, Logic_StorageSlot);
+    const adminAddr = await this.pos.getStorage(evt.address, Admin_StorageSlot);
+    const beaconAddr = await this.pos.getStorage(evt.address, Beacon_StorageSlot);
+    if (implAddr.value != EmptyBytes32 || beaconAddr.value != EmptyBytes32) {
+      // is standard proxy
+      c.isProxy = true;
+      c.proxyType = 'ERC-1967';
+      c.implAddr = '0x' + implAddr.value.substring(26);
+      c.adminAddr = '0x' + adminAddr.value.substring(26);
+      c.beaconAddr = '0x' + beaconAddr.value.substring(26);
+      this.log.info(
+        { implAddr: c.implAddr, adminAddr: c.adminAddr, beaconAddr: c.beaconAddr },
+        'Identified as standard proxy'
+      );
+    }
+
+    // mini proxy detection
+    const codeHex = code.replace('0x', '');
+    if (codeHex.startsWith(Minimal_Proxy.substring(0, 20)) && codeHex.endsWith(Minimal_Proxy.substring(60))) {
+      // is minimal proxy
+      c.isProxy = true;
+      c.proxyType = 'ERC-1167';
+      c.implAddr = '0x' + codeHex.substring(20, 60);
+      this.log.info({ implAddr: c.implAddr }, 'Identified as min proxy');
+    }
 
     const e721_1155 = await this.pos.fetchERC721AndERC1155Data(evt.address, blockConcise.hash);
     if (e721_1155 && (e721_1155.supports721 || e721_1155.supports1155)) {

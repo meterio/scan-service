@@ -29,4 +29,12 @@ export interface Contract {
   creationTxHash: string;
   creationInputHash?: string;
   firstSeen: BlockConcise;
+
+  // proxy
+  isProxy?: Boolean;
+  proxyType?: string;
+  implAddr?: string;
+  prevImplAddr?: string;
+  adminAddr?: string;
+  beaconAddr?: string;
 }

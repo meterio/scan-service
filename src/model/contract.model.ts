@@ -54,6 +54,13 @@ const schema = new mongoose.Schema<Contract>({
   creationTxHash: { type: String, required: true },
   creationInputHash: { type: String, required: false }, // record the sha3(input data) during contract creation
   firstSeen: blockConciseSchema,
+
+  isProxy: { type: Boolean, required: false, default: false },
+  proxyType: { type: String, required: false },
+  implAddr: { type: String, required: false, lowercase: true },
+  prevImplAddr: { type: String, required: false, lowercase: true },
+  adminAddr: { type: String, required: false, lowercase: true },
+  beaconAddr: { type: String, required: false, lowercase: true },
 });
 
 schema.index({ 'firstSeen.number': 1 });

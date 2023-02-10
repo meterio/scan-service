@@ -394,6 +394,7 @@ export class Pos {
   public async getCandidates() {
     return this.httpGet<Pos.Candidate[]>(`staking/candidates`);
   }
+
   public async getCandidatesOnRevision(revsion: string | number) {
     return this.httpGet<Pos.Candidate[]>(`staking/candidates?revision=${revsion}`);
   }

@@ -17,6 +17,7 @@ export const AuctionAccountAddress =
 export const AuctionLeftOverAddress = '0xe852f654dfaee0e2b60842657379a56e1cafa292';
 
 export const ZeroAddress = '0x0000000000000000000000000000000000000000';
+export const EmptyBytes32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
 export const KnowExchange = new Map<string, string>();
 export const BridgePoolAddress = '0x5c5713656c6819ebe3921936fd28bed2a387cda5';
 
