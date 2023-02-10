@@ -150,6 +150,12 @@ class AccountController extends BaseController {
       actJson.verified = contract.verified;
       actJson.verifiedFrom = contract.verifiedFrom;
       actJson.status = contract.status;
+      actJson.isProxy = contract.isProxy;
+      actJson.proxyType = contract.proxyType;
+      actJson.implAddr = contract.implAddr;
+      actJson.prevImplAddr = contract.prevImplAddr;
+      actJson.beaconAddr = contract.beaconAddr;
+      actJson.adminAddr = contract.adminAddr;
     }
 
     const txCount = await this.txDigestRepo.countByAddress(address);
@@ -195,13 +201,13 @@ class AccountController extends BaseController {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
 
-    const addresses = []
+    const addresses = [];
     for (const tx of paginate.result) {
-      addresses.push(tx.from, tx.to)
+      addresses.push(tx.from, tx.to);
     }
 
     const contracts = await this.contractRepo.findByAddressList(addresses);
-    const existAddrs = contracts.map(c => c.address);
+    const existAddrs = contracts.map((c) => c.address);
 
     const methods = await this.abiFragmentRepo.findAllFunctions();
     let methodMap = {};
@@ -210,12 +216,14 @@ class AccountController extends BaseController {
     });
     return res.json({
       totalRows: paginate.count,
-      txs: paginate.result.map((tx) => tx.toJSON()).map((tx) => ({ 
-        ...tx,
-        method: methodMap[tx.method] || tx.method,
-        fromIsContract: existAddrs.includes(tx.from),
-        toIsContract: existAddrs.includes(tx.to)
-      })),
+      txs: paginate.result
+        .map((tx) => tx.toJSON())
+        .map((tx) => ({
+          ...tx,
+          method: methodMap[tx.method] || tx.method,
+          fromIsContract: existAddrs.includes(tx.from),
+          toIsContract: existAddrs.includes(tx.to),
+        })),
     });
   };
 
@@ -412,21 +420,21 @@ class AccountController extends BaseController {
     if (contract) {
       const paginate = await this.movementRepo.paginateByTokenAddress(address, page, limit);
 
-      const addresses = []
+      const addresses = [];
       for (const tx of paginate.result) {
-        addresses.push(tx.from, tx.to)
+        addresses.push(tx.from, tx.to);
       }
 
       const contracts = await this.contractRepo.findByAddressList(addresses);
-      const existAddrs = contracts.map(c => c.address);
-      
+      const existAddrs = contracts.map((c) => c.address);
+
       return res.json({
         totalRows: paginate.count,
         contract: contract.toJSON(),
         transfers: paginate.result.map((t) => ({
           ...t.toJSON(),
           fromIsContract: existAddrs.includes(t.from),
-          toIsContract: existAddrs.includes(t.to)
+          toIsContract: existAddrs.includes(t.to),
         })),
       });
     }
@@ -455,13 +463,13 @@ class AccountController extends BaseController {
       feeMap[tx.hash] = tx.paid.toFixed(0);
     });
 
-    const addresses = []
+    const addresses = [];
     for (const tx of paginate.result) {
-      addresses.push(tx.from, tx.to)
+      addresses.push(tx.from, tx.to);
     }
 
     const contracts = await this.contractRepo.findByAddressList(addresses);
-    const existAddrs = contracts.map(c => c.address);
+    const existAddrs = contracts.map((c) => c.address);
 
     return res.json({
       totalRows: paginate.count,
@@ -642,23 +650,23 @@ class AccountController extends BaseController {
       methodMap[m.signature] = m.name;
     });
 
-    const addresses = []
+    const addresses = [];
     for (const tx of paginate.result) {
-      addresses.push(tx.from, tx.to)
+      addresses.push(tx.from, tx.to);
     }
 
     const contracts = await this.contractRepo.findByAddressList(addresses);
-    const existAddrs = contracts.map(c => c.address);
+    const existAddrs = contracts.map((c) => c.address);
 
     return res.json({
       totalRows: paginate.count,
       rows: paginate.result.map((r) => {
         const method = methodMap[r.signature];
-        return { 
+        return {
           ...r.toJSON(),
           method: method || r.signature || '',
           fromIsContract: existAddrs.includes(r.from),
-          toIsContract: existAddrs.includes(r.to)
+          toIsContract: existAddrs.includes(r.to),
         };
       }),
     });
