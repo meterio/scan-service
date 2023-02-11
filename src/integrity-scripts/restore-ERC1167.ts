@@ -33,6 +33,7 @@ const runAsync = async (options) => {
         c.proxyType = 'ERC-1167';
         c.implAddr = '0x' + codeHex.substring(20, 60);
         console.log({ implAddr: c.implAddr }, `identified contract ${c.address} as min proxy`);
+        await c.save()
       }
     }
   }
