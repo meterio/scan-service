@@ -22,7 +22,7 @@ import { BigNumber as EBN } from 'ethers';
 
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { BaseController } from './baseController';
-import { Network } from '../../const';
+import { DeployStatus, Network } from '../../const';
 
 class AccountController extends BaseController {
   public path = '/api/accounts';
