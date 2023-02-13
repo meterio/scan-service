@@ -156,7 +156,9 @@ class AccountController extends BaseController {
       actJson.prevImplAddr = contract.prevImplAddr;
       actJson.beaconAddr = contract.beaconAddr;
       actJson.adminAddr = contract.adminAddr;
-      actJson.deployStatus = contract.deployStatus;
+      if (contract.deployStatus) {
+        actJson.deployStatus = DeployStatus[contract.deployStatus];
+      }
       actJson.destructTxHash = contract.destructTxHash;
       actJson.destructBlock = contract.destructBlock;
     }
