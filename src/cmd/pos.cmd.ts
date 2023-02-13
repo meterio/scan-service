@@ -438,7 +438,12 @@ export class PosCMD extends CMD {
 
   async saveCacheToDB() {
     if (this.txsCache.length > 0) {
-      await this.txRepo.bulkInsert(...this.txsCache);
+      for (const tx of this.txsCache) {
+        this.log.info(`save tx ${tx.hash}`);
+        await this.txRepo.bulkInsert(tx);
+        this.log.info(`saved`);
+      }
+      // await this.txRepo.bulkInsert(...this.txsCache);
       this.log.info(`saved ${this.txsCache.length} txs`);
     }
     if (this.logEventCache.length > 0) {
@@ -472,7 +477,11 @@ export class PosCMD extends CMD {
     }
 
     if (this.contractsCache.length > 0) {
-      await this.contractRepo.bulkInsert(...this.contractsCache);
+      for (const c of this.contractsCache) {
+        this.log.info(`save contract ${c.address}`);
+        await this.contractRepo.bulkInsert(c);
+      }
+      // await this.contractRepo.bulkInsert(...this.contractsCache);
       this.log.info(`saved ${this.contractsCache.length} contracts`);
     }
     if (this.internalTxCache.length > 0) {
