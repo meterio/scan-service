@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import mongoose from 'mongoose';
 
-import { ContractType, enumKeys } from '../const';
+import { ContractType, DeployStatus, enumKeys } from '../const';
 import { blockConciseSchema } from './blockConcise.model';
 import { Contract } from './contract.interface';
 
@@ -56,11 +56,23 @@ const schema = new mongoose.Schema<Contract>({
   firstSeen: blockConciseSchema,
 
   isProxy: { type: Boolean, required: false, default: false },
-  proxyType: { type: String, required: false },
+  proxyType: { type: String, required: false }, // ERC-1167 or ERC-1967
   implAddr: { type: String, required: false, lowercase: true },
   prevImplAddr: { type: String, required: false, lowercase: true },
   adminAddr: { type: String, required: false, lowercase: true },
   beaconAddr: { type: String, required: false, lowercase: true },
+
+  // selfdestruct or re-deployed
+  deployStatus: {
+    type: String,
+    enum: enumKeys(DeployStatus),
+    get: (enumValue: string) => DeployStatus[enumValue as keyof typeof DeployStatus],
+    set: (enumValue: DeployStatus) => DeployStatus[enumValue],
+    required: false,
+  },
+
+  destructTxHash: { type: String, required: false },
+  destructBlock: { type: blockConciseSchema, required: false },
 });
 
 schema.index({ 'firstSeen.number': 1 });

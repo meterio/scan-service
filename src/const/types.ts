@@ -21,6 +21,12 @@ export enum ContractType {
   ERC1155,
 }
 
+export enum DeployStatus {
+  New,
+  SelfDestructed,
+  ReDeployed,
+}
+
 export enum BlockType {
   MBlock,
   KBlock,

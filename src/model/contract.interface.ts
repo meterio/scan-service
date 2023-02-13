@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { FileChangeInfo } from 'fs/promises';
-import { ContractType, Token } from '../const';
+import { ContractType, DeployStatus, Token } from '../const';
 
 import { BlockConcise } from './blockConcise.interface';
 
@@ -37,4 +37,9 @@ export interface Contract {
   prevImplAddr?: string;
   adminAddr?: string;
   beaconAddr?: string;
+
+  // selfdestruct
+  deployStatus?: DeployStatus;
+  destructTxHash?: string;
+  destructBlock?: BlockConcise;
 }

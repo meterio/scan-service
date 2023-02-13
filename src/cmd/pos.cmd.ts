@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 
 import { abi, cry, ERC20, ERC1155, ERC721 } from '@meterio/devkit';
 import { ScriptEngine } from '@meterio/devkit';
-import { AdminChangedEvent, BeaconUpgradedEvent, EmptyBytes32, Network, UpgradedEvent } from '../const';
+import { AdminChangedEvent, BeaconUpgradedEvent, DeployStatus, EmptyBytes32, Network, UpgradedEvent } from '../const';
 import {
   BlockRepo,
   BoundRepo,
@@ -438,12 +438,7 @@ export class PosCMD extends CMD {
 
   async saveCacheToDB() {
     if (this.txsCache.length > 0) {
-      for (const tx of this.txsCache) {
-        this.log.info(`save tx ${tx.hash}`);
-        await this.txRepo.bulkInsert(tx);
-        this.log.info(`saved`);
-      }
-      // await this.txRepo.bulkInsert(...this.txsCache);
+      await this.txRepo.bulkInsert(...this.txsCache);
       this.log.info(`saved ${this.txsCache.length} txs`);
     }
     if (this.logEventCache.length > 0) {
@@ -479,7 +474,15 @@ export class PosCMD extends CMD {
     if (this.contractsCache.length > 0) {
       for (const c of this.contractsCache) {
         this.log.info(`save contract ${c.address}`);
-        await this.contractRepo.bulkInsert(c);
+        const ec = await this.contractRepo.findByAddress(c.address);
+        if (ec) {
+          if (ec.deployStatus && ec.deployStatus === DeployStatus.SelfDestructed) {
+            c.deployStatus = DeployStatus.ReDeployed;
+            await this.contractRepo.bulkInsert(c);
+          } else {
+            throw new Error(`contract ${c.address} existed`);
+          }
+        }
       }
       // await this.contractRepo.bulkInsert(...this.contractsCache);
       this.log.info(`saved ${this.contractsCache.length} contracts`);
@@ -645,6 +648,53 @@ export class PosCMD extends CMD {
     this.contractsCache.push(c);
   }
 
+  async handleSelfdestruct(tracer: Pos.CallTracerOutput | undefined, txHash: string, block: BlockConcise) {
+    let destructedContracts = {};
+    try {
+      if (tracer) {
+        // find creationInput in tracing
+        let q = [tracer];
+        while (q.length) {
+          const node = q.shift();
+          if (node.calls) {
+            for (const c of node.calls) {
+              q.push(c);
+            }
+          }
+          if (node.type === 'SELFDESTRUCT') {
+            destructedContracts[node.from] = { txHash, block };
+          }
+        }
+      }
+
+      //
+      if (Object.keys(destructedContracts).length > 0) {
+        for (const addr in destructedContracts) {
+          const { block, txHash } = destructedContracts[addr];
+          let inCache = false;
+          for (const c of this.contractsCache) {
+            if (c.address.toLowerCase() === addr.toLowerCase()) {
+              c.deployStatus = DeployStatus.SelfDestructed;
+              inCache = true;
+              break;
+            }
+          }
+
+          if (!inCache) {
+            let c = await this.contractRepo.findByAddress(addr);
+            if (c) {
+              c.deployStatus = DeployStatus.SelfDestructed;
+              c.destructTxHash = txHash;
+              c.destructBlock = block;
+              await c.save();
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
   async handleERC1967Events(evt: Flex.Meter.Event) {
     try {
       if (evt.topics && evt.topics[0] && evt.topics[0] == UpgradedEvent.signature) {
@@ -1421,6 +1471,8 @@ export class PosCMD extends CMD {
         }
 
         await this.handleContractCreation(evt, tx.id, blockConcise, clauseTrace);
+
+        await this.handleSelfdestruct(clauseTrace, tx.id, blockConcise);
 
         // ### Handle proxy events for ERC-1967
         await this.handleERC1967Events(evt);
