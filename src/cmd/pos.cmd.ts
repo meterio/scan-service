@@ -477,8 +477,10 @@ export class PosCMD extends CMD {
         const ec = await this.contractRepo.findByAddress(c.address);
         if (ec) {
           if (ec.deployStatus && ec.deployStatus === DeployStatus.SelfDestructed) {
-            c.deployStatus = DeployStatus.ReDeployed;
-            await this.contractRepo.bulkInsert(c);
+            ec.deployStatus = DeployStatus.ReDeployed;
+            ec.destructBlock = c.destructBlock;
+            ec.destructTxHash = c.destructTxHash;
+            await ec.save();
           } else {
             throw new Error(`contract ${c.address} existed`);
           }
