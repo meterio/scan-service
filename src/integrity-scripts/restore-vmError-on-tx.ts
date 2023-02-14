@@ -18,14 +18,14 @@ const runAsync = async (options) => {
 
   const posHead = await headRepo.findByKey('pos');
   const best = posHead.num;
-  const step = 5000;
+  const step = 50000;
 
   for (let i = 0; i < best; i += step) {
     const start = i;
     const end = i + step - 1 > best ? best : i + step - 1;
 
-    const txs = await txRepo.findByTraceInRange(/could not get tracing error/, start, end);
-    console.log(`searching for txs with tracing error in blocks [${start}, ${end}]`);
+    const txs = await txRepo.findRevertedWOTxErrorInRange(start, end);
+    console.log(`searching for txs without vmError in blocks [${start}, ${end}]`);
     for (const tx of txs) {
       console.log(`processing tx ${tx.hash}`);
 
@@ -33,9 +33,10 @@ const runAsync = async (options) => {
       for (let i = 0; i < tx.clauseCount; i++) {
         const trace = await pos.newTraceClause(tx.hash, i);
         if (trace.error) {
-          tx.vmError.error = trace.error;
+          tx.vmError = { error: trace.error, reason: '', clauseIndex: i };
           console.log(`tx ${tx.hash} failed due to ${tx.vmError.error}`);
           await tx.save();
+          break;
         }
         const t: TraceOutput = { json: JSON.stringify(trace), clauseIndex: i };
         traces.push(t);

@@ -107,9 +107,13 @@ export default class TxRepo {
     );
   }
 
-  public async findByTraceInRange(tracePattern: RegExp, startblock: number, endblock: number) {
+  public async findRevertedWOTxErrorInRange(startblock: number, endblock: number) {
     return this.model
-      .find({ 'block.number': { $gte: startblock, $lt: endblock }, 'traces.0.json': tracePattern })
+      .find({
+        'block.number': { $gte: startblock, $lt: endblock },
+        reverted: true,
+        $or: [{ vmError: null }, { 'vmError.error': 'could not get tracing error' }],
+      })
       .sort({ 'block.number': 1 });
   }
 
