@@ -484,6 +484,8 @@ export class PosCMD extends CMD {
           } else {
             throw new Error(`contract ${c.address} existed`);
           }
+        } else {
+          await this.contractRepo.bulkInsert(c);
         }
       }
       // await this.contractRepo.bulkInsert(...this.contractsCache);
@@ -506,9 +508,9 @@ export class PosCMD extends CMD {
       this.log.info(`saved ${this.blocksCache.length} blocks in [${first.number}, ${last.number}]`);
       this.log.info(`update head to ${last.number}`);
     }
-    this.log.info('handling rebasing');
+    this.log.debug('handling rebasing');
     await this.handleRebasing();
-    this.log.info('done handling rebasing');
+    this.log.debug('done handling rebasing');
   }
 
   async updateHead(num, hash): Promise<Head> {
@@ -653,7 +655,6 @@ export class PosCMD extends CMD {
   async handleSelfdestruct(tracer: Pos.CallTracerOutput | undefined, txHash: string, block: BlockConcise) {
     let destructedContracts = {};
     try {
-      this.log.info('handle selfdestruct');
       if (tracer) {
         // find creationInput in tracing
         let q = [tracer];
@@ -664,7 +665,6 @@ export class PosCMD extends CMD {
               q.push(c);
             }
           }
-          console.log('TYPE: ', node.type);
           if (node.type === 'SELFDESTRUCT') {
             destructedContracts[node.from] = { txHash, block };
           }
@@ -1491,8 +1491,6 @@ export class PosCMD extends CMD {
         await this.handleUnbound(evt, tx.id, clauseIndex, logIndex, blockConcise);
       } // End of handling events
 
-      console.log('HANDLE SELFDESTRUCT');
-      console.log('clause trace: ', clauseTrace);
       await this.handleSelfdestruct(clauseTrace, tx.id, blockConcise);
     }
 
