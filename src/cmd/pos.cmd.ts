@@ -473,9 +473,9 @@ export class PosCMD extends CMD {
 
     if (this.contractsCache.length > 0) {
       for (const c of this.contractsCache) {
-        this.log.info(`save contract ${c.address}`);
         const ec = await this.contractRepo.findByAddress(c.address);
         if (ec) {
+          this.log.info(`save contract ${c.address} with existing`);
           if (ec.deployStatus && ec.deployStatus === DeployStatus.SelfDestructed) {
             ec.deployStatus = DeployStatus.ReDeployed;
             ec.destructBlock = c.destructBlock;
@@ -485,6 +485,7 @@ export class PosCMD extends CMD {
             throw new Error(`contract ${c.address} existed`);
           }
         } else {
+          this.log.info(`save contract ${c.address}`);
           await this.contractRepo.bulkInsert(c);
         }
       }

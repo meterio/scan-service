@@ -109,13 +109,13 @@ export default class TxRepo {
 
   public async findByTraceInRange(tracePattern: RegExp, startblock: number, endblock: number) {
     return this.model
-      .find({
-        'block.number': {
-          $gte: startblock,
-          $lt: endblock,
-        },
-        'traces.0.json': tracePattern,
-      })
+      .find({ 'block.number': { $gte: startblock, $lt: endblock }, 'traces.0.json': tracePattern })
+      .sort({ 'block.number': 1 });
+  }
+
+  public async findInRange(start, end: number) {
+    return this.model
+      .find({ 'block.number': { $gte: start, $lt: end }, 'vmError.error': { $ne: 'execution reverted' } })
       .sort({ 'block.number': 1 });
   }
 }
