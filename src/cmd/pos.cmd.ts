@@ -1460,6 +1460,16 @@ export class PosCMD extends CMD {
       // ----------------------------------
       // Handle events
       // ----------------------------------
+
+      // get clause trace
+      let clauseTrace: Pos.CallTracerOutput | undefined = undefined;
+      for (const trace of traces) {
+        if (trace.clauseIndex === clauseIndex) {
+          clauseTrace = JSON.parse(trace.json) as Pos.CallTracerOutput;
+          break;
+        }
+      }
+
       for (const [logIndex, evt] of o.events.entries()) {
         // rebasing events (by AMPL)
         if (evt.topics[0] === '0x72725a3b1e5bd622d6bcd1339bb31279c351abe8f541ac7fd320f24e1b1641f2') {
@@ -1467,19 +1477,7 @@ export class PosCMD extends CMD {
         }
 
         // ### Handle contract creation
-        let clauseTrace: Pos.CallTracerOutput | undefined = undefined;
-        for (const trace of traces) {
-          if (trace.clauseIndex === clauseIndex) {
-            clauseTrace = JSON.parse(trace.json) as Pos.CallTracerOutput;
-            break;
-          }
-        }
-
         await this.handleContractCreation(evt, tx.id, blockConcise, clauseTrace);
-
-        console.log('HANDLE SELFDESTRUCT');
-        console.log('clause trace: ', clauseTrace);
-        await this.handleSelfdestruct(clauseTrace, tx.id, blockConcise);
 
         // ### Handle proxy events for ERC-1967
         await this.handleERC1967Events(evt);
@@ -1490,6 +1488,10 @@ export class PosCMD extends CMD {
         // ### Handle staking unbound event
         await this.handleUnbound(evt, tx.id, clauseIndex, logIndex, blockConcise);
       } // End of handling events
+
+      console.log('HANDLE SELFDESTRUCT');
+      console.log('clause trace: ', clauseTrace);
+      await this.handleSelfdestruct(clauseTrace, tx.id, blockConcise);
     }
 
     // extract internal txs from traces
