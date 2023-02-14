@@ -507,6 +507,11 @@ export class Pos {
     return result;
   }
 
+  public async newTraceClause(txHash: string, clauseIndex = 0) {
+    const result = await this.httpGet<Pos.CallTracerOutput>(`debug/trace/${txHash}/${clauseIndex}`);
+    return result;
+  }
+
   public async fetchERC721AndERC1155Data(address, blockHash) {
     try {
       const outputs = await this.explain(
