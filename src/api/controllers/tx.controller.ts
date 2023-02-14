@@ -58,14 +58,14 @@ class TxController extends BaseController {
     let methodMap = {};
     methods.forEach((m) => (methodMap[m.signature] = m.name));
 
-    const addresses = []
+    const addresses = [];
     for (const tx of Object.values(digestMap)) {
-      addresses.push(tx.from, tx.to)
+      addresses.push(tx.from, tx.to);
     }
 
     const contracts = await this.contractRepo.findByAddressList(addresses);
-    const existAddrs = contracts.map(c => c.address);
-    
+    const existAddrs = contracts.map((c) => c.address);
+
     return res.json({
       totalRows: paginate.count,
       txs: Object.values(digestMap)
@@ -73,7 +73,7 @@ class TxController extends BaseController {
           ...tx,
           method: methodMap[tx.method] || tx.method,
           fromIsContract: existAddrs.includes(tx.from),
-          toIsContract: existAddrs.includes(tx.to)
+          toIsContract: existAddrs.includes(tx.to),
         }))
         .sort((a, b) => (a.block.number > b.block.number ? -1 : 1)),
     });
@@ -206,6 +206,7 @@ class TxController extends BaseController {
     }
 
     let internaltxsCount = 0;
+    let selfDestructed = {};
     if (tx.traces) {
       for (const t of tx.traces) {
         const trace = JSON.parse(t.json);
@@ -213,6 +214,9 @@ class TxController extends BaseController {
         while (q.length > 0) {
           const node = q.shift();
           internaltxsCount++;
+          if (node.type === 'SELFDESTRUCT') {
+            selfDestructed[node.from] = true;
+          }
           if (node.calls) {
             for (const c of node.calls) {
               q.push(c);
@@ -224,8 +228,9 @@ class TxController extends BaseController {
 
     const summary = {
       ...txObj,
-      events,
-      transfers,
+      // events,
+      // transfers,
+      selfDestructed: Object.keys(selfDestructed),
       clauseCount: tx.clauses.length,
       transferCount: transfers.length,
       eventCount: events.length,
@@ -233,6 +238,9 @@ class TxController extends BaseController {
       tokenTransfers,
       contractAddress,
     };
+
+    delete summary.traces;
+    delete summary.outputs;
 
     return res.json({
       tx: summary,
