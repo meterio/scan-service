@@ -1477,6 +1477,8 @@ export class PosCMD extends CMD {
 
         await this.handleContractCreation(evt, tx.id, blockConcise, clauseTrace);
 
+        console.log('HANDLE SELFDESTRUCT');
+        console.log('clause trace: ', clauseTrace);
         await this.handleSelfdestruct(clauseTrace, tx.id, blockConcise);
 
         // ### Handle proxy events for ERC-1967
