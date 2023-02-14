@@ -651,6 +651,7 @@ export class PosCMD extends CMD {
   async handleSelfdestruct(tracer: Pos.CallTracerOutput | undefined, txHash: string, block: BlockConcise) {
     let destructedContracts = {};
     try {
+      this.log.info('handle selfdestruct');
       if (tracer) {
         // find creationInput in tracing
         let q = [tracer];
@@ -661,6 +662,7 @@ export class PosCMD extends CMD {
               q.push(c);
             }
           }
+          console.log('TYPE: ', node.type);
           if (node.type === 'SELFDESTRUCT') {
             destructedContracts[node.from] = { txHash, block };
           }
@@ -670,11 +672,14 @@ export class PosCMD extends CMD {
       //
       if (Object.keys(destructedContracts).length > 0) {
         for (const addr in destructedContracts) {
+          this.log.info(`found selfdestructed contract ${addr}`);
           const { block, txHash } = destructedContracts[addr];
           let inCache = false;
           for (const c of this.contractsCache) {
             if (c.address.toLowerCase() === addr.toLowerCase()) {
               c.deployStatus = DeployStatus.SelfDestructed;
+              c.destructTxHash = txHash;
+              c.destructBlock = block;
               inCache = true;
               break;
             }
@@ -1356,7 +1361,7 @@ export class PosCMD extends CMD {
       var tracer: Pos.CallTracerOutput;
       if (isTraceable(tx.clauses[clauseIndex].data)) {
         try {
-          tracer = await this.pos.traceClause(blockConcise.hash, tx.id, clauseIndex);
+          tracer = await this.pos.newTraceClause(tx.id, clauseIndex);
           traces.push({ json: JSON.stringify(tracer), clauseIndex });
         } catch (e) {
           this.log.error({ err: e }, 'failed to get tracing');
