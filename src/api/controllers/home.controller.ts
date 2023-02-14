@@ -22,6 +22,10 @@ class HomeController extends BaseController {
     this.router.get(`${this.path}/mtrg`, try$(this.getMTRGCirculating));
     this.router.get(`${this.path}/mtrg/circulating`, try$(this.getMTRGCirculatingRaw));
     this.router.get(`${this.path}/mtrg/totalsupply`, try$(this.getMTRGTotalsupplyRaw));
+
+    this.router.get(`${this.path}/mtr/circulating`, try$(this.getMTRCirculatingRaw));
+    this.router.get(`${this.path}/mtr/totalsupply`, try$(this.getMTRTotalsupplyRaw));
+
     this.router.get(`${this.path}/probe/:ip`, try$(this.probe));
     this.router.get(`${this.path}`, try$(this.getHome));
   }
@@ -57,6 +61,16 @@ class HomeController extends BaseController {
 
   private getMTRGTotalsupplyRaw = async (req: Request, res: Response) => {
     const t = await this.metricRepo.findByKey(MetricName.MTRG_TOTALSUPPLY);
+    return res.send(new BigNumber(t.value).div(1e18).toFixed(0));
+  };
+
+  private getMTRCirculatingRaw = async (req: Request, res: Response) => {
+    const m = await this.metricRepo.findByKey(MetricName.MTR_CIRCULATION);
+    return res.send(new BigNumber(m.value).div(1e18).toFixed(0));
+  };
+
+  private getMTRTotalsupplyRaw = async (req: Request, res: Response) => {
+    const t = await this.metricRepo.findByKey(MetricName.MTR_TOTALSUPPLY);
     return res.send(new BigNumber(t.value).div(1e18).toFixed(0));
   };
 

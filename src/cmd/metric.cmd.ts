@@ -544,10 +544,10 @@ export class MetricCMD extends CMD {
       let mtrCirculation = new BigNumber(0);
       let mtrgCirculation = new BigNumber(0);
       let mtrgTotalSupply = new BigNumber(0);
+      let mtrTotalSupply = new BigNumber(0);
 
-      // add mtr to circulation
       for (const acct of accts) {
-        // add mtr balance
+        // add mtr to circulation
         if (!(acct.address in LockedMeterAddrs)) {
           if (acct.mtrBalance.isGreaterThan(0)) {
             mtrCirculation = mtrCirculation.plus(acct.mtrBalance);
@@ -555,6 +555,14 @@ export class MetricCMD extends CMD {
           if (acct.mtrBounded && acct.mtrBounded.isGreaterThan(0)) {
             mtrCirculation = mtrCirculation.plus(acct.mtrBounded);
           }
+        }
+
+        // add mtr to total supply
+        if (acct.mtrBalance.isGreaterThan(0)) {
+          mtrTotalSupply = mtrTotalSupply.plus(acct.mtrBalance);
+        }
+        if (acct.mtrBounded && acct.mtrBounded.isGreaterThan(0)) {
+          mtrTotalSupply = mtrTotalSupply.plus(acct.mtrBounded);
         }
 
         // add mtrg to circulation
@@ -580,6 +588,7 @@ export class MetricCMD extends CMD {
       await this.cache.update(MetricName.MTR_CIRCULATION, mtrCirculation.toFixed());
       await this.cache.update(MetricName.MTRG_CIRCULATION, mtrgCirculation.toFixed());
       await this.cache.update(MetricName.MTRG_TOTALSUPPLY, mtrgTotalSupply.toFixed());
+      await this.cache.update(MetricName.MTR_TOTALSUPPLY, mtrTotalSupply.toFixed());
 
       // Update rank information
       const mtrRanked = accts.sort((a, b) => {
