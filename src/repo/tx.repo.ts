@@ -122,4 +122,10 @@ export default class TxRepo {
       .find({ 'block.number': { $gte: start, $lt: end }, 'vmError.error': { $ne: 'execution reverted' } })
       .sort({ 'block.number': 1 });
   }
+
+  public async findByTraceInRange(tracePattern: RegExp, start, end: number) {
+    return this.model
+      .find({ 'block.number': { $gte: start, $lt: end }, 'traces.0.json': tracePattern })
+      .sort({ 'block.number': 1 });
+  }
 }
