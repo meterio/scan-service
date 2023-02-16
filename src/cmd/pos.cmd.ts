@@ -19,6 +19,7 @@ import {
   LogEventRepo,
   LogTransferRepo,
   InternalTxRepo,
+  ContractFileRepo,
 } from '../repo';
 import { Token, ContractType, BlockType } from '../const';
 import {
@@ -109,6 +110,7 @@ export class PosCMD extends CMD {
   private boundRepo = new BoundRepo();
   private unboundRepo = new UnboundRepo();
   private contractRepo = new ContractRepo();
+  private contractFileRepo = new ContractFileRepo();
   private accountRepo = new AccountRepo();
   private tokenBalanceRepo = new TokenBalanceRepo();
   private logEventRepo = new LogEventRepo();
@@ -473,14 +475,16 @@ export class PosCMD extends CMD {
 
     if (this.contractsCache.length > 0) {
       for (const c of this.contractsCache) {
+        // find if contract address existed before
         const ec = await this.contractRepo.findByAddress(c.address);
         if (ec) {
           this.log.info(`save contract ${c.address} with existing`);
           if (ec.deployStatus && ec.deployStatus === DeployStatus.SelfDestructed) {
-            ec.deployStatus = DeployStatus.ReDeployed;
-            ec.destructBlock = c.destructBlock;
-            ec.destructTxHash = c.destructTxHash;
-            await ec.save();
+            // if contract was self-destructed, delete this and save the latest info
+            await ec.delete();
+            await this.contractFileRepo.deleteByContract(c.address);
+            c.deployStatus = DeployStatus.ReDeployed;
+            await this.contractRepo.bulkInsert(c);
           } else {
             throw new Error(`contract ${c.address} existed`);
           }
@@ -551,6 +555,9 @@ export class PosCMD extends CMD {
     let verified = false;
     let verifiedFrom = '';
     let status = '';
+    const hash = new Keccak(256);
+    hash.update(code.replace('0x', ''));
+    const codeHash = hash.digest('hex');
     let creationInputHash = '';
 
     if (tracer) {
@@ -573,7 +580,7 @@ export class PosCMD extends CMD {
           }
         }
 
-        // code-match verification
+        // creation-match verification
         // if verified contract is found by the same input data, recognize the newly deployed contract as verified
         const verifiedContract = await this.contractRepo.findVerifiedContractsWithCreationInputHash(creationInputHash);
         if (verifiedContract) {
@@ -584,6 +591,14 @@ export class PosCMD extends CMD {
       } catch (e) {
         this.log.error({ err: e }, 'decode tracing error');
       }
+    }
+
+    // code-match verification
+    const verifiedContract = await this.contractRepo.findVerifiedContractWithCodeHash(codeHash);
+    if (verifiedContract) {
+      verified = true;
+      status = 'match';
+      verifiedFrom = verifiedContract.address;
     }
 
     let c: Contract = {
@@ -599,6 +614,7 @@ export class PosCMD extends CMD {
       tokensCount: new BigNumber(0),
       creationTxHash: txHash,
       creationInputHash,
+      codeHash,
       master: master.toLowerCase(),
       owner: master.toLowerCase(),
       code,
