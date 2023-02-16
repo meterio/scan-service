@@ -20,7 +20,7 @@ const runAsync = async (options) => {
     hash.update(c.code.replace('0x', ''));
     const codeHash = hash.digest('hex');
     c.codeHash = codeHash;
-    console.log(`update codeHash for ${codeHash}`);
+    console.log(`update codeHash for ${c.address}`);
     await c.save();
   }
 };
