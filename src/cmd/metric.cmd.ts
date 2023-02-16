@@ -705,18 +705,35 @@ export class MetricCMD extends CMD {
         }
 
         await c.save();
-        const relateds = await this.contractRepo.findUnverifiedContractsWithCreationInputHash(c.creationInputHash);
-        for (const rc of relateds) {
+
+        // verify contracts with same creationInputHash
+        const creationMatches = await this.contractRepo.findUnverifiedContractsWithCreationInputHash(
+          c.creationInputHash
+        );
+        for (const rc of creationMatches) {
           if (rc.address === c.address) {
             continue;
           }
-          console.log(
-            `found related existing contracts sharing the same creationInputHash, verify now for ${rc.address}`
-          );
+          console.log(`found contract with the same creationInputHash as ${c.address}, verify ${rc.address}`);
           rc.verified = true;
           rc.status = 'match';
           rc.verifiedFrom = c.address;
           await rc.save();
+        }
+
+        // verify contracts with same codeHash
+        if (c.codeHash) {
+          const codeMatches = await this.contractRepo.findUnverifiedContractsWithCodeHash(c.codeHash);
+          for (const rc of codeMatches) {
+            if (rc.address === c.address) {
+              continue;
+            }
+            console.log(`found contract with the same codeHash as ${c.address}, verify ${rc.address}`);
+            rc.verified = true;
+            rc.status = 'match';
+            rc.verifiedFrom = c.address;
+            await rc.save();
+          }
         }
       }
       this.log.info('done update verified contract');
