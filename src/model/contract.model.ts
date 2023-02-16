@@ -52,7 +52,8 @@ const schema = new mongoose.Schema<Contract>({
   status: { type: String, required: false, default: '' }, // 'full', 'partial' - verified by sourcify, 'match' verified by deployed bytecode match
 
   creationTxHash: { type: String, required: true },
-  creationInputHash: { type: String, required: false }, // record the sha3(input data) during contract creation
+  creationInputHash: { type: String, required: false, index: true }, // record the sha3(input data) during contract creation
+  codeHash: { type: String, required: false, index: true }, // record the sha3(code) for deployed code
   firstSeen: blockConciseSchema,
 
   isProxy: { type: Boolean, required: false, default: false },
@@ -77,8 +78,10 @@ const schema = new mongoose.Schema<Contract>({
 
 schema.index({ 'firstSeen.number': 1 });
 schema.index({ 'firstSeen.number': -1 });
-schema.index({ creationInputHash: 1 });
 schema.index({ verified: 1, creationInputHash: 1 });
+schema.index({ verified: 1, codeHash: 1 });
+schema.index({ verified: 1, status: 1, creationInputHash: 1 });
+schema.index({ verified: 1, status: 1, codeHash: 1 });
 
 schema.set('toJSON', {
   transform: (obj, ret, options) => {

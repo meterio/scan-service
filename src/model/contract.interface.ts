@@ -28,6 +28,7 @@ export interface Contract {
 
   creationTxHash: string;
   creationInputHash?: string;
+  codeHash?: string;
   firstSeen: BlockConcise;
 
   // proxy

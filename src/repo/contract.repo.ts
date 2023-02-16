@@ -91,6 +91,14 @@ export default class ContractRepo {
     return this.model.findOne({ verified: true, status: { $ne: 'match' }, creationInputHash });
   }
 
+  public async findVerifiedContractWithCodeHash(codeHash: string) {
+    return this.model.findOne({ verified: true, status: { $ne: 'match' }, codeHash });
+  }
+
+  public async findEmptyCodeHash() {
+    return this.model.find({ codeHash: { $exists: false } });
+  }
+
   public async findVerifiedContractsInRange(startBlock, endBlock: number) {
     return this.model.find({
       verified: true,
@@ -101,6 +109,10 @@ export default class ContractRepo {
 
   public async findUnverifiedContractsWithCreationInputHash(creationInputHash: string) {
     return this.model.find({ verified: false, creationInputHash });
+  }
+
+  public async findUnverifiedContractsWithCodeHash(codeHash: string) {
+    return this.model.find({ verified: false, codeHash });
   }
 
   public async findCodeMatchVerifiedContract() {

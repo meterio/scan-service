@@ -20,6 +20,10 @@ export default class ContractFileRepo {
     return this.model.findOne({ address: address.toLowerCase(), name: 'metadata.json' });
   }
 
+  public async deleteByContract(address: string) {
+    return this.model.deleteOne({ address: address.toLowerCase() });
+  }
+
   public async create(contractFile: ContractFile) {
     return this.model.create(contractFile);
   }
