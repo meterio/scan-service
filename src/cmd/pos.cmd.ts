@@ -462,6 +462,18 @@ export class PosCMD extends CMD {
     }
     if (this.movementsCache.length > 0) {
       await this.movementRepo.bulkInsert(...this.movementsCache);
+      for (const mvt of this.movementsCache) {
+        if (mvt.token === Token.ERC20 && (mvt.from === ZeroAddress || mvt.to === ZeroAddress)) {
+          this.log.info({ token: mvt.tokenAddress }, `mint/burn noticed, update totalSupply for ERC20 token`);
+          const erc20Data = await this.pos.fetchERC20Data(mvt.tokenAddress, '');
+          const tokenContract = await this.contractRepo.findByAddress(mvt.tokenAddress);
+          if (tokenContract && tokenContract.type === ContractType.ERC20) {
+            tokenContract.totalSupply = new BigNumber(erc20Data.totalSupply);
+            await tokenContract.save();
+            this.log.info({ token: mvt.tokenAddress, totalSupply: erc20Data.totalSupply }, `token totalSupply updated`);
+          }
+        }
+      }
       this.log.info(`saved ${this.movementsCache.length} movements`);
     }
     if (this.boundsCache.length > 0) {
