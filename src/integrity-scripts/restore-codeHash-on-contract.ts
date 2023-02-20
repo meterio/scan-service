@@ -13,8 +13,16 @@ const runAsync = async (options) => {
   const contractRepo = new ContractRepo();
   await checkNetworkWithDB(network);
 
-  const contracts = await contractRepo.findEmptyCodeHash();
+  const incorrectVerified = await contractRepo.findIncorrectVerified();
+  for (const ic of incorrectVerified) {
+    ic.verified = false;
+    ic.verifiedFrom = undefined;
+    ic.status = '';
+    console.log(`set to unverified for ${ic.address}`);
+    await ic.save();
+  }
 
+  const contracts = await contractRepo.findEmptyCodeHash();
   for (const c of contracts) {
     const hash = new Keccak(256);
     hash.update(c.code.replace('0x', ''));
