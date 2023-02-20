@@ -107,6 +107,10 @@ export default class ContractRepo {
     });
   }
 
+  public async findIncorrectVerified() {
+    return this.model.find({ verified: true, status: 'match', codeHash: { $exists: false } });
+  }
+
   public async findUnverifiedContractsWithCreationInputHash(creationInputHash: string) {
     return this.model.find({ verified: false, creationInputHash });
   }

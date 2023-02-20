@@ -23,6 +23,9 @@ const runAsync = async (options) => {
     const end = i + step - 1 > best ? best : i + step - 1;
     const verified = await contractRepo.findVerifiedContractsInRange(start, end);
     for (const v of verified) {
+      if (!v.codeHash) {
+        continue;
+      }
       const unv = await contractRepo.findUnverifiedContractsWithCodeHash(v.codeHash);
       for (const u of unv) {
         u.verified = true;
