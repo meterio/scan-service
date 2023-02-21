@@ -575,7 +575,7 @@ export class Pos {
         },
         blockHash
       );
-      console.log(outputs);
+      // console.log(outputs);
 
       const valid = (i) => !!outputs[i] && !outputs[i].reverted && outputs[i].data !== '0x';
       const name = valid(0) ? ERC20.name.decode(outputs[0].data)['0'] : '';

@@ -48,7 +48,11 @@ const runAsync = async (options) => {
             if (body.opCode === ScriptEngine.StakingOpCode.Governing) {
               if (body.extra instanceof Array) {
                 for (const ex of body.extra) {
-                  transferTotal = transferTotal.plus(ex.amount);
+                  if (ex instanceof ScriptEngine.RewardInfo) {
+                    transferTotal = transferTotal.plus(ex?.amount);
+                  } else if (ex instanceof ScriptEngine.RewardInfoV2) {
+                    transferTotal = transferTotal.plus(ex?.distAmount);
+                  }
                   transferCount++;
                 }
               }

@@ -4,7 +4,7 @@ import { try$ } from 'express-toolbox';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { ContractType, Network } from '../../const';
 import { BaseController } from './baseController';
-import CuratedRepo from '../../repo/curated.repo';
+// import CuratedRepo from '../../repo/curated.repo';
 import isAdmin from '../middleware/auth.middleware';
 const addrPattern = new RegExp('^0x[0-9a-fA-F]{40}$');
 class NFTController extends BaseController {
@@ -14,7 +14,7 @@ class NFTController extends BaseController {
 
   private nftRepo = new NFTRepo();
   private contractRepo = new ContractRepo();
-  private curatedRepo = new CuratedRepo();
+  // private curatedRepo = new CuratedRepo();
   private movementRepo = new MovementRepo();
 
   constructor(network: Network, standby: boolean) {
@@ -24,7 +24,7 @@ class NFTController extends BaseController {
 
   private initializeRoutes() {
     // @deprecated
-    this.router.get(`${this.path}/curated`, try$(this.getCuratedCollections));
+    // this.router.get(`${this.path}/curated`, try$(this.getCuratedCollections));
     this.router.get(`${this.path}/:address/tokens`, try$(this.getTokensInCollection));
     this.router.get(`${this.path}/:address/:tokenId`, try$(this.getTokenDetail));
 
@@ -34,11 +34,13 @@ class NFTController extends BaseController {
     this.router.get(`${this.path}/tokens/in/:fromNum/:toNum`, try$(this.getNFTTokensInRange));
 
     // @deprecated
-    this.router.post(`${this.adminPath}/curated`, [isAdmin], try$(this.addAddressToCurated));
+    // this.router.post(`${this.adminPath}/curated`, [isAdmin], try$(this.addAddressToCurated));
     // @deprecated
-    this.router.delete(`${this.adminPath}/curated/:address`, [isAdmin], try$(this.deleteAddressFromCurated));
+    // this.router.delete(`${this.adminPath}/curated/:address`, [isAdmin], try$(this.deleteAddressFromCurated));
   }
 
+  // deprecated
+  /*
   private deleteAddressFromCurated = async (req: Request, res: Response) => {
     const { address } = req.params;
     const result = await this.curatedRepo.deleteByID(address);
@@ -46,7 +48,10 @@ class NFTController extends BaseController {
       result,
     });
   };
+  */
 
+  // deprecated
+  /*
   private addAddressToCurated = async (req: Request, res: Response) => {
     const { name, address } = req.body;
     console.log('address', address);
@@ -63,40 +68,41 @@ class NFTController extends BaseController {
       res.json({ error: 'not recognized address' });
     }
   };
+  */
 
-  private getCuratedCollections = async (req: Request, res: Response) => {
-    const { page, limit } = extractPageAndLimitQueryParam(req);
-    // const curatedAddrs = getCuratedNFTs(this.network);
-    const collections = await this.curatedRepo.findAll();
-    const curatedAddrs = collections.map((c) => c.address);
-    const paginate = await this.contractRepo.paginateWithAddressList(curatedAddrs, page, limit);
-    /*
-    - getAllCollections - this gives all NFT that stored on your DB
-request: page, limit
-return: collection list [nftAddress, nftCreator, createTxHash, createBlockNumber, nftName, nftSymbol, nftType]
+  // deprecated
+  //   private getCuratedCollections = async (req: Request, res: Response) => {
+  //     const { page, limit } = extractPageAndLimitQueryParam(req);
+  //     // const curatedAddrs = getCuratedNFTs(this.network);
+  //     const collections = await this.curatedRepo.findAll();
+  //     const curatedAddrs = collections.map((c) => c.address);
+  //     const paginate = await this.contractRepo.paginateWithAddressList(curatedAddrs, page, limit);
+  //     /*
+  //     - getAllCollections - this gives all NFT that stored on your DB
+  // request: page, limit
+  // return: collection list [nftAddress, nftCreator, createTxHash, createBlockNumber, nftName, nftSymbol, nftType]
 
-    */
-    if (paginate.result)
-      return res.json({
-        totalRows: paginate.count,
-        collections: paginate.result.map((c) => ({
-          address: c.address,
-          name: c.name,
-          symbol: c.symbol,
-          type: ContractType[c.type],
-          createTxHash: c.creationTxHash,
-          createBlockNum: c.firstSeen.number,
-          createTimestamp: c.firstSeen.number,
-          creator: c.master,
-        })),
-      });
-  };
+  //     */
+  //     if (paginate.result)
+  //       return res.json({
+  //         totalRows: paginate.count,
+  //         collections: paginate.result.map((c) => ({
+  //           address: c.address,
+  //           name: c.name,
+  //           symbol: c.symbol,
+  //           type: ContractType[c.type],
+  //           createTxHash: c.creationTxHash,
+  //           createBlockNum: c.firstSeen.number,
+  //           createTimestamp: c.firstSeen.number,
+  //           creator: c.master,
+  //         })),
+  //       });
+  //   };
 
   /*
   - getAllNFTs - this gives all NFT token that stored on your DB
 request: page, limit
 return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftTokenID, tokenURI, nft minter, created timestamp, nft token media URI, nft token media type(image or video), nft token JSON]
-
   */
   private getTokensInCollection = async (req: Request, res: Response) => {
     const { address } = req.params;
