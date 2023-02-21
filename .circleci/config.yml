@@ -1,26 +1,17 @@
 version: 2.1
 orbs:
-  docker: circleci/docker@1.7.0
   slack: circleci/slack@4.4.4
 jobs:
   build_docker:
+    docker:
+      - image: cimg/base:2022.04
     resource_class: large
-    environment:
-      DOCKER_REPO: meterio/scan-api
-      DOCKER_TAGS: 'latest'
-    executor: docker/docker
     steps:
+      - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - checkout
-      - docker/check
-      - docker/build:
-          dockerfile: ./api.Dockerfile
-          image: $DOCKER_REPO
-          tag: $DOCKER_TAGS
-      - docker/push:
-          image: $DOCKER_REPO
-          tag: $DOCKER_TAGS
+      - run: 'docker build -t meterio/scan-api:latest -f ./api.Dockerfile .'
+      - run: 'docker login -u="$DOCKERHUB_USER" -p="$DOCKERHUB_PWD" && docker push meterio/scan-api:latest'
       - slack/notify:
           event: fail
           template: basic_fail_1

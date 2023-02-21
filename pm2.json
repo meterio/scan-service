@@ -3,8 +3,7 @@
     {
       "name": "scan-api",
       "instances": "1",
-      "script": "./src/pm2-main.ts",
-      "interpreter": "ts-node",
+      "script": "./dist/src/pm2-main.js",
       "env": {
         "NODE_ENV": "production"
       }
