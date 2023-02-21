@@ -10,6 +10,9 @@ function validateEnv() {
 
     SWAPPER_PRIVATE_KEY: str(),
     SWAPPER_RPC_URL: str(),
+    CALLBACK_URL: str(),
+    CONSUMER_KEY: str(),
+    CONSUMER_SECRET: str(),
   });
 }
 

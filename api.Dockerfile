@@ -1,10 +1,12 @@
-FROM node:16-bullseye
+FROM node:16-bullseye-slim
 
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y ca-certificates wget && wget https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && apt-get autoremove -y wget
 RUN npm install -g pm2
 RUN pm2 install typescript
 
 # Bundle APP files
-WORKDIR /app
 COPY src ./src
 COPY package.json .
 COPY pm2.json .
@@ -13,7 +15,6 @@ COPY tsconfig.json .
 # Install app dependencies
 RUN npm install --productin
 ENV NPM_CONFIG_LOGLEVEL warn
-RUN apt install -y wget && wget https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && apt autoremove -y wget
 
 ENV API_NETWORK main
 ENV API_PORT 4000
