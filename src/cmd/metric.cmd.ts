@@ -290,6 +290,50 @@ export class MetricCMD extends CMD {
     }
   }
 
+  private async updateTokenRank(index: number, interval: number) {
+    if (index % interval === 0) {
+      this.log.info('update token rank');
+      const res = await axios.get(
+        `https://raw.githubusercontent.com/meterio/token-list/master/generated/wallet-tokens.json`
+      );
+      if (res.data) {
+        const tokenList = JSON.parse(res.data).tokens;
+        if (!tokenList) {
+          return;
+        }
+
+        const conf = GetNetworkConfig(this.network);
+        if (!conf) {
+          return;
+        }
+        let listedTokens = tokenList.filter((t) => t.chainId == conf.chainId);
+        for (const t of listedTokens) {
+          const c = await this.contractRepo.findByAddress(t.address.toLowerCase());
+          if (!c) {
+            continue;
+          }
+
+          const rank = c.holdersCount.plus(c.transfersCount).plus(10).toNumber();
+          let updated = false;
+          const originRank = c.rank;
+          if (c.rank != rank) {
+            c.rank = rank;
+            updated = true;
+          }
+          if (c.logoURI != t.logoURI) {
+            c.logoURI = t.logoURI;
+            updated = true;
+          }
+          if (updated) {
+            this.log.info(`updated rank on contract ${c.address}: ${originRank}->${c.rank}`);
+            await c.save();
+          }
+        }
+      }
+      this.log.info('done update token rank');
+    }
+  }
+
   private async updateAuctionInfo(index: number, interval: number) {
     if (index % interval === 0) {
       this.log.info('update auction info');
@@ -797,6 +841,9 @@ export class MetricCMD extends CMD {
 
         // update pos best, kblock & seq
         await this.updatePosInfo(index, every);
+
+        // update token rank
+        await this.updateTokenRank(index, every10m);
 
         // check network, if halt for 2 mins, send alert
         await this.alertIfNetworkHalt(index, every2m);
