@@ -43,4 +43,8 @@ export interface Contract {
   deployStatus?: DeployStatus;
   destructTxHash?: string;
   destructBlock?: BlockConcise;
+
+  // token list related fields
+  rank?: number;
+  logoURI?: string;
 }

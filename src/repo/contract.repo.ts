@@ -128,13 +128,15 @@ export default class ContractRepo {
   }
 
   public async findBySymbol(symbol: string) {
-    return this.model.findOne({ symbol: { $regex: `^${symbol}$`, $options: 'i' } });
+    return this.model.findOne({ symbol: { $regex: `^${symbol}$`, $options: 'i' } }).sort({ rank: -1 });
   }
 
   public async findByFuzzyName(fuzzyName: string) {
-    return this.model.find({
-      name: { $regex: new RegExp(`.*${fuzzyName}.*`, 'i') },
-    });
+    return this.model
+      .find({
+        name: { $regex: new RegExp(`.*${fuzzyName}.*`, 'i') },
+      })
+      .sort({ rank: -1 });
   }
 
   // paginates

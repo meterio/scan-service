@@ -74,6 +74,9 @@ const schema = new mongoose.Schema<Contract>({
 
   destructTxHash: { type: String, required: false },
   destructBlock: { type: blockConciseSchema, required: false },
+
+  rank: { type: Number, required: false, default: 0, index: true },
+  logoURI: { type: String, required: false },
 });
 
 schema.index({ 'firstSeen.number': 1 });
@@ -82,6 +85,7 @@ schema.index({ verified: 1, creationInputHash: 1 });
 schema.index({ verified: 1, codeHash: 1 });
 schema.index({ verified: 1, status: 1, creationInputHash: 1 });
 schema.index({ verified: 1, status: 1, codeHash: 1 });
+schema.index({ rank: -1 });
 
 schema.set('toJSON', {
   transform: (obj, ret, options) => {
