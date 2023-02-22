@@ -296,17 +296,12 @@ export class MetricCMD extends CMD {
       const res = await axios.get(
         `https://raw.githubusercontent.com/meterio/token-list/master/generated/wallet-tokens.json`
       );
-      if (res.data) {
-        const tokenList = JSON.parse(res.data).tokens;
-        if (!tokenList) {
-          return;
-        }
-
+      if (res.data && res.data.tokens) {
         const conf = GetNetworkConfig(this.network);
         if (!conf) {
           return;
         }
-        let listedTokens = tokenList.filter((t) => t.chainId == conf.chainId);
+        let listedTokens = res.data.tokens.filter((t) => t.chainId == conf.chainId);
         for (const t of listedTokens) {
           const c = await this.contractRepo.findByAddress(t.address.toLowerCase());
           if (!c) {
