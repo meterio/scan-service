@@ -161,6 +161,7 @@ class AccountController extends BaseController {
       }
       actJson.destructTxHash = contract.destructTxHash;
       actJson.destructBlock = contract.destructBlock;
+      actJson.logoURI = contract.logoURI;
     }
 
     const txCount = await this.txDigestRepo.countByAddress(address);
