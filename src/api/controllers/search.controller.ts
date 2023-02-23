@@ -100,6 +100,7 @@ class SearchController extends BaseController {
         symbol: contract.symbol,
         type: 'address',
         tag: ContractType[contract.type],
+        logoURI: contract.logoURI,
       });
     }
 
@@ -129,11 +130,12 @@ class SearchController extends BaseController {
           symbol: c.symbol,
           type: 'address',
           tag: ContractType[c.type],
+          logoURI: c.logoURI,
         });
       }
     }
     if (suggestions.length > 0) {
-      return res.json({ type: 'suggestions', data: suggestions.slice(0, 15) });
+      return res.json({ type: 'suggestions', data: suggestions.slice(0, 100) });
     }
 
     return res.json({ type: 'suggestions', data: [] });
