@@ -107,6 +107,10 @@ class SearchController extends BaseController {
     const accounts = await this.accountRepo.findByFuzzyName(word);
     if (accounts && accounts.length > 0) {
       for (const a of accounts) {
+        if (a.address in visitedAddrs) {
+          continue;
+        }
+        visitedAddrs[a.address] = true;
         suggestions.push({
           name: a.name,
           address: a.address,
