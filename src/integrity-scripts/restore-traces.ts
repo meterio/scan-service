@@ -43,13 +43,13 @@ const runAsync = async (options) => {
         let tracer: Pos.CallTracerOutput;
         if (isTraceable(tx.clauses[clauseIndex].data)) {
           try {
-            tracer = await pos.traceClause(tx.block.hash, tx.hash, clauseIndex);
+            tracer = await pos.newTraceClause(tx.hash, clauseIndex);
             traces.push({ json: JSON.stringify(tracer), clauseIndex });
           } catch (e) {
             console.log('error getting 1st trace for tx:', tx.hash, 'sleep for 5 seconds');
             await sleep(5000);
             try {
-              tracer = await pos.traceClause(tx.block.hash, tx.hash, clauseIndex);
+              tracer = await pos.newTraceClause(tx.hash, clauseIndex);
               traces.push({ json: JSON.stringify(tracer), clauseIndex });
             } catch (e) {
               console.log('error getting 2nd trace for tx: ', tx.hash);
