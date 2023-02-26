@@ -1503,6 +1503,8 @@ export class PosCMD extends CMD {
 
       for (const [logIndex, evt] of o.events.entries()) {
         // rebasing events (by AMPL)
+        // event LogRebase(uint256 indexed epoch, uint256 globalAMPLSupply)
+        // sample: https://scan.meter.io/tx/0xdd34ce672832253b819be51e85b196e4eca7f49d50f272b0ad2d2a866006d4b1?tab=2&p=1
         if (evt.topics[0] === '0x72725a3b1e5bd622d6bcd1339bb31279c351abe8f541ac7fd320f24e1b1641f2') {
           this.rebasingsCache.push(evt.address);
         }
@@ -1732,6 +1734,17 @@ export class PosCMD extends CMD {
     for (const tokenAddr of this.rebasingsCache) {
       this.log.info(`Handling rebasing events on ${tokenAddr}`);
       const bals = await this.tokenBalanceRepo.findByTokenAddress(tokenAddr);
+      const c = await this.contractRepo.findByAddress(tokenAddr);
+      if (c) {
+        const res = await this.pos.explain(
+          { clauses: [{ to: tokenAddr, value: '0x0', token: Token.MTR, data: ERC20.totalSupply.encode() }] },
+          'best'
+        );
+        const decoded = ERC20.totalSupply.decode(res[0].data);
+        c.totalSupply = new BigNumber(decoded['0']);
+        await c.save();
+      }
+
       for (const bal of bals) {
         const res = await this.pos.explain(
           {
