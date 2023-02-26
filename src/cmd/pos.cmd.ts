@@ -1732,6 +1732,17 @@ export class PosCMD extends CMD {
     for (const tokenAddr of this.rebasingsCache) {
       this.log.info(`Handling rebasing events on ${tokenAddr}`);
       const bals = await this.tokenBalanceRepo.findByTokenAddress(tokenAddr);
+      const c = await this.contractRepo.findByAddress(tokenAddr);
+      if (c) {
+        const res = await this.pos.explain(
+          { clauses: [{ to: tokenAddr, value: '0x0', token: Token.MTR, data: ERC20.totalSupply.encode() }] },
+          'best'
+        );
+        const decoded = ERC20.totalSupply.decode(res[0].data);
+        c.totalSupply = new BigNumber(decoded['0']);
+        await c.save();
+      }
+
       for (const bal of bals) {
         const res = await this.pos.explain(
           {
