@@ -1332,7 +1332,7 @@ export class PosCMD extends CMD {
     let traces: TraceOutput[] = [];
     for (const [clauseIndex, _] of tx.clauses.entries()) {
       try {
-        const tracer = await this.pos.traceClause(blockConcise.hash, tx.id, clauseIndex);
+        const tracer = await this.pos.newTraceClause(tx.id, clauseIndex);
         traces.push({ json: JSON.stringify(tracer), clauseIndex });
         if (tracer.error) {
           vmError = {
