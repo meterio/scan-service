@@ -1171,13 +1171,13 @@ export class PosCMD extends CMD {
     let visitedClause = {};
     for (const [clauseIndex, clause] of tx.clauses.entries()) {
       // skip handling of clause if it's a sys contract call
-      if (
-        (!!this.mtrSysToken && clause.to === this.mtrSysToken.address) ||
-        (!!this.mtrgSysToken && clause.to === this.mtrgSysToken.address) ||
-        (!!this.mtrgV2SysToken && clause.to === this.mtrgV2SysToken.address)
-      ) {
-        continue;
-      }
+      // if (
+      //   (!!this.mtrSysToken && clause.to === this.mtrSysToken.address) ||
+      //   (!!this.mtrgSysToken && clause.to === this.mtrgSysToken.address) ||
+      //   (!!this.mtrgV2SysToken && clause.to === this.mtrgV2SysToken.address)
+      // ) {
+      //   continue;
+      // }
 
       // save call digests with data
       if (clause.data && clause.data.length >= 10) {
@@ -1193,31 +1193,47 @@ export class PosCMD extends CMD {
         } else {
           signature = clause.data.substring(0, 10);
         }
-        const key = sha1({ num: blockConcise.number, hash: tx.id, from: tx.origin, to: clause.to || ZeroAddress });
-        if (key in visitedClause) {
-          // this.log.info('Skip clause for duplicate data: ', clause);
-          continue;
-        }
-        visitedClause[key] = true;
-        if (signature != '0x00000000') {
-          callDigests.push({
-            block: blockConcise,
-            txHash: tx.id,
-            fee: new BigNumber(tx.paid),
-            from: tx.origin,
-            to: clause.to || ZeroAddress,
-            mtr: token === Token.MTR ? new BigNumber(clause.value) : new BigNumber(0),
-            mtrg: token === Token.MTRG ? new BigNumber(clause.value) : new BigNumber(0),
-            method: signature,
-            reverted: tx.reverted,
-            clauseIndexs: [clauseIndex],
-            txIndex,
-            seq: 0,
-          });
-        }
+        // const key = sha1({ num: blockConcise.number, hash: tx.id, from: tx.origin, to: clause.to || ZeroAddress });
+        // if (key in visitedClause) {
+        //   // this.log.info('Skip clause for duplicate data: ', clause);
+        //   continue;
+        // }
+        // visitedClause[key] = true;
+        // if (signature != '0x00000000') {
+        callDigests.push({
+          block: blockConcise,
+          txHash: tx.id,
+          fee: new BigNumber(tx.paid),
+          from: tx.origin,
+          to: clause.to || ZeroAddress,
+          mtr: token === Token.MTR ? new BigNumber(clause.value) : new BigNumber(0),
+          mtrg: token === Token.MTRG ? new BigNumber(clause.value) : new BigNumber(0),
+          method: signature,
+          reverted: tx.reverted,
+          clauseIndexs: [clauseIndex],
+          txIndex,
+          seq: 0,
+        });
+        // }
+      } else {
+        callDigests.push({
+          block: blockConcise,
+          txHash: tx.id,
+          fee: new BigNumber(tx.paid),
+          from: tx.origin,
+          to: clause.to || ZeroAddress,
+          mtr: clause.token === Token.MTR ? new BigNumber(clause.value) : new BigNumber(0),
+          mtrg: clause.token === Token.MTRG ? new BigNumber(clause.value) : new BigNumber(0),
+          method: 'Transfer',
+          reverted: tx.reverted,
+          clauseIndexs: [clauseIndex],
+          txIndex,
+          seq: 0,
+        });
       }
     }
 
+    /*
     // prepare events and outputs
     for (const [clauseIndex, o] of tx.outputs.entries()) {
       for (const [logIndex, evt] of o.events.entries()) {
@@ -1303,6 +1319,7 @@ export class PosCMD extends CMD {
         }
       } // End of handling transfers
     }
+    */
     let ids = {};
     for (const d of callDigests) {
       const id = sha1({ num: d.block.number, hash: d.txHash, from: d.from, to: d.to });
@@ -1312,15 +1329,15 @@ export class PosCMD extends CMD {
       ids[id] = true;
       this.txDigestsCache.push(d);
     }
-    for (const key in transferDigestMap) {
-      const d = transferDigestMap[key];
-      const id = sha1({ num: d.block.number, hash: d.txHash, from: d.from, to: d.to });
-      if (id in ids) {
-        continue;
-      }
-      ids[id] = true;
-      this.txDigestsCache.push(d);
-    }
+    // for (const key in transferDigestMap) {
+    //   const d = transferDigestMap[key];
+    //   const id = sha1({ num: d.block.number, hash: d.txHash, from: d.from, to: d.to });
+    //   if (id in ids) {
+    //     continue;
+    //   }
+    //   ids[id] = true;
+    //   this.txDigestsCache.push(d);
+    // }
   }
 
   async getVMError(
@@ -1803,82 +1820,89 @@ export class PosCMD extends CMD {
   }
 
   printCache() {
+    this.log.info('----------------------------------------');
+    this.log.info(` ${this.blocksCache.length} BLOCK(s)`);
+    this.log.info('----------------------------------------');
     for (const item of this.blocksCache) {
-      this.log.info('----------------------------------------');
-      this.log.info('BLOCK');
-      this.log.info('----------------------------------------');
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
-
+    this.log.info('----------------------------------------');
+    this.log.info(` ${this.txsCache.length} TX(s)`);
+    this.log.info('----------------------------------------');
     for (const item of this.txsCache) {
-      this.log.info('----------------------------------------');
-      this.log.info('TX');
-      this.log.info('----------------------------------------');
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
 
+    this.log.info('----------------------------------------');
+    this.log.info(` ${this.movementsCache.length} MOVEMENT(s)`);
+    this.log.info('----------------------------------------');
     for (const item of this.movementsCache) {
-      this.log.info('----------------------------------------');
-      this.log.info('MOVEMENT');
-      this.log.info('----------------------------------------');
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
+
+    this.log.info('----------------------------------------');
+    this.log.info(` ${this.txDigestsCache.length} TX DIGEST(s)`);
+    this.log.info('----------------------------------------');
     for (const item of this.txDigestsCache) {
-      this.log.info('----------------------------------------');
-      this.log.info('TX DIGEST');
-      this.log.info('----------------------------------------');
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
+
+    this.log.info('----------------------------------------');
+    this.log.info(` ${this.boundsCache.length} BOUND(s)`);
+    this.log.info('----------------------------------------');
     for (const item of this.boundsCache) {
-      this.log.info('----------------------------------------');
-      this.log.info('BOUND');
-      this.log.info('----------------------------------------');
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
+
+    this.log.info('----------------------------------------');
+    this.log.info(` ${this.unboundsCache.length} UNBOUND(s)`);
+    this.log.info('----------------------------------------');
     for (const item of this.unboundsCache) {
-      this.log.info('----------------------------------------');
-      this.log.info('UNBOUND');
-      this.log.info('----------------------------------------');
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
+
+    this.log.info('----------------------------------------');
+    this.log.info(` ${this.rebasingsCache.length} REBASING(s)`);
+    this.log.info('----------------------------------------');
     for (const item of this.rebasingsCache) {
-      this.log.info('----------------------------------------');
-      this.log.info('REBASING');
-      this.log.info('----------------------------------------');
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
+
+    this.log.info('----------------------------------------');
+    this.log.info(` ${this.contractsCache.length} CONTRACT(s) created`);
+    this.log.info('----------------------------------------');
     for (const item of this.contractsCache) {
-      this.log.info('----------------------------------------');
-      this.log.info('CONTRACT');
-      this.log.info('----------------------------------------');
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
+
+    this.log.info('----------------------------------------');
+    this.log.info(` ${this.accountCache.list().length} ACCOUT(s) updated`);
+    this.log.info('----------------------------------------');
     for (const item of this.accountCache.list()) {
-      this.log.info('----------------------------------------');
-      this.log.info('ACCOUT');
-      this.log.info('----------------------------------------');
-      this.log.info(item);
+      this.log.info(item.toJSON());
       this.log.info('----------------------------------------\n');
     }
+
+    this.log.info('----------------------------------------');
+    this.log.info(`${this.tokenBalanceCache.list.length} TOKEN BALNCE(s) updated`);
+    this.log.info('----------------------------------------');
     for (const item of this.tokenBalanceCache.list()) {
-      this.log.info('----------------------------------------');
-      this.log.info('TOKEN BALNCE');
-      this.log.info('----------------------------------------');
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
+
+    this.log.info('----------------------------------------');
+    this.log.info(`${this.internalTxCache.length} Internal Tx(s)`);
+    this.log.info('----------------------------------------');
     for (const item of this.internalTxCache) {
-      this.log.info('----------------------------------------');
-      this.log.info('Internal Tx');
-      this.log.info('----------------------------------------');
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
