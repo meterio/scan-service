@@ -36,7 +36,6 @@ const txDigestSchema = new mongoose.Schema<TxDigest>({
   seq: { type: Number, default: 0, required: true },
 });
 
-txDigestSchema.index({ 'block.number': 1, txHash: 1, from: 1, to: 1 }, { unique: true });
 txDigestSchema.index({ from: 1, to: 1 });
 txDigestSchema.index({ 'block.number': 1, txHash: 1, from: 1, to: 1, clauseIndexs: 1 }, { unique: true });
 txDigestSchema.index({ 'block.number': 1 });

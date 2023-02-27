@@ -79,4 +79,12 @@ export default class TxDigestRepo {
   public async findInRangeWithoutTxIndex(startblock: number, endblock: number) {
     return this.model.find({ txIndex: { $exists: false }, 'block.number': { $gte: startblock, $lt: endblock } });
   }
+
+  public deleteByTxHash(txHash: string) {
+    return this.model.deleteMany({ txHash });
+  }
+
+  public deleteInRange(start, end: number) {
+    return this.model.deleteMany({ 'block.number': { $gte: start, $lte: end } });
+  }
 }

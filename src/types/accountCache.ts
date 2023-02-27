@@ -5,7 +5,7 @@ import { getAccountName, ZeroAddress, Network, Token } from '../const';
 import { Pos, fromWei } from '../utils';
 
 export class AccountCache {
-  private accts: { [key: string]: Account & { save() } } = {};
+  private accts: { [key: string]: Account & { save(); toJSON() } } = {};
   private repo = new AccountRepo();
   private network: Network;
   private pos: Pos;
