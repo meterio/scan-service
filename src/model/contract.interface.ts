@@ -14,8 +14,11 @@ export interface Contract {
   officialSite?: string;
   totalSupply: BigNumber;
 
+  // deprecated
   holdersCount: BigNumber;
+  // deprecated
   transfersCount: BigNumber;
+  // deprecated
   tokensCount?: BigNumber;
 
   master: string;

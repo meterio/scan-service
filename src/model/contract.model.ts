@@ -24,18 +24,21 @@ const schema = new mongoose.Schema<Contract>({
     set: (bnum: BigNumber) => bnum.toFixed(0),
     required: true,
   },
+  // deprecated
   holdersCount: {
     type: String,
     get: (num: string) => new BigNumber(num),
     set: (bnum: BigNumber) => bnum.toFixed(0),
     required: true,
   },
+  // deprecated
   tokensCount: {
     type: String,
     get: (num: string) => new BigNumber(num),
     set: (bnum: BigNumber) => bnum.toFixed(0),
     required: false,
   },
+  // deprecated
   transfersCount: {
     type: String,
     get: (num: string) => new BigNumber(num),
