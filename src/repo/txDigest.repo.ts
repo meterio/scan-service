@@ -43,7 +43,7 @@ export default class TxDigestRepo {
     const count = await this.model.count(query);
     const result = await this.model
       .find(query)
-      .sort({ 'block.number': -1, txIndex: -1 })
+      .sort({ 'block.number': -1 })
       .limit(limit)
       .skip(limit * page);
     return { count, result };

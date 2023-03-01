@@ -199,8 +199,6 @@ class AccountController extends BaseController {
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
     start = process.hrtime();
-
-    start = process.hrtime();
     const paginate = await this.txDigestRepo.paginateByAccount(address, page, limit);
 
     if (!paginate.result) {
@@ -223,6 +221,9 @@ class AccountController extends BaseController {
     return res.json({
       totalRows: paginate.count,
       txs: paginate.result
+        .sort((a, b) =>
+          a.block.number == b.block.number ? (a.txIndex > b.txIndex ? -1 : 1) : a.block.number > b.block.number ? -1 : 1
+        )
         .map((tx) => tx.toJSON())
         .map((tx) => ({
           ...tx,
