@@ -141,9 +141,9 @@ class AccountController extends BaseController {
       actJson.tokenSymbol = contract.symbol;
       actJson.tokenDecimals = contract.decimals;
       actJson.totalSupply = contract.totalSupply.toFixed();
-      actJson.holdersCount = contract.holdersCount.toNumber();
-      actJson.transfersCount = contract.transfersCount.toNumber();
-      actJson.tokensCount = contract.tokensCount?.toNumber();
+      // actJson.holdersCount = contract.holdersCount.toNumber();
+      // actJson.transfersCount = contract.transfersCount.toNumber();
+      // actJson.tokensCount = contract.tokensCount?.toNumber();
       actJson.master = contract.master;
       actJson.creationTxHash = contract.creationTxHash;
       actJson.firstSeen = contract.firstSeen;
@@ -164,6 +164,15 @@ class AccountController extends BaseController {
       actJson.logoURI = contract.logoURI;
     }
 
+    let holdersCount = 0;
+    if (contract) {
+      if (contract.type === ContractType.ERC20) {
+        holdersCount = await this.tokenBalanceRepo.countByTokenAddress(address);
+      } else {
+        holdersCount = await this.nftRepo.countByAddress(address);
+      }
+    }
+    const transfersCount = await this.movementRepo.countByTokenAddress(address);
     const txCount = await this.txDigestRepo.countByAddress(address);
     const erc20TokenCount = await this.tokenBalanceRepo.countERC20ByAddress(address);
     const nftTokenCount = await this.nftRepo.countByOwner(address);
@@ -179,6 +188,8 @@ class AccountController extends BaseController {
       account: {
         address,
         ...actJson,
+        holdersCount,
+        transfersCount,
         txCount,
         erc20TokenCount,
         nftTokenCount,
