@@ -1165,27 +1165,20 @@ export class PosCMD extends CMD {
     blockConcise: BlockConcise,
     txIndex: number
   ) {
-    let transferDigestMap: { [key: string]: TxDigest } = {}; // key: sha1(from,to) -> val: txDigest object
-    let callDigests: TxDigest[] = [];
-    //
-    let visitedClause = {};
+    let digests: TxDigest[] = [];
+    let ids = {};
+    // -------------------------------------
+    // Handle direct digests
+    // related to tx.origin and clause.to
+    // -------------------------------------
     for (const [clauseIndex, clause] of tx.clauses.entries()) {
-      // skip handling of clause if it's a sys contract call
-      // if (
-      //   (!!this.mtrSysToken && clause.to === this.mtrSysToken.address) ||
-      //   (!!this.mtrgSysToken && clause.to === this.mtrgSysToken.address) ||
-      //   (!!this.mtrgV2SysToken && clause.to === this.mtrgV2SysToken.address)
-      // ) {
-      //   continue;
-      // }
-
-      // save call digests with data
+      // save direct digests with data
+      let signature = 'Transfer'; // default is transfer
+      const token = clause.token;
       if (clause.data && clause.data.length >= 10) {
         // this.log.info('data', clause.data);
         const isSE = ScriptEngine.IsScriptEngineData(clause.data);
         // this.log.info('clause.to: ', clause.to);
-        const token = clause.token;
-        let signature = '';
         if (isSE) {
           const decoded = ScriptEngine.decodeScriptData(clause.data);
           // this.log.info('decoded: ', decoded);
@@ -1193,45 +1186,85 @@ export class PosCMD extends CMD {
         } else {
           signature = clause.data.substring(0, 10);
         }
-        // const key = sha1({ num: blockConcise.number, hash: tx.id, from: tx.origin, to: clause.to || ZeroAddress });
-        // if (key in visitedClause) {
-        //   // this.log.info('Skip clause for duplicate data: ', clause);
-        //   continue;
-        // }
-        // visitedClause[key] = true;
-        // if (signature != '0x00000000') {
-        callDigests.push({
-          block: blockConcise,
-          txHash: tx.id,
-          fee: new BigNumber(tx.paid),
-          from: tx.origin,
-          to: clause.to || ZeroAddress,
-          mtr: token === Token.MTR ? new BigNumber(clause.value) : new BigNumber(0),
-          mtrg: token === Token.MTRG ? new BigNumber(clause.value) : new BigNumber(0),
-          method: signature,
-          reverted: tx.reverted,
-          clauseIndexs: [clauseIndex],
-          txIndex,
-          seq: 0,
-        });
-        // }
-      } else {
-        callDigests.push({
-          block: blockConcise,
-          txHash: tx.id,
-          fee: new BigNumber(tx.paid),
-          from: tx.origin,
-          to: clause.to || ZeroAddress,
-          mtr: clause.token === Token.MTR ? new BigNumber(clause.value) : new BigNumber(0),
-          mtrg: clause.token === Token.MTRG ? new BigNumber(clause.value) : new BigNumber(0),
-          method: 'Transfer',
-          reverted: tx.reverted,
-          clauseIndexs: [clauseIndex],
-          txIndex,
-          seq: 0,
-        });
+      }
+
+      const d = {
+        block: blockConcise,
+        txHash: tx.id,
+        fee: new BigNumber(tx.paid),
+        from: tx.origin,
+        to: clause.to || ZeroAddress,
+        mtr: token === Token.MTR ? new BigNumber(clause.value) : new BigNumber(0),
+        mtrg: token === Token.MTRG ? new BigNumber(clause.value) : new BigNumber(0),
+        method: signature,
+        reverted: tx.reverted,
+        clauseIndexs: [clauseIndex],
+        txIndex,
+        seq: 0,
+      };
+      const id = sha1({ from: d.from, to: d.to, clauseIndex });
+      if (id in ids) {
+        continue;
+      }
+      ids[id] = true;
+      digests.push(d);
+    }
+
+    // ---------------------------------------------
+    // Handle special case to KBlock ScriptEngine tx
+    // related to transfers (indicating staking reward)
+    // ---------------------------------------------
+    let kblockDigestMap: { [key: string]: TxDigest } = {};
+    for (const [clauseIndex, o] of tx.outputs.entries()) {
+      const clause = tx.clauses[clauseIndex];
+      // special case for KBlock ScritpEngine tx
+      if (!tx.reverted && tx.origin === ZeroAddress && clause && ScriptEngine.IsScriptEngineData(clause.data)) {
+        for (const [logIndex, tr] of o.transfers.entries()) {
+          let mtr = new BigNumber(0);
+          let mtrg = new BigNumber(0);
+          if (tr.token == 0) {
+            mtr = new BigNumber(tr.amount);
+          }
+          if (tr.token == 1) {
+            mtrg = new BigNumber(tr.amount);
+          }
+
+          const d = {
+            block: blockConcise,
+            txHash: tx.id,
+            fee: new BigNumber(tx.paid),
+            from: tr.sender,
+            to: tr.recipient,
+            mtr,
+            mtrg,
+            method: 'Transfer',
+            reverted: tx.reverted,
+            clauseIndexs: [clauseIndex],
+            txIndex,
+            seq: 0,
+          };
+          const id = sha1({ from: d.from, to: d.to, clauseIndex });
+          if (id in kblockDigestMap) {
+            kblockDigestMap[id].clauseIndexs.push(clauseIndex);
+            kblockDigestMap[id].mtr = kblockDigestMap[id].mtr.plus(mtr);
+            kblockDigestMap[id].mtrg = kblockDigestMap[id].mtrg.plus(mtrg);
+            continue;
+          }
+          ids[id] = true;
+          digests.push(d);
+        }
       }
     }
+
+    for (const id in kblockDigestMap) {
+      const d = kblockDigestMap[id];
+      if (id in ids) {
+        continue;
+      }
+      ids[id] = true;
+      digests.push(d);
+    }
+    return digests;
 
     /*
     // prepare events and outputs
@@ -1320,15 +1353,7 @@ export class PosCMD extends CMD {
       } // End of handling transfers
     }
     */
-    let ids = {};
-    for (const d of callDigests) {
-      const id = sha1({ num: d.block.number, hash: d.txHash, from: d.from, to: d.to });
-      if (id in ids) {
-        continue;
-      }
-      ids[id] = true;
-      this.txDigestsCache.push(d);
-    }
+
     // for (const key in transferDigestMap) {
     //   const d = transferDigestMap[key];
     //   const id = sha1({ num: d.block.number, hash: d.txHash, from: d.from, to: d.to });
