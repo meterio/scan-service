@@ -1264,7 +1264,9 @@ export class PosCMD extends CMD {
       ids[id] = true;
       digests.push(d);
     }
-    return digests;
+    for (const d of digests) {
+      this.txDigestsCache.push(d);
+    }
 
     /*
     // prepare events and outputs
