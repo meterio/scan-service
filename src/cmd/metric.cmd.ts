@@ -867,7 +867,7 @@ export class MetricCMD extends CMD {
         await this.updateValidatorRewards(index, every5m);
 
         // adjust total supply
-        await this.adjustTotalSupply(index, every6h);
+        await this.adjustTotalSupply(index, every2h);
 
         index = (index + 1) % every24h; // clear up 24hours
       } catch (e) {
