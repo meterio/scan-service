@@ -895,7 +895,7 @@ export class PosCMD extends CMD {
       };
       if (!!this.mtrSysToken && evt.address.toLowerCase() === this.mtrSysToken.address) {
         // MTR: convert system contract event into system transfer
-        movement.token = Token.MTR;
+        // movement.token = Token.MTR;
         await this.accountCache.minus(from, Token.MTR, amount, blockConcise);
         await this.accountCache.plus(to, Token.MTR, amount, blockConcise);
       } else if (
@@ -903,7 +903,7 @@ export class PosCMD extends CMD {
         (!!this.mtrgV2SysToken && evt.address.toLowerCase() === this.mtrgV2SysToken.address)
       ) {
         // MTRG: convert system contract event into system transfer
-        movement.token = Token.MTRG;
+        // movement.token = Token.MTRG;
         await this.accountCache.minus(from, Token.MTRG, amount, blockConcise);
         await this.accountCache.plus(to, Token.MTRG, amount, blockConcise);
       } else {

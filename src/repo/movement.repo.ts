@@ -33,13 +33,13 @@ export default class MovementRepo {
     return this.model.find({ 'block.number': blockNum });
   }
 
-  public async findByRange(token: Token, startTS: number, endTS: number) {
+  public async findByTokenInRange(token: Token, startNum: number, endNum: number) {
     return this.model
       .find({
         token,
-        blockTimestamp: { $gte: startTS, $lt: endTS },
+        'block.number': { $gte: startNum, $lte: endNum },
       })
-      .sort({ blockNumber: 1 });
+      .sort({ 'block.number': 1 });
   }
 
   public async countByTokenAddress(tokenAddress: string) {
