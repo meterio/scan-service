@@ -1089,7 +1089,7 @@ export class PosCMD extends CMD {
           }
           const from = decoded.from.toLowerCase();
           const amount = new BigNumber(decoded.amount);
-          await this.accountCache.minus(from, Token.MTR, amount, blockConcise);
+          // await this.accountCache.minus(from, Token.MTR, amount, blockConcise);
           await this.tokenBalanceCache.plus(from, evt.address, amount, blockConcise);
         }
 
@@ -1110,7 +1110,7 @@ export class PosCMD extends CMD {
 
           const from = decoded.from.toLowerCase();
           const amount = new BigNumber(decoded.amount);
-          await this.tokenBalanceCache.minus(from, evt.address, amount, blockConcise);
+          // await this.tokenBalanceCache.minus(from, evt.address, amount, blockConcise);
           await this.accountCache.plus(from, Token.MTR, amount, blockConcise);
         }
       }
@@ -1510,7 +1510,7 @@ export class PosCMD extends CMD {
 
     // update accounts with WMTR wrap
     // skip WMTR handling because this duplicates with native transfer
-    // await this.updateWMTR(tx, blockConcise);
+    await this.updateWMTR(tx, blockConcise);
 
     await this.updateLogs(tx, blockConcise);
 
