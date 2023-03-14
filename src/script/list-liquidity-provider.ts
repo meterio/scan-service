@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 require('../utils/validateEnv');
 
-import { HeadRepo, TxRepo } from '../repo';
+import { ContractRepo, HeadRepo, LogEventRepo } from '../repo';
 import { connectDB, disconnectDB } from '../utils/db';
 import * as fs from 'fs';
+import { Interface } from 'ethers/lib/utils';
 
 import { checkNetworkWithDB, runWithOptions } from '../utils';
+import { ZeroAddress } from '../const';
 
 const pairs = {
   'MTRG-BUSD.bsc': '0xaca210bd7d12c15560994e4c7b2bec1b538ad306',
@@ -37,13 +39,15 @@ for (const name in pairs) {
 }
 
 // function addLiquidity(address tokenA, address tokenB, uint256 amountADesired, uint256 amountBDesired, uint256 amountAMin, uint256 amountBMin, address to, uint256 deadline) returns (uint256 amountA, uint256 amountB, uint256 liquidity)
-const funcID = '0xe8e33700';
+const iface = new Interface(['event Transfer(address indexed _from, address indexed _to, uint256 _value)']);
+const transferTopic = iface.getEventTopic('Transfer');
 const runAsync = async (options) => {
   const { network, standby } = options;
 
   await connectDB(network, standby);
   const headRepo = new HeadRepo();
-  const txRepo = new TxRepo();
+  const evtRepo = new LogEventRepo();
+  const contractRepo = new ContractRepo();
   await checkNetworkWithDB(network);
 
   const pos = await headRepo.findByKey('pos');
@@ -56,26 +60,35 @@ const runAsync = async (options) => {
     const start = i;
     const end = i + step - 1 > best ? best : i + step - 1;
 
-    const txs = await txRepo.findInRange(start, end);
-    console.log(`scanning tx in blocks [${start}, ${end}]`);
+    const evts = await evtRepo.findByTopic0InBlockRangeSortAsc(transferTopic, start, end);
+    console.log(`scanning events in blocks [${start}, ${end}]`);
 
-    for (const tx of txs) {
-      let method = tx.clauses[0].data;
-      if (method.length > 10) {
-        method = method.substring(0, 10);
-      }
-      if (method != funcID) {
-        continue;
-      }
+    for (const e of evts) {
+      try {
+        const decoded = iface.decodeEventLog('Transfer', e.data, e.topics);
+        const from = decoded._from;
+        const to = decoded._to;
 
-      if (targetAddrs.includes(tx.clauses[0].to.toLowerCase())) {
-        console.log(`${tx.origin} added liquidity to ${tx.clauses[0].to.toLowerCase()}`);
-        // add liquidity to pools
-        addrMap[tx.origin] = true;
-      }
+        if (targetAddrs.includes(e.address.toLowerCase()) && from === ZeroAddress) {
+          console.log(`${to} added liquidity to ${e.address}`);
+          // add liquidity to pools
+          addrMap[to.toLowerCase()] = true;
+        }
+      } catch (e) {}
     }
   }
-  fs.writeFileSync('liquidity-providers.txt', Object.keys(addrMap).join('\n'));
+  let validAddrs = [];
+  for (const addr in addrMap) {
+    if (addr === ZeroAddress) {
+      continue;
+    }
+    const c = await contractRepo.findByAddress(addr);
+    if (c) {
+      continue;
+    }
+    validAddrs.push(addr);
+  }
+  fs.writeFileSync('liquidity-providers.txt', validAddrs.join('\n'));
 };
 
 (async () => {

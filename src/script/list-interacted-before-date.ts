@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 require('../utils/validateEnv');
 
-import { HeadRepo, TxRepo } from '../repo';
+import { ContractRepo, HeadRepo, TxRepo } from '../repo';
 import { connectDB, disconnectDB } from '../utils/db';
 import * as fs from 'fs';
 
 import { checkNetworkWithDB, runWithOptions } from '../utils';
+import { ZeroAddress } from '../const';
 
 const cutOffTimestamp = 1672560000;
 
@@ -15,6 +16,7 @@ const runAsync = async (options) => {
   await connectDB(network, standby);
   const headRepo = new HeadRepo();
   const txRepo = new TxRepo();
+  const contractRepo = new ContractRepo();
   await checkNetworkWithDB(network);
 
   const pos = await headRepo.findByKey('pos');
@@ -42,6 +44,13 @@ const runAsync = async (options) => {
   }
   let validAddrs = [];
   for (const addr in addrMap) {
+    if (addr === ZeroAddress) {
+      continue;
+    }
+    const c = await contractRepo.findByAddress(addr);
+    if (c) {
+      continue;
+    }
     const count = addrMap[addr];
     if (count >= 5) {
       validAddrs.push(addr);
