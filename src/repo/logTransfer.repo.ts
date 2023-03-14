@@ -1,3 +1,4 @@
+import { ZeroAddress } from '../const';
 import { LogTransfer } from '../model/logTransfer.interface';
 import logTransferModel from '../model/logTransfer.model';
 
@@ -49,5 +50,17 @@ export default class LogTransferRepo {
 
   public async findBeforeNum(blockNum: number) {
     return this.model.find({ 'block.number': { $gt: blockNum } });
+  }
+
+  public async findMintInRange(token: number, start, end: number) {
+    return this.model
+      .find({ sender: ZeroAddress, token, 'block.number': { $gte: start, $lte: end } })
+      .sort({ 'block.number': 1 });
+  }
+
+  public async findBurnInRange(token: number, start, end: number) {
+    return this.model
+      .find({ recipient: ZeroAddress, token, 'block.number': { $gte: start, $lte: end } })
+      .sort({ 'block.number': 1 });
   }
 }
