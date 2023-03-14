@@ -29,6 +29,7 @@ const runAsync = async (options) => {
 
     const txs = await txRepo.findInRange(start, end);
 
+    console.log(`scanning txs in blocks [${start}, ${end}]`);
     for (const tx of txs) {
       if (tx.block.timestamp > cutOffTimestamp) {
         break;

@@ -57,6 +57,7 @@ const runAsync = async (options) => {
     const end = i + step - 1 > best ? best : i + step - 1;
 
     const txs = await txRepo.findInRange(start, end);
+    console.log(`scanning tx in blocks [${start}, ${end}]`);
 
     for (const tx of txs) {
       let method = tx.clauses[0].data;
@@ -67,7 +68,8 @@ const runAsync = async (options) => {
         continue;
       }
 
-      if (targetAddrs.includes(tx.clauses[0].to)) {
+      if (targetAddrs.includes(tx.clauses[0].to.toLowerCase())) {
+        console.log(`${tx.origin} added liquidity to ${tx.clauses[0].to.toLowerCase()}`);
         // add liquidity to pools
         addrMap[tx.origin] = true;
       }
