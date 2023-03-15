@@ -39,6 +39,7 @@ const txDigestSchema = new mongoose.Schema<TxDigest>({
 txDigestSchema.index({ from: 1, to: 1 });
 txDigestSchema.index({ 'block.number': 1, txHash: 1, from: 1, to: 1, clauseIndexs: 1 }, { unique: true });
 txDigestSchema.index({ 'block.number': 1 });
+txDigestSchema.index({ 'block.number': -1 });
 txDigestSchema.index({ 'block.number': -1, txIndex: -1 });
 
 txDigestSchema.set('toJSON', {

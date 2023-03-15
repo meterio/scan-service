@@ -172,11 +172,23 @@ class AccountController extends BaseController {
         holdersCount = await this.nftRepo.countByAddress(address);
       }
     }
+    console.time('transferCount');
     const transfersCount = await this.movementRepo.countByTokenAddress(address);
+    console.timeEnd('transferCount');
+
+    console.time('txCount');
     const txCount = await this.txDigestRepo.countByAddress(address);
+    console.timeEnd('txCount');
+
     const erc20TokenCount = await this.tokenBalanceRepo.countERC20ByAddress(address);
+
+    console.time('nftTokenCount');
     const nftTokenCount = await this.nftRepo.countByOwner(address);
+    console.timeEnd('nftTokenCount');
+
+    console.time('erc20TxCount');
     const erc20TxCount = await this.movementRepo.countERC20TxsByAddress(address);
+    console.timeEnd('erc20TxCount');
     const nftTxCount = await this.movementRepo.countNFTTxsByAddress(address);
     const bidCount = await this.bidRepo.countByAddress(address);
     const proposedCount = await this.blockRepo.countByBeneficiary(address);
@@ -206,11 +218,11 @@ class AccountController extends BaseController {
 
   private getTxsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
-    let start = process.hrtime();
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    start = process.hrtime();
+    console.time('paginate total');
     const paginate = await this.txDigestRepo.paginateByAccount(address, page, limit);
+    console.timeEnd('paginate total');
 
     if (!paginate.result) {
       return res.json({ totalRows: 0, txSummaries: [] });
@@ -221,10 +233,15 @@ class AccountController extends BaseController {
       addresses.push(tx.from, tx.to);
     }
 
+    console.time('findByAddressList');
     const contracts = await this.contractRepo.findByAddressList(addresses);
     const existAddrs = contracts.map((c) => c.address);
+    console.timeEnd('findByAddressList');
 
+    console.time('findAllFunctions');
     const methods = await this.abiFragmentRepo.findAllFunctions();
+    console.timeEnd('findAllFunctions');
+
     let methodMap = {};
     methods.forEach((m) => {
       methodMap[m.signature] = m.name;

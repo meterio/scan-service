@@ -1,3 +1,4 @@
+import { ZeroAddress } from '../const';
 import { TxDigest } from '../model/txDigest.interface';
 import txDigestModel from '../model/txDigest.model';
 import { formalizePageAndLimit } from '../utils';
@@ -34,18 +35,45 @@ export default class TxDigestRepo {
   }
 
   public async countByAddress(address: string) {
-    return this.model.count({ $or: [{ from: address.toLowerCase() }, { to: address.toLowerCase() }] });
+    console.time('fromCount');
+    const fromCount = await this.model.count({ from: address.toLowerCase() });
+    console.timeEnd('fromCount');
+
+    console.time('toCount');
+    const toCount = await this.model.count({ to: address.toLowerCase() });
+    console.timeEnd('toCount');
+    return fromCount + toCount;
   }
 
   // paginates
   private async paginate(query: any, pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    console.time('count');
     const count = await this.model.count(query);
+    console.timeEnd('count');
+    console.time('paginate');
+    let skipSize = count - (page + 1) * limit;
+    let pageSize = limit;
+    if (skipSize < 0) {
+      pageSize += skipSize;
+      if (pageSize < 0) {
+        pageSize = 0;
+      }
+    }
+    console.log(`skipSize: ${skipSize}, pageSize: ${pageSize}`);
+
+    // const result = await this.model.find(query).skip(skipSize).limit(pageSize);
     const result = await this.model
       .find(query)
-      .sort({ 'block.number': -1 })
+      .sort({ _id: -1 })
       .limit(limit)
       .skip(limit * page);
+    // .sort({ 'block.number': -1 });
+    // .sort({ 'block.number': -1 })
+    // .limit(limit);
+    // .skip(limit * page);
+    result.sort((a, b) => (a.block.number > b.block.number ? -1 : 1));
+    console.timeEnd('paginate');
     return { count, result };
   }
 
@@ -54,7 +82,11 @@ export default class TxDigestRepo {
   }
 
   public async paginateByAccount(addr: string, pageNum?: number, limitNum?: number) {
-    return this.paginate({ $or: [{ from: addr.toLowerCase() }, { to: addr.toLowerCase() }] }, pageNum, limitNum);
+    if (addr === ZeroAddress) {
+      return this.paginate({ from: addr.toLowerCase() }, pageNum, limitNum);
+    } else {
+      return this.paginate({ $or: [{ from: addr.toLowerCase() }, { to: addr.toLowerCase() }] }, pageNum, limitNum);
+    }
   }
 
   public async paginateByAccountInRange(start: number, end: number, addr: string, pageNum?: number, limitNum?: number) {
