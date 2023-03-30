@@ -70,9 +70,11 @@ class MetricController extends BaseController {
 
     const totalStaked = map[MetricName.MTRG_STAKED];
     const totalStakedLocked = map[MetricName.MTRG_STAKED_LOCKED];
+    const totalSupply = await map[MetricName.MTRG_TOTALSUPPLY];
 
     const accountCount = await this.accountRepo.count();
     const contractCount = await this.contractRepo.count();
+    const stakingRatio = new BigNumber(totalStaked).div(totalSupply).toNumber();
     return {
       pos: {
         best: Number(map[MetricName.POS_BEST]),
@@ -92,6 +94,8 @@ class MetricController extends BaseController {
         healthyNodes: Number(map[MetricName.CANDIDATE_COUNT]) - Number(map[MetricName.INVALID_NODES_COUNT]),
         invalidNodes: Number(map[MetricName.INVALID_NODES_COUNT]),
         totalStaked,
+        stakingRatio,
+        stakingAPY: new BigNumber(5).div(100).div(stakingRatio), // inflation / stakingRatio
         totalCirculationStaked: new BigNumber(totalStaked).minus(totalStakedLocked).toFixed(0),
         totalStakedStr: `${fromWei(totalStaked, 2)} ${this.config.balanceSym}`,
       },
@@ -127,6 +131,7 @@ class MetricController extends BaseController {
       mtr: {
         price: map[MetricName.MTR_PRICE],
         priceChange: map[MetricName.MTR_PRICE_CHANGE],
+        totalSupply: new BigNumber(map[MetricName.MTR_TOTALSUPPLY]).dividedBy(1e18).toFixed(),
         circulation: new BigNumber(map[MetricName.MTR_CIRCULATION]).dividedBy(1e18).toFixed(),
       },
 
@@ -134,6 +139,7 @@ class MetricController extends BaseController {
         price: map[MetricName.MTRG_PRICE],
         priceChange: map[MetricName.MTRG_PRICE_CHANGE],
         avgDailyReward,
+        totalSupply: new BigNumber(map[MetricName.MTRG_TOTALSUPPLY]).dividedBy(1e18).toFixed(),
         circulation: new BigNumber(map[MetricName.MTRG_CIRCULATION]).dividedBy(1e18).toFixed(),
       },
     };

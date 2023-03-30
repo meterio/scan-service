@@ -62,7 +62,7 @@ export class MetricCMD extends CMD {
   private pos: Pos;
   private pow: Pow;
   private network: Network;
-  private coingecko = new Net('https://api.coingecko.com/api/v3/');
+  // private coingecko = new Net('https://api.coingecko.com/api/v3/');
   private coinmarketcap = new Net('https://pro-api.coinmarketcap.com/v2/');
   private blockchainInfo = new Net('https://api.blockchain.info');
   private validatorRepo = new ValidatorRepo();
