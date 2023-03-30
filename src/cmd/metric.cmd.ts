@@ -253,10 +253,8 @@ export class MetricCMD extends CMD {
             query: { slug: slugs.join(',') },
             headers: { 'X-CMC_PRO_API_KEY': process.env.COINMARKETCAP_API_KEY },
           });
-          console.log(res.data);
           for (const id in res.data) {
             const data = res.data[id];
-            console.log('id: ', id, data);
             const price = Math.floor(parseFloat(data.quote.USD.price) * 100) / 100;
             const percent24h = Math.floor(parseFloat(data.quote.USD.percent_change_24h) * 100) / 100;
 
