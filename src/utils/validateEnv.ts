@@ -13,6 +13,8 @@ function validateEnv() {
     CALLBACK_URL: str(),
     CONSUMER_KEY: str(),
     CONSUMER_SECRET: str(),
+
+    COINMARKETCAP_API_KEY: str(),
   });
 }
 

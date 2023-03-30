@@ -88,8 +88,9 @@ export class NetworkConfig {
   auctionEnabled: boolean;
   sourcifyEnabled: boolean;
 
-  coingeckoEnergy: string;
-  coingeckoBalance: string;
+  // coinmarketcap slug
+  cmcEnergy: string;
+  cmcBalance: string;
 
   energySym: string;
   balanceSym: string;
@@ -118,8 +119,8 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         auctionEnabled: true,
         sourcifyEnabled: true,
 
-        coingeckoEnergy: 'meter-stable',
-        coingeckoBalance: 'meter',
+        cmcEnergy: 'meter-stable',
+        cmcBalance: 'meter-governance',
 
         energySym: 'MTR',
         balanceSym: 'MTRG',
@@ -144,8 +145,8 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         auctionEnabled: true,
         sourcifyEnabled: true,
 
-        coingeckoEnergy: 'meter-stable',
-        coingeckoBalance: 'meter',
+        cmcEnergy: 'meter-stable',
+        cmcBalance: 'meter-governance',
 
         energySym: 'MTR',
         balanceSym: 'MTRG',
@@ -163,8 +164,8 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         auctionEnabled: false,
         sourcifyEnabled: false,
 
-        coingeckoEnergy: 'stp-network',
-        coingeckoBalance: '',
+        cmcEnergy: 'standard-tokenization-protocol',
+        cmcBalance: '',
         energySym: 'STPT',
         balanceSym: 'STPD',
         chainId: 36,
@@ -182,8 +183,8 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         auctionEnabled: false,
         sourcifyEnabled: false,
 
-        coingeckoEnergy: 'stp-network',
-        coingeckoBalance: '',
+        cmcEnergy: 'standard-tokenization-protocol',
+        cmcBalance: '',
         energySym: 'STPT',
         balanceSym: 'STPD',
         chainId: 72,

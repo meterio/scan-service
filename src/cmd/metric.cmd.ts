@@ -63,6 +63,7 @@ export class MetricCMD extends CMD {
   private pow: Pow;
   private network: Network;
   private coingecko = new Net('https://api.coingecko.com/api/v3/');
+  private coinmarketcap = new Net('https://pro-api.coinmarketcap.com/v2/');
   private blockchainInfo = new Net('https://api.blockchain.info');
   private validatorRepo = new ValidatorRepo();
   private bucketRepo = new BucketRepo();
@@ -226,67 +227,54 @@ export class MetricCMD extends CMD {
     }
   }
 
-  private async updateBitcoinInfo(index: number, interval: number) {
+  private async updatePowHashrate(index: number, interval: number) {
     if (index % interval === 0) {
       //blockchain.info/q/hashrate
-      this.log.info('update Bitcoin info');
+      this.log.info('update PoW hashrate');
       const stats = await this.blockchainInfo.http<any>('GET', 'stats');
       this.log.info('BTC Hashrate:', stats.hash_rate);
       if (!!stats) {
         this.cache.update(MetricName.BTC_HASHRATE, String(stats.hash_rate));
       }
-      const price = await this.coingecko.http<any>('GET', 'simple/price', {
-        query: { ids: 'bitcoin', vs_currencies: 'usd', include_24hr_change: 'false' },
-      });
 
-      if (!!price && price.bitcoin) {
-        this.log.info('BTC Price', price.bitcoin);
-        this.cache.update(MetricName.BTC_PRICE, String(price.bitcoin.usd));
-      }
-      this.log.info('done update Bitcoin info');
+      this.log.info('done update PoW hashrate');
     }
   }
 
   private async updateMarketPrice(index: number, interval: number) {
     if (index % interval === 0) {
-      this.log.info('update market price');
-      const config = GetNetworkConfig(this.network);
+      try {
+        this.log.info('update market price');
+        const config = GetNetworkConfig(this.network);
 
-      if (typeof config.coingeckoEnergy === 'string') {
-        const price = await this.coingecko.http<any>('GET', 'simple/price', {
-          query: { ids: `${config.coingeckoEnergy}`, vs_currencies: 'usd', include_24hr_change: 'true' },
-        });
-        this.log.info(`Got energy price: ${price}`);
-        if (!!price && config.coingeckoEnergy in price) {
-          const m = price[config.coingeckoEnergy];
-          const percent20h = Math.floor(parseFloat(m.usd_24h_change) * 100) / 100;
-          this.cache.update(MetricName.MTR_PRICE, String(m.usd));
-          this.cache.update(MetricName.MTR_PRICE_CHANGE, `${percent20h}%`);
-        }
-      } else if (typeof config.coingeckoEnergy === 'number') {
-        this.cache.update(MetricName.MTR_PRICE, String(config.coingeckoEnergy));
-        this.cache.update(MetricName.MTR_PRICE_CHANGE, `0%`);
-      } else {
-        this.log.info('invalid type for coingeckoEnergy');
-      }
+        const slugs = [config.cmcBalance, config.cmcEnergy, 'bitcoin'].filter((s) => !s);
+        if (slugs.length > 0) {
+          const res = await this.coinmarketcap.http<any>('GET', 'cryptocurrency/quotes/latest', {
+            query: { slugs: slugs.join(',') },
+            headers: { 'X-CMC_PRO_API_KEY': process.env.COINMARKETCAP_API_KEY },
+          });
+          for (const id in res.data) {
+            const data = res.data[id];
+            const price = data.quote.USD.price;
+            const percent24h = Math.floor(parseFloat(data.quote.USD.percent_change_24h) * 10000) / 100;
 
-      if (typeof config.coingeckoBalance === 'string') {
-        const price = await this.coingecko.http<any>('GET', 'simple/price', {
-          query: { ids: `${config.coingeckoBalance}`, vs_currencies: 'usd', include_24hr_change: 'true' },
-        });
-        if (!!price && config.coingeckoBalance in price) {
-          const m = price[config.coingeckoBalance];
-          const percent20h = Math.floor(parseFloat(m.usd_24h_change) * 100) / 100;
-          this.cache.update(MetricName.MTRG_PRICE, String(m.usd));
-          this.cache.update(MetricName.MTRG_PRICE_CHANGE, `${percent20h}%`);
+            if ('bitcoin' in data) {
+              this.cache.update(MetricName.BTC_PRICE, String(price));
+            }
+            if (config.cmcBalance in res.data) {
+              this.cache.update(MetricName.MTRG_PRICE, String(price));
+              this.cache.update(MetricName.MTRG_PRICE_CHANGE, `${percent24h}%`);
+            }
+            if (config.cmcEnergy in res.data) {
+              this.cache.update(MetricName.MTR_PRICE, String(price));
+              this.cache.update(MetricName.MTR_PRICE_CHANGE, `${percent24h}%`);
+            }
+          }
         }
-      } else if (typeof config.coingeckoBalance === 'number') {
-        this.cache.update(MetricName.MTRG_PRICE, String(config.coingeckoBalance));
-        this.cache.update(MetricName.MTRG_PRICE_CHANGE, `0%`);
-      } else {
-        this.log.info('invalid type for coingeckoBalance');
+        this.log.info('done update market price');
+      } catch (e) {
+        console.log(`error during update market price: `, e);
       }
-      this.log.info('done update market price');
     }
   }
 
@@ -831,7 +819,7 @@ export class MetricCMD extends CMD {
           await this.updatePowInfo(index, every5m);
 
           // update bitcoin info every 5 minutes
-          await this.updateBitcoinInfo(index, every20m);
+          await this.updatePowHashrate(index, every20m);
         }
 
         // update pos best, kblock & seq
@@ -844,7 +832,7 @@ export class MetricCMD extends CMD {
         await this.alertIfNetworkHalt(index, every2m);
 
         // update price/change every 10 minutes
-        await this.updateMarketPrice(index, every5m);
+        await this.updateMarketPrice(index, every30m);
 
         // update circulation
         await this.updateCirculationAndRank(index, every4h);
