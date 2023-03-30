@@ -63,7 +63,7 @@ export class MetricCMD extends CMD {
   private pow: Pow;
   private network: Network;
   // private coingecko = new Net('https://api.coingecko.com/api/v3/');
-  private coinmarketcap = new Net('https://pro-api.coinmarketcap.com/v2/');
+  private coinmarketcap = new Net('https://pro-api.coinmarketcap.com/v2');
   private blockchainInfo = new Net('https://api.blockchain.info');
   private validatorRepo = new ValidatorRepo();
   private bucketRepo = new BucketRepo();
@@ -247,25 +247,27 @@ export class MetricCMD extends CMD {
         this.log.info('update market price');
         const config = GetNetworkConfig(this.network);
 
-        const slugs = [config.cmcBalance, config.cmcEnergy, 'bitcoin'].filter((s) => !s);
+        const slugs = [config.cmcBalance, config.cmcEnergy, 'bitcoin'].filter((s) => s);
         if (slugs.length > 0) {
           const res = await this.coinmarketcap.http<any>('GET', 'cryptocurrency/quotes/latest', {
-            query: { slugs: slugs.join(',') },
+            query: { slug: slugs.join(',') },
             headers: { 'X-CMC_PRO_API_KEY': process.env.COINMARKETCAP_API_KEY },
           });
+          console.log(res.data);
           for (const id in res.data) {
             const data = res.data[id];
-            const price = data.quote.USD.price;
-            const percent24h = Math.floor(parseFloat(data.quote.USD.percent_change_24h) * 10000) / 100;
+            console.log('id: ', id, data);
+            const price = Math.floor(parseFloat(data.quote.USD.price) * 100) / 100;
+            const percent24h = Math.floor(parseFloat(data.quote.USD.percent_change_24h) * 100) / 100;
 
-            if ('bitcoin' in data) {
+            if (data.slug == 'bitcoin') {
               this.cache.update(MetricName.BTC_PRICE, String(price));
             }
-            if (config.cmcBalance in res.data) {
+            if (data.slug == config.cmcBalance) {
               this.cache.update(MetricName.MTRG_PRICE, String(price));
               this.cache.update(MetricName.MTRG_PRICE_CHANGE, `${percent24h}%`);
             }
-            if (config.cmcEnergy in res.data) {
+            if (data.slug == config.cmcEnergy) {
               this.cache.update(MetricName.MTR_PRICE, String(price));
               this.cache.update(MetricName.MTR_PRICE_CHANGE, `${percent24h}%`);
             }
