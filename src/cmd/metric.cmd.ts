@@ -856,8 +856,6 @@ export class MetricCMD extends CMD {
 
         // adjust total supply
         await this.adjustTotalSupply(index, every2h);
-
-        index = (index + 1) % every24h; // clear up 24hours
       } catch (e) {
         if (!(e instanceof InterruptedError)) {
           this.log.error({ err: e }, `error in loop`);
@@ -867,6 +865,8 @@ export class MetricCMD extends CMD {
             break;
           }
         }
+      } finally {
+        index = (index + 1) % every24h; // clear up 24hours
       }
     }
   }
