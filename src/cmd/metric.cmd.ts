@@ -62,7 +62,7 @@ export class MetricCMD extends CMD {
   private pos: Pos;
   private pow: Pow;
   private network: Network;
-  // private coingecko = new Net('https://api.coingecko.com/api/v3/');
+  private coingecko = new Net('https://api.coingecko.com/api/v3/');
   private coinmarketcap = new Net('https://pro-api.coinmarketcap.com/v2');
   private blockchainInfo = new Net('https://api.blockchain.info');
   private validatorRepo = new ValidatorRepo();
@@ -241,10 +241,48 @@ export class MetricCMD extends CMD {
     }
   }
 
-  private async updateMarketPrice(index: number, interval: number) {
+  private async updateMarketPriceWithCoingecko(index: number, interval: number) {
+    if (index % interval === 0) {
+      this.log.info('update market price with coingecko');
+      try {
+        const config = GetNetworkConfig(this.network);
+        const ids = [config.coingeckoEnergy, config.coingeckoBalance, 'bitcoin'].filter((s) => s);
+        const currencies = [];
+        for (let i = 0; i < ids.length; i++) {
+          currencies.push('usd');
+        }
+        const res = await this.coingecko.http<any>('GET', 'simple/price', {
+          query: { ids: ids.join(','), vs_currencies: currencies.join(','), include_24hr_change: 'true' },
+        });
+        if (!!res) {
+          for (const id in res) {
+            const price = res[id];
+            const percent20h = Math.floor(parseFloat(price.usd_24h_change) * 100) / 100;
+
+            if (id == 'bitcoin') {
+              this.cache.update(MetricName.BTC_PRICE, String(price.usd));
+            }
+            if (id == config.coingeckoEnergy) {
+              this.cache.update(MetricName.MTR_PRICE, String(price.usd));
+              this.cache.update(MetricName.MTR_PRICE_CHANGE, `${percent20h}%`);
+            }
+            if (id == config.coingeckoBalance) {
+              this.cache.update(MetricName.MTRG_PRICE, String(price.usd));
+              this.cache.update(MetricName.MTRG_PRICE_CHANGE, `${percent20h}%`);
+            }
+          }
+        }
+        this.log.info('done update market price with coingecko');
+      } catch (e) {
+        console.log(`error during update market price: `, e);
+      }
+    }
+  }
+
+  private async updateMarketPriceWithCoinMarketCap(index: number, interval: number) {
     if (index % interval === 0) {
       try {
-        this.log.info('update market price');
+        this.log.info('update market price with coinmarketcap');
         const config = GetNetworkConfig(this.network);
 
         const slugs = [config.cmcBalance, config.cmcEnergy, 'bitcoin'].filter((s) => s);
@@ -271,7 +309,7 @@ export class MetricCMD extends CMD {
             }
           }
         }
-        this.log.info('done update market price');
+        this.log.info('done update market price with coinmarketcap');
       } catch (e) {
         console.log(`error during update market price: `, e);
       }
@@ -832,7 +870,7 @@ export class MetricCMD extends CMD {
         await this.alertIfNetworkHalt(index, every2m);
 
         // update price/change every 10 minutes
-        await this.updateMarketPrice(index, every30m);
+        await this.updateMarketPriceWithCoingecko(index, every30m);
 
         // update circulation
         await this.updateCirculationAndRank(index, every4h);

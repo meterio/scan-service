@@ -92,6 +92,10 @@ export class NetworkConfig {
   cmcEnergy: string;
   cmcBalance: string;
 
+  // coingecko id
+  coingeckoEnergy: string;
+  coingeckoBalance: string;
+
   energySym: string;
   balanceSym: string;
 
@@ -122,6 +126,9 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         cmcEnergy: 'meter-stable',
         cmcBalance: 'meter-governance',
 
+        coingeckoEnergy: 'meter-stable',
+        coingeckoBalance: 'meter',
+
         energySym: 'MTR',
         balanceSym: 'MTRG',
         chainId: 82,
@@ -148,6 +155,9 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         cmcEnergy: 'meter-stable',
         cmcBalance: 'meter-governance',
 
+        coingeckoEnergy: 'meter-stable',
+        coingeckoBalance: 'meter',
+
         energySym: 'MTR',
         balanceSym: 'MTRG',
         chainId: 83,
@@ -166,6 +176,10 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
 
         cmcEnergy: 'standard-tokenization-protocol',
         cmcBalance: '',
+
+        coingeckoEnergy: 'stp-network',
+        coingeckoBalance: '',
+
         energySym: 'STPT',
         balanceSym: 'STPD',
         chainId: 36,
@@ -185,6 +199,10 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
 
         cmcEnergy: 'standard-tokenization-protocol',
         cmcBalance: '',
+
+        coingeckoEnergy: 'stp-network',
+        coingeckoBalance: '',
+
         energySym: 'STPT',
         balanceSym: 'STPD',
         chainId: 72,
