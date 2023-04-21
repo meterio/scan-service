@@ -31,7 +31,7 @@ const runAsync = async (options) => {
 
     const txDigests = await txDigestRepo.findInRange(start, end)
     const aimTx = txDigests.filter(t => t.from === FROM_ADDR && t.to === TO_ADDR && t.method === 'Transfer')
-    if (!aimTx.length) {
+    if (aimTx.length) {
 
       console.log(`${start}-${end}:${aimTx.length}`)
       const groupByHash = {}
@@ -44,26 +44,26 @@ const runAsync = async (options) => {
           groupByHash[t.txHash].fee = groupByHash[t.txHash].fee.plus(t.fee)
           groupByHash[t.txHash].mtr = groupByHash[t.txHash].mtr.plus(t.mtr)
           groupByHash[t.txHash].mtr = groupByHash[t.txHash].mtrg.plus(t.mtrg)
-          groupByHash[t.txHash].clauseIndexs = groupByHash[t.txHash].push(...t.clauseIndexs)
+          groupByHash[t.txHash].clauseIndexs.push(...t.clauseIndexs)
           // t.delete()
           deleteIds.push(t._id)
         }
 
       }
 
-      const txDigest: TxDigest[] = []
+      const txDigest: {id : TxDigest[]} | {} = {}
       for (const hash in groupByHash) {
         // groupByHash[hash].save()
-        txDigest.push(groupByHash[hash])
+        txDigest[groupByHash[hash]._id] = groupByHash[hash]
       }
 
       console.log('txDigests', txDigest)
       console.log('delete ids', deleteIds)
-      await txDigestRepo.bulkUpsert(...txDigest)
-      console.log('bulk upsert length', txDigest.length)
+      await txDigestRepo.bulkUpsert(txDigest)
+      console.log('bulk upserted')
 
       await txDigestRepo.deleteByIds(deleteIds)
-      console.log('delete length', deleteIds.length)
+      console.log('deleted')
     } else {
       console.log(`no aim tx in ${start}-${end}`)
     }

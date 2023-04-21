@@ -124,9 +124,9 @@ export default class TxDigestRepo {
     return this.model.deleteMany({ _id: { $in: ids }})
   }
 
-  public async bulkUpsert(...txDigest: TxDigest[]) {
-    for (const t of txDigest) {
-      await this.model.findOneAndUpdate({ ...t }, t, { new: true, upsert: true, overwrite: true });
+  public async bulkUpsert(txDigest: { id: TxDigest[]} | {}) {
+    for (const id in txDigest) {
+      await this.model.findOneAndUpdate({ _id: id }, txDigest[id], { new: true, upsert: true, overwrite: true });
     }
     return true;
   }
