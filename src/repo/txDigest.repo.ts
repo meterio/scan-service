@@ -119,4 +119,15 @@ export default class TxDigestRepo {
   public deleteInRange(start, end: number) {
     return this.model.deleteMany({ 'block.number': { $gte: start, $lte: end } });
   }
+
+  public deleteByIds(ids: number[]) {
+    return this.model.deleteMany({ _id: { $in: ids }})
+  }
+
+  public async bulkUpsert(...txDigest: TxDigest[]) {
+    for (const t of txDigest) {
+      await this.model.findOneAndUpdate({ ...t }, t, { new: true, upsert: true, overwrite: true });
+    }
+    return true;
+  }
 }
