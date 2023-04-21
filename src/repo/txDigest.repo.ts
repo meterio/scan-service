@@ -112,6 +112,23 @@ export default class TxDigestRepo {
     return this.model.find({ txIndex: { $exists: false }, 'block.number': { $gte: startblock, $lt: endblock } });
   }
 
+  public async findDistinctTxInRangeWithFromAndTo(
+    startblock: number,
+    endblock: number,
+    from: string,
+    to: string,
+    method: string
+  ) {
+    return this.model
+      .find({
+        from: from.toLowerCase(),
+        to: to.toLowerCase(),
+        method,
+        'block.number': { $gte: startblock, $lt: endblock },
+      })
+      .distinct('txHash');
+  }
+
   public deleteByTxHash(txHash: string) {
     return this.model.deleteMany({ txHash });
   }
@@ -121,10 +138,10 @@ export default class TxDigestRepo {
   }
 
   public deleteByIds(ids: number[]) {
-    return this.model.deleteMany({ _id: { $in: ids }})
+    return this.model.deleteMany({ _id: { $in: ids } });
   }
 
-  public async bulkUpsert(txDigest: { id: TxDigest[]} | {}) {
+  public async bulkUpsert(txDigest: { id: TxDigest[] } | {}) {
     for (const id in txDigest) {
       await this.model.findOneAndUpdate({ _id: id }, txDigest[id], { new: true, upsert: true, overwrite: true });
     }
