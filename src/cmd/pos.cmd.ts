@@ -1243,7 +1243,7 @@ export class PosCMD extends CMD {
             txIndex,
             seq: 0,
           };
-          const id = sha1({ from: d.from, to: d.to });
+          const id = sha1({ from: d.from, to: d.to, clauseIndex });
           if (id in kblockDigestMap) {
             kblockDigestMap[id].clauseIndexs.push(clauseIndex);
             kblockDigestMap[id].mtr = kblockDigestMap[id].mtr.plus(mtr);
