@@ -386,4 +386,8 @@ export default class MovementRepo {
 
     return this.model.find(query);
   }
+
+  public async findNaNMovments(fromNum: number, toNum: number) {
+    return this.model.find({ amount: 'NaN', 'block.number': { $gte: fromNum, $lte: toNum } });
+  }
 }
