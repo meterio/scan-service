@@ -36,9 +36,9 @@ const runAsync = async (options) => {
       if (evt) {
         const decoded = ERC20.Transfer.decode(evt.data, evt.topics);
         const actualAmount = new BigNumber(decoded.value.toString());
+        console.log(`updated movement amount from ${mvt.amount.toNumber()} to ${actualAmount.toNumber()}`);
         mvt.amount = actualAmount;
         await mvt.save();
-        console.log(`updated movement amount from ${mvt.amount.toNumber()} to ${actualAmount.toNumber()}`);
       }
     }
   }

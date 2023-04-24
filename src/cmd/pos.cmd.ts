@@ -1250,10 +1250,12 @@ export class PosCMD extends CMD {
             }
             kblockDigestMap[id].mtr = kblockDigestMap[id].mtr.plus(mtr);
             kblockDigestMap[id].mtrg = kblockDigestMap[id].mtrg.plus(mtrg);
-            continue;
+            // continue;
+          } else {
+            kblockDigestMap[id] = d;
           }
-          ids[id] = true;
-          digests.push(d);
+          // ids[id] = true;
+          // digests.push(d);
         }
       }
     }
