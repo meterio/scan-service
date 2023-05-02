@@ -149,7 +149,7 @@ export class NFTCMD extends CMD {
       const to = decoded.to.toLowerCase();
       const tokenAddress = evt.address.toLowerCase();
       for (const [i, id] of decoded.ids.entries()) {
-        const value = Number(decoded.values[i]);
+        const value = Number(decoded.values[i].toString());
         const tokenStr = `${tokenAddress}[${id}:${value}]`;
         if (from !== ZeroAddress) {
           this.log.info({ txHash: evt.txHash }, `handle transfer ERC1155 ${tokenStr}`);
@@ -269,7 +269,7 @@ export class NFTCMD extends CMD {
       const from = decoded.from.toLowerCase();
       const to = decoded.to.toLowerCase();
       const tokenAddress = evt.address.toLowerCase();
-      const tokenId = new BigNumber(decoded.tokenId).toFixed();
+      const tokenId = new BigNumber(decoded.tokenId.toString()).toFixed();
       const tokenStr = `${tokenAddress}[${tokenId}]`;
 
       if (from !== ZeroAddress) {
