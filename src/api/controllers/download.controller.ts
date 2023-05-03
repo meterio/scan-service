@@ -65,13 +65,20 @@ class DownloadController extends BaseController {
         fields,
         transfers.map((tx) => {
   
+          let amount  = fromWei(String(tx.amount), contract.decimals)
+          if (tx.nftTransfers.length) {
+            amount = tx.nftTransfers.map(t => {
+              return `[${t.tokenId}](${t.value})`
+            }).join(',')
+          }
+
           return {
             txHash: tx.txHash,
             blocknum: tx.block.number,
             timestamp: moment(tx.block.timestamp * 1000).format('YYYY-MM-DD HH:mm:ss'),
             from: tx.from,
             to: tx.to,
-            amount: fromWei(String(tx.amount), contract.decimals),
+            amount,
             symbol: contract.symbol,
           };
         })
