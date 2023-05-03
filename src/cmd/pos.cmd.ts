@@ -823,7 +823,7 @@ export class PosCMD extends CMD {
     const decoded = BoundEvent.decode(evt.data, evt.topics);
     const owner = decoded.owner.toLowerCase();
     const token = decoded.token == 1 ? Token.MTRG : Token.MTR;
-    const amount = new BigNumber(decoded.amount);
+    const amount = new BigNumber(decoded.amount.toString());
     this.boundsCache.push({
       owner,
       amount,
@@ -849,10 +849,10 @@ export class PosCMD extends CMD {
     const decoded = UnboundEvent.decode(evt.data, evt.topics);
     const owner = decoded.owner.toLowerCase();
     const token = decoded.token == 1 ? Token.MTRG : Token.MTR;
-    const amount = new BigNumber(decoded.amount);
+    const amount = new BigNumber(decoded.amount.toString());
     this.unboundsCache.push({
       owner,
-      amount: new BigNumber(decoded.amount),
+      amount: new BigNumber(decoded.amount.toString()),
       token: decoded.token == 1 ? Token.MTRG : Token.MTR,
       txHash,
       block: blockConcise,
@@ -880,7 +880,7 @@ export class PosCMD extends CMD {
 
       const from = decoded.from.toLowerCase();
       const to = decoded.to.toLowerCase();
-      const amount = new BigNumber(decoded.value);
+      const amount = new BigNumber(decoded.value.toString());
       let movement: Movement = {
         from,
         to,
@@ -933,7 +933,7 @@ export class PosCMD extends CMD {
 
       const from = decoded.from.toLowerCase();
       const to = decoded.to.toLowerCase();
-      const tokenId = new BigNumber(decoded.tokenId).toFixed();
+      const tokenId = new BigNumber(decoded.tokenId.toString()).toFixed();
       const nftTransfers = [{ tokenId, value: 1 }];
       // ### Handle movement
       let movement: Movement = {
@@ -973,7 +973,7 @@ export class PosCMD extends CMD {
       }
       const from = decoded.from.toLowerCase();
       const to = decoded.to.toLowerCase();
-      const nftTransfers = [{ tokenId: decoded.id, value: Number(decoded.value) }];
+      const nftTransfers = [{ tokenId: decoded.id, value: Number(decoded.value.toString()) }];
       const movement: Movement = {
         from,
         to,
@@ -1001,7 +1001,7 @@ export class PosCMD extends CMD {
       }
       let nftTransfers: NFTTransfer[] = [];
       for (const [i, id] of decoded.ids.entries()) {
-        nftTransfers.push({ tokenId: id, value: Number(decoded.values[i]) });
+        nftTransfers.push({ tokenId: id, value: Number(decoded.values[i].toString()) });
       }
       const from = decoded.from.toLowerCase();
       const to = decoded.to.toLowerCase();
@@ -1088,7 +1088,7 @@ export class PosCMD extends CMD {
             continue;
           }
           const from = decoded.from.toLowerCase();
-          const amount = new BigNumber(decoded.amount);
+          const amount = new BigNumber(decoded.amount.toString());
           // await this.accountCache.minus(from, Token.MTR, amount, blockConcise);
           await this.tokenBalanceCache.plus(from, evt.address, amount, blockConcise);
         }
@@ -1109,7 +1109,7 @@ export class PosCMD extends CMD {
           }
 
           const from = decoded.from.toLowerCase();
-          const amount = new BigNumber(decoded.amount);
+          const amount = new BigNumber(decoded.amount.toString());
           // await this.tokenBalanceCache.minus(from, evt.address, amount, blockConcise);
           await this.accountCache.plus(from, Token.MTR, amount, blockConcise);
         }
@@ -1245,13 +1245,17 @@ export class PosCMD extends CMD {
           };
           const id = sha1({ from: d.from, to: d.to });
           if (id in kblockDigestMap) {
-            kblockDigestMap[id].clauseIndexs.push(clauseIndex);
+            if (!kblockDigestMap[id].clauseIndexs.includes(clauseIndex)) {
+              kblockDigestMap[id].clauseIndexs.push(clauseIndex);
+            }
             kblockDigestMap[id].mtr = kblockDigestMap[id].mtr.plus(mtr);
             kblockDigestMap[id].mtrg = kblockDigestMap[id].mtrg.plus(mtrg);
-            continue;
+            // continue;
+          } else {
+            kblockDigestMap[id] = d;
           }
-          ids[id] = true;
-          digests.push(d);
+          // ids[id] = true;
+          // digests.push(d);
         }
       }
     }
@@ -1785,7 +1789,7 @@ export class PosCMD extends CMD {
           'best'
         );
         const decoded = ERC20.totalSupply.decode(res[0].data);
-        c.totalSupply = new BigNumber(decoded['0']);
+        c.totalSupply = new BigNumber(decoded['0'].toString());
         await c.save();
       }
 

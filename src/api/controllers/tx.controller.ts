@@ -225,6 +225,26 @@ class TxController extends BaseController {
         }
       }
     }
+    const fromToAddrs = Array.from(new Set(tokenTransfers.map((t) => t.from).concat(tokenTransfers.map((t) => t.to))));
+    if (fromToAddrs.length > 0) {
+      const knownContracts = await this.contractRepo.findByAddressList(fromToAddrs);
+      const knwonContractMap = {};
+      knownContracts.forEach((c) => {
+        knwonContractMap[c.address] = c;
+      });
+      for (let t of tokenTransfers) {
+        if (t.from in knwonContractMap) {
+          t.fromName = knwonContractMap[t.from].name;
+        } else {
+          t.fromName = '';
+        }
+        if (t.to in knwonContractMap) {
+          t.toName = knwonContractMap[t.to].name;
+        } else {
+          t.toName = '';
+        }
+      }
+    }
 
     const summary = {
       ...txObj,

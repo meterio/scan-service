@@ -46,6 +46,7 @@ const runAsync = async (options) => {
         await d.delete();
         deleteCount++;
       }
+      first.clauseIndexs = Array.from(new Set(first.clauseIndexs));
       first.clauseIndexs.sort((a, b) => (a < b ? -1 : 1));
       console.log(`update digest (${first.txHash}, ${first.from}, ${first.to}, ${first.clauseIndexs})`);
       console.log(`deleted digests: ${deleteCount}`);

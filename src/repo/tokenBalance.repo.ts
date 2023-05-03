@@ -273,4 +273,8 @@ export default class TokenBalanceRepo {
       tokenAddress: tokenAddress.toLowerCase(),
     });
   }
+
+  public async findNaNBalance() {
+    return this.model.find({ balance: new BigNumber(NaN) });
+  }
 }
