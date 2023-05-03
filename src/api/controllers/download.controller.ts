@@ -1,5 +1,5 @@
 import { BigNumber } from 'bignumber.js';
-import { ABIFragmentRepo, MovementRepo, TxDigestRepo } from '../../repo';
+import { ABIFragmentRepo, MovementRepo, TxDigestRepo, ContractRepo } from '../../repo';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Parser } from 'json2csv';
@@ -14,6 +14,7 @@ class DownloadController extends BaseController {
   private txDigestRepo = new TxDigestRepo();
   private abiFragmentRepo = new ABIFragmentRepo();
   private movementRepo = new MovementRepo();
+  private contractRepo = new ContractRepo();
 
   constructor(network: Network, standby: boolean) {
     super(network, standby);
@@ -24,6 +25,7 @@ class DownloadController extends BaseController {
     this.router.get(`${this.path}/:address/:start/:end/txs`, try$(this.downloadTxs));
     this.router.get(`${this.path}/:address/:start/:end/erc20Txs`, try$(this.downloadErc20Txs));
     this.router.get(`${this.path}/:address/:start/:end/nftTxs`, try$(this.downloadNftTxs));
+    this.router.get(`${this.path}/:address/:start/:end/transfers`, try$(this.downloadTransfer));
   }
 
   private download = (res: Response, fileName: string, fields: { label: string; value: string }[], data: any) => {
@@ -33,6 +35,51 @@ class DownloadController extends BaseController {
     res.attachment(fileName);
     return res.send(csv);
   };
+
+  private downloadTransfer =async (req: Request, res: Response) => {
+    const { address, start, end } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+
+    const contract = await this.contractRepo.findByAddress(address);
+
+    const fileName = `transfers-${address}.csv`;
+
+    const fields = [
+      { value: 'txHash', label: 'Hash' },
+      { value: 'blocknum', label: 'Block' },
+      { value: 'timestamp', label: 'Time' },
+      { value: 'from', label: 'From' },
+      { value: 'to', label: 'To' },
+      { value: 'amount', label: 'Amount' },
+      { value: 'symbol', label: 'Symbol' },
+    ];
+
+    if (contract) {
+      const paginate = await this.movementRepo.paginateByTokenAddressInRange(Number(start), Number(end), address, page, limit);
+
+      const transfers = paginate.result.map((t) => t.toJSON())
+
+      return this.download(
+        res,
+        fileName,
+        fields,
+        transfers.map((tx) => {
+  
+          return {
+            txHash: tx.txHash,
+            blocknum: tx.block.number,
+            timestamp: moment(tx.block.timestamp * 1000).format('YYYY-MM-DD HH:mm:ss'),
+            from: tx.from,
+            to: tx.to,
+            amount: fromWei(String(tx.amount), contract.decimals),
+            symbol: contract.symbol,
+          };
+        })
+      );
+    } else {
+      this.download(res, fileName, fields, []);
+    }
+  }
 
   private downloadTxs = async (req: Request, res: Response) => {
     const { address, start, end } = req.params;
