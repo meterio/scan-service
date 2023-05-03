@@ -169,6 +169,19 @@ export default class MovementRepo {
     return this.paginate({ tokenAddress: addr.toLowerCase() }, pageNum, limitNum);
   }
 
+  public async paginateByTokenAddressInRange(start: number, end: number, addr: string, pageNum?: number, limitNum?: number) {
+    return this.paginate(
+      {
+        $and: [
+          { 'block.timestamp': { $gte: start, $lte: end } },
+          { tokenAddress: addr.toLowerCase() }
+        ],
+      },
+      pageNum,
+      limitNum
+    );
+  }
+
   public async paginateERC20TxsByAccount(addr: string, pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     const query = {
