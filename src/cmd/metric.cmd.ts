@@ -817,7 +817,7 @@ export class MetricCMD extends CMD {
             'best'
           );
           const decoded = ERC20.totalSupply.decode(ret[0].data);
-          const amount = decoded['0'];
+          const amount = decoded['0'].toString();
           let updated = false;
           if (!p.totalSupply.isEqualTo(amount.toString())) {
             console.log(`Update total supply for token ${p.symbol} from ${p.totalSupply.toFixed(0)} to ${amount}`);

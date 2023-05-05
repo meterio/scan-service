@@ -1801,7 +1801,7 @@ export class PosCMD extends CMD {
           'best'
         );
         const decoded = ERC20.balanceOf.decode(res[0].data);
-        const chainBal = decoded['0'];
+        const chainBal = decoded['0'].toString();
         if (!bal.balance.isEqualTo(chainBal)) {
           this.log.info(
             `Update  ${bal.tokenAddress} with balance ${chainBal}, originally was ${bal.balance.toFixed(0)}`
