@@ -22,7 +22,13 @@ const S3_WEBSITE_BASE = 'nft-image.meter.io';
 // const INFURA_IPFS_PREFIX = 'https://metersync.infura-ipfs.io/ipfs/';
 const INFURA_IPFS_PREFIX = 'https://metersync.mypinata.cloud/ipfs/';
 const METER_IPFS_PREFIX = 'http://ipfs.voltswap.finance:8080/ipfs/';
-const CONVERTIBLES = ['ipfs://', 'https://gateway.pinata.cloud/ipfs/', 'https://ipfs.io/ipfs/', INFURA_IPFS_PREFIX];
+const CONVERTIBLES = [
+  'ipfs://',
+  'https://gateway.pinata.cloud/ipfs/',
+  'https://ipfs.fleek.co/ipfs/',
+  'https://ipfs.io/ipfs/',
+  INFURA_IPFS_PREFIX,
+];
 
 const BASE64_ENCODED_JSON = 'base64 encoded json';
 

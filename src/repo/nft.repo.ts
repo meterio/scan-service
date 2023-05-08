@@ -18,7 +18,13 @@ export default class NFTRepo {
   }
 
   public async findUncached() {
-    return this.model.find({ status: 'new', tokenURI: /ipfs:.+/ });
+    return this.model.find({
+      status: 'new',
+      tokenURI: { $exists: true },
+      tokenJSON: '{}',
+      mediaURI: { $exists: false },
+    });
+    // return this.model.find({ status: 'new', tokenURI: /ipfs:.+/ });
   }
 
   public async findCacheFailed() {

@@ -5,6 +5,8 @@ import { NFTRepo } from '../repo';
 import { connectDB, disconnectDB } from '../utils/db';
 import { checkNetworkWithDB, runWithOptions } from '../utils';
 import { NFTCache } from '../types/nftCache';
+import { sleep } from '../utils';
+import { PromisePool } from '@supercharge/promise-pool';
 
 const runAsync = async (options) => {
   const { network, standby } = options;
@@ -17,28 +19,17 @@ const runAsync = async (options) => {
 
   console.log(`Found ${uncached.length} uncached nfts`);
   const nftCache = new NFTCache(network);
-  for (const nft of uncached) {
-    try {
-      await nftCache.updateNFTInfo(nft);
-      console.log(`updated NFT ${nft.address}[${nft.tokenId}]`, nft);
-      await nft.save();
-    } catch (e) {
-      console.log(`could not cache nft image for [${nft.tokenId}] on ${nft.address} `, e);
-    }
-  }
-
-  let cacheFailed = await nftRepo.findCacheFailed();
-  console.log(`Found ${cacheFailed.length} cache failed nfts`);
-
-  for (const nft of cacheFailed) {
-    try {
-      await nftCache.updateNFTInfo(nft);
-      console.log(`updated NFT ${nft.address}[${nft.tokenId}]`, nft);
-      await nft.save();
-    } catch (e) {
-      console.log(`could not cache nft image for [${nft.tokenId}] on ${nft.address} `, e);
-    }
-  }
+  await PromisePool.withConcurrency(20)
+    .for(uncached)
+    .process(async (nft, index, pool) => {
+      try {
+        await Promise.any([sleep(10000), nftCache.updateNFTInfo(nft)]);
+        console.log(`updated NFT ${nft.address}[${nft.tokenId}]`, nft);
+        await nft.save();
+      } catch (e) {
+        console.log(`could not cache nft image for [${nft.tokenId}] on ${nft.address} `, e);
+      }
+    });
 };
 
 (async () => {
