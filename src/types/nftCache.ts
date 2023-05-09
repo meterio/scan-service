@@ -175,8 +175,12 @@ export class NFTCache {
           toNFT.value += value;
           this.updated[toNFTKey] = toNFT;
         } else {
+          let existedValue = 0;
+          if (toNFTKey in this.minted) {
+            existedValue = this.minted[toNFTKey].value;
+          }
           console.log(`MINTED ${key} in transfer1155 with key in updated`);
-          this.minted[toNFTKey] = { ...nft, owner: to, value };
+          this.minted[toNFTKey] = { ...nft, owner: to, value: value + existedValue };
         }
         nft.value -= value;
       }
@@ -216,8 +220,12 @@ export class NFTCache {
         toNFT.value += value;
         this.updated[toNFTKey] = toNFT;
       } else {
+        let existedValue = 0;
+        if (toNFTKey in this.minted) {
+          existedValue = this.minted[toNFTKey].value;
+        }
         console.log(`MINTED ${key} in transfer1155 with key in updated`);
-        this.minted[toNFTKey] = { ...fromNFT.toJSON(), owner: to, value };
+        this.minted[toNFTKey] = { ...fromNFT.toJSON(), owner: to, value: value + existedValue };
       }
 
       fromNFT.value -= value;
