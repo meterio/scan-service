@@ -598,9 +598,27 @@ export class Pos {
       );
       const valid = (i) => !!outputs[i] && !outputs[i].reverted && outputs[i].data !== '0x';
       const bal = valid(0) ? ERC20.balanceOf.decode(outputs[0].data)['0'] : 0;
-      return bal;
+      return bal.toString();
     } catch (e) {
       console.log('Error happened during fetch ERC20 balanceOf');
+    }
+  }
+
+  public async getERC1155BalanceOf(address: string, tokenAddress: string, tokenId: string, blockHash: string) {
+    try {
+      const outputs = await this.explain(
+        {
+          clauses: [
+            { to: tokenAddress, value: '0x0', data: ERC1155.balanceOf.encode(address, tokenId), token: Token.MTR },
+          ],
+        },
+        blockHash
+      );
+      const valid = (i) => !!outputs[i] && !outputs[i].reverted && outputs[i].data !== '0x';
+      const bal = valid(0) ? ERC20.balanceOf.decode(outputs[0].data)['0'] : 0;
+      return bal;
+    } catch (e) {
+      console.log('Error happened during fetch ERC1155 balanceOf', e);
     }
   }
 
