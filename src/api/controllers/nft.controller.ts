@@ -171,8 +171,12 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
     }
     const nftCache = new NFTCache(this.network);
     for (const nft of tokens) {
-      await nftCache.updateNFTInfo(nft);
-      await nft.save();
+      try {
+        await nftCache.updateNFTInfo(nft);
+        await nft.save();
+      } catch (e) {
+        console.log('error happened: ', e);
+      }
     }
     return res.json({ status: 'success' });
   };
