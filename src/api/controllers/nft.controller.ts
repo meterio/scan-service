@@ -6,6 +6,7 @@ import { ContractType, Network } from '../../const';
 import { BaseController } from './baseController';
 // import CuratedRepo from '../../repo/curated.repo';
 import isAdmin from '../middleware/auth.middleware';
+import { NFTCache } from '../../types/nftCache';
 const addrPattern = new RegExp('^0x[0-9a-fA-F]{40}$');
 class NFTController extends BaseController {
   public path = '/api/nfts';
@@ -27,6 +28,9 @@ class NFTController extends BaseController {
     // this.router.get(`${this.path}/curated`, try$(this.getCuratedCollections));
     this.router.get(`${this.path}/:address/tokens`, try$(this.getTokensInCollection));
     this.router.get(`${this.path}/:address/:tokenId`, try$(this.getTokenDetail));
+
+    // use with caution, might be used for DDoS
+    this.router.get(`${this.path}/:address/:tokenId/update`, try$(this.updateTokenInfo));
 
     // added for nft market
     this.router.get(`${this.path}/transfers/in/:fromNum/:toNum`, try$(this.getNFTTransfersInRange));
@@ -153,6 +157,24 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
       }),
       // .filter((n) => n.mediaURI !== ''),
     });
+  };
+
+  private updateTokenInfo = async (req: Request, res: Response) => {
+    const { address, tokenId } = req.params;
+    let tokens = await this.nftRepo.findByTokenId(address, tokenId);
+    if (!tokens || tokens.length <= 0) {
+      return res.json({ status: 'failed' });
+    }
+    tokens = tokens.filter((t) => t.status == 'new');
+    if (tokens.length <= 0) {
+      return res.json({ status: 'not-needed' });
+    }
+    const nftCache = new NFTCache(this.network);
+    for (const nft of tokens) {
+      await nftCache.updateNFTInfo(nft);
+      await nft.save();
+    }
+    return res.json({ status: 'success' });
   };
 
   private getTokenDetail = async (req: Request, res: Response) => {
