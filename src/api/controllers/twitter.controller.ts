@@ -183,7 +183,13 @@ class TwitterController extends BaseController {
 
   private getOAuthRequestToken = async (req: Request, res: Response) => {
 
-    const _requestTokenURL = `${requestTokenURL}?oauth_callback=${encodeURIComponent(CALLBACK_URL)}&x_auth_access_type=write`
+    const { callbackUrl } = req.query
+
+    if (!callbackUrl) {
+      throw new Error('callbackUrl is need')
+    }
+
+    const _requestTokenURL = `${requestTokenURL}?oauth_callback=${encodeURIComponent(String(callbackUrl))}&x_auth_access_type=write`
     
     const authHeader = oauth.toHeader(oauth.authorize({
       url: _requestTokenURL,
