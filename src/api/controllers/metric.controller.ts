@@ -84,7 +84,7 @@ class MetricController extends BaseController {
         avgBlockTime: avgBlockTime,
         txsCount,
         inflation: '5%',
-        addressCount: accountCount + contractCount,
+        addressCount: Number(map[MetricName.ADDRESS_COUNT])  ,
       },
       staking: {
         buckets: Number(map[MetricName.BUCKET_COUNT]),
