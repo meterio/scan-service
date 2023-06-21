@@ -180,4 +180,8 @@ export default class ContractRepo {
   public async findFirstSeenInRange(start, end: number) {
     return this.model.find({ 'firstSeen.number': { $gte: start, $lte: end } });
   }
+
+  public async distinctAddress() {
+    return this.model.distinct('address');
+  }
 }

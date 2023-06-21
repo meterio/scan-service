@@ -154,6 +154,22 @@ export class MetricCMD extends CMD {
     }
   }
 
+  private async updateAddressCount(index: number, interval: number) {
+    if (index % interval === 0) {
+      this.log.info('update address count');
+      const accountAddrs = await this.accountRepo.distinctAddress();
+      const contractAddrs = await this.contractRepo.distinctAddress();
+      const nftOwners = await this.nftRepo.distinctOwner();
+      const addrs = accountAddrs.concat(contractAddrs).concat(nftOwners);
+      const addrSet = new Set(addrs);
+
+      if (!!addrSet) {
+        await this.cache.update(MetricName.ADDRESS_COUNT, String(addrSet.size));
+      }
+      this.log.info('done update address count');
+    }
+  }
+
   private async updatePosInfo(index: number, interval: number) {
     if (index % interval === 0) {
       this.log.info('update PoS info');
@@ -859,6 +875,8 @@ export class MetricCMD extends CMD {
           // update bitcoin info every 5 minutes
           await this.updatePowHashrate(index, every20m);
         }
+
+        await this.updateAddressCount(index, every6h);
 
         // update pos best, kblock & seq
         await this.updatePosInfo(index, every);

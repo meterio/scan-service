@@ -62,6 +62,9 @@ export const METRIC_DEFS = [
   { key: MetricName.MTRG_STAKED, type: MetricType.STRING, default: '0' },
   { key: MetricName.MTRG_STAKED_LOCKED, type: MetricType.STRING, default: '0' },
   { key: MetricName.TX_FEE_BENEFICIARY, type: MetricType.STRING, default: '0x' },
+
+  // Address Count
+  { key: MetricName.ADDRESS_COUNT, type: MetricType.STRING, default: '0' },
 ];
 
 export class MetricCache {

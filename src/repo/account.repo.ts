@@ -155,4 +155,8 @@ export default class AccountRepo {
       .skip(limit * page);
     return { count, result };
   }
+
+  public async distinctAddress() {
+    return this.model.distinct('address');
+  }
 }

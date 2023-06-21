@@ -241,4 +241,8 @@ export default class NFTRepo {
     const dis = await this.model.distinct('owner', { address: address.toLowerCase() });
     return dis?.length || 0;
   }
+
+  public async distinctOwner() {
+    return this.model.distinct('owner');
+  }
 }

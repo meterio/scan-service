@@ -38,4 +38,5 @@ export enum MetricName {
   TX_FEE_BENEFICIARY = 'tx_fee_beneficiary',
   MTRG_TOTALSUPPLY = 'mtrg_totalsupply',
   MTR_TOTALSUPPLY = 'mtr_totalsupply',
+  ADDRESS_COUNT = 'address_count',
 }
