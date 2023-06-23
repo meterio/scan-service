@@ -156,6 +156,40 @@ export class AccountCache {
     this.accts[addr].lastUpdate = blockConcise;
   }
 
+  public async withdraw(
+    ownerStr: string,
+    recipientStr: string,
+    token: Token,
+    amount: string | BigNumber,
+    blockConcise: BlockConcise
+  ) {
+    await this.setDefault(ownerStr, blockConcise);
+    await this.setDefault(recipientStr, blockConcise);
+    const owner = ownerStr.toLowerCase();
+    const recipient = recipientStr.toLowerCase();
+    const formattedAmount = new BigNumber(amount);
+    if (token === Token.MTR) {
+      this.accts[owner].mtrBounded = this.accts[owner].mtrBounded.minus(formattedAmount);
+      this.accts[recipient].mtrBounded = this.accts[recipient].mtrBounded.plus(formattedAmount);
+    }
+    if (token === Token.MTRG) {
+      console.log(`Account ${owner} withdraw ${formattedAmount} MTRG to ${recipient}:`);
+      console.log(`  Owner Bounded: ${this.accts[owner].mtrgBounded} - ${formattedAmount}`);
+      console.log(`  Recipient Bounded: ${this.accts[recipient].mtrgBounded} + ${formattedAmount} `);
+      this.accts[owner].mtrgBounded = this.accts[owner].mtrgBalance.minus(formattedAmount);
+      this.accts[recipient].mtrgBounded = this.accts[recipient].mtrgBounded.plus(formattedAmount);
+      if (this.accts[owner].mtrgBounded.isLessThan(0)) {
+        console.log(`Got negative bounded: ${this.accts[owner].mtrgBounded}`);
+        await this.fixAccount(owner, blockConcise);
+      }
+      console.log(
+        `Got => Owner Bounded: ${this.accts[owner].mtrgBounded}, Recipient Bounded: ${this.accts[recipient].mtrgBounded}`
+      );
+    }
+    this.accts[owner].lastUpdate = blockConcise;
+    this.accts[recipient].lastUpdate = blockConcise;
+  }
+
   public async unbound(addrStr: string, token: Token, amount: string | BigNumber, blockConcise: BlockConcise) {
     await this.setDefault(addrStr, blockConcise);
     const addr = addrStr.toLowerCase();

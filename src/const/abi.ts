@@ -119,6 +119,23 @@ const UnboundABI: abi.Event.Definition = {
   type: 'event',
 };
 
+const NativeBucketWithdrawABI: abi.Event.Definition = {
+  anonymous: false,
+  inputs: [
+    { indexed: true, internalType: 'address', name: 'owner', type: 'address' },
+    { indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256' },
+    { indexed: false, internalType: 'uint256', name: 'token', type: 'uint256' },
+    { indexed: false, internalType: 'address', name: 'recipient', type: 'address' },
+  ],
+  name: 'NativeBucketWithdraw',
+  type: 'event',
+};
+
+export const BoundEvent = new abi.Event(BoundABI);
+export const UnboundEvent = new abi.Event(UnboundABI);
+export const NativeBucketWithdraw = new abi.Event(NativeBucketWithdrawABI);
+
+// WMTR
 export const WMTRDeposit = new abi.Event({
   anonymous: false,
   inputs: [
@@ -138,9 +155,6 @@ export const WMTRWithdrawal = new abi.Event({
   name: 'Withdrawal',
   type: 'event',
 });
-
-export const BoundEvent = new abi.Event(BoundABI);
-export const UnboundEvent = new abi.Event(UnboundABI);
 
 // ERC 1967 Events
 const UpgradedABI: abi.Event.Definition = {

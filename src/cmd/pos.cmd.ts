@@ -2,7 +2,15 @@ import { EventEmitter } from 'events';
 
 import { abi, cry, ERC20, ERC1155, ERC721 } from '@meterio/devkit';
 import { ScriptEngine } from '@meterio/devkit';
-import { AdminChangedEvent, BeaconUpgradedEvent, DeployStatus, EmptyBytes32, Network, UpgradedEvent } from '../const';
+import {
+  AdminChangedEvent,
+  BeaconUpgradedEvent,
+  DeployStatus,
+  EmptyBytes32,
+  NativeBucketWithdraw,
+  Network,
+  UpgradedEvent,
+} from '../const';
 import {
   BlockRepo,
   BoundRepo,
@@ -70,6 +78,8 @@ import { newIterator, LogItem } from '../utils/log-traverser';
 import { AccountCache, TokenBalanceCache } from '../types';
 import { MetricName, getPreAllocAccount } from '../const';
 import { KeyTransactionFeeAddress } from '../const/key';
+import { Withdraw } from '../model/withdraw.interface';
+import WithdrawRepo from '../repo/withdraw.repo';
 
 const Web3 = require('web3');
 const meterify = require('meterify').meterify;
@@ -109,6 +119,7 @@ export class PosCMD extends CMD {
   private movementRepo = new MovementRepo();
   private boundRepo = new BoundRepo();
   private unboundRepo = new UnboundRepo();
+  private withdrawRepo = new WithdrawRepo();
   private contractRepo = new ContractRepo();
   private contractFileRepo = new ContractFileRepo();
   private accountRepo = new AccountRepo();
@@ -134,6 +145,7 @@ export class PosCMD extends CMD {
   private movementsCache: Movement[] = [];
   private boundsCache: Bound[] = [];
   private unboundsCache: Unbound[] = [];
+  private withdrawCache: Withdraw[] = [];
   private rebasingsCache: string[] = [];
   private contractsCache: Contract[] = [];
   private accountCache: AccountCache;
@@ -182,6 +194,7 @@ export class PosCMD extends CMD {
     this.movementsCache = [];
     this.boundsCache = [];
     this.unboundsCache = [];
+    this.withdrawCache = [];
 
     this.contractsCache = [];
     this.accountCache.clean();
@@ -483,6 +496,10 @@ export class PosCMD extends CMD {
     if (this.unboundsCache.length > 0) {
       await this.unboundRepo.bulkInsert(...this.unboundsCache);
       this.log.info(`saved ${this.unboundsCache.length} unbounds`);
+    }
+    if (this.withdrawCache.length > 0) {
+      await this.withdrawRepo.bulkInsert(...this.withdrawCache);
+      this.log.info(`saved ${this.withdrawCache.length} withdraws`);
     }
 
     if (this.contractsCache.length > 0) {
@@ -834,6 +851,34 @@ export class PosCMD extends CMD {
       logIndex,
     });
     await this.accountCache.bound(owner, token, amount, blockConcise);
+  }
+
+  async handleBucketWithdraw(
+    evt: Flex.Meter.Event,
+    txHash: string,
+    clauseIndex: number,
+    logIndex: number,
+    blockConcise: BlockConcise
+  ) {
+    if (!evt.topics || evt.topics[0] != BoundEvent.signature) {
+      return;
+    }
+    const decoded = NativeBucketWithdraw.decode(evt.data, evt.topics);
+    const owner = decoded.owner.toLowerCase();
+    const recipient = decoded.recipient.toLowerCase();
+    const token = decoded.token == 1 ? Token.MTRG : Token.MTR;
+    const amount = new BigNumber(decoded.amount.toString());
+    this.withdrawCache.push({
+      owner,
+      recipient,
+      amount,
+      token,
+      txHash,
+      block: blockConcise,
+      clauseIndex,
+      logIndex,
+    });
+    await this.accountCache.withdraw(owner, recipient, token, amount, blockConcise);
   }
 
   async handleUnbound(
@@ -1556,6 +1601,12 @@ export class PosCMD extends CMD {
         if (evt.topics[0] === '0x72725a3b1e5bd622d6bcd1339bb31279c351abe8f541ac7fd320f24e1b1641f2') {
           this.rebasingsCache.push(evt.address);
         }
+        // rebasing (by stMTRG)
+        // event LogRebase( bytes32 indexed bucketID, address indexed candidate, uint256 indexed epoch, uint256 totalSupply);
+        // sample ?
+        if (evt.topics[0] === '0x718b31b13d461b57805228117e5ad834c401532de2bea40d37cf85cbea57e1ff') {
+          this.rebasingsCache.push(evt.address);
+        }
 
         // ### Handle contract creation
         await this.handleContractCreation(evt, tx.id, blockConcise, clauseTrace);
@@ -1568,6 +1619,9 @@ export class PosCMD extends CMD {
 
         // ### Handle staking unbound event
         await this.handleUnbound(evt, tx.id, clauseIndex, logIndex, blockConcise);
+
+        // ### Handle staking withdraw from liquid staking
+        await this.handleBucketWithdraw(evt, tx.id, clauseIndex, logIndex, blockConcise);
       } // End of handling events
 
       await this.handleSelfdestruct(clauseTrace, tx.id, blockConcise);
@@ -1894,6 +1948,14 @@ export class PosCMD extends CMD {
     this.log.info(` ${this.unboundsCache.length} UNBOUND(s)`);
     this.log.info('----------------------------------------');
     for (const item of this.unboundsCache) {
+      this.log.info(item);
+      this.log.info('----------------------------------------\n');
+    }
+
+    this.log.info('----------------------------------------');
+    this.log.info(` ${this.withdrawCache.length} WITHDRAWS(s)`);
+    this.log.info('----------------------------------------');
+    for (const item of this.withdrawCache) {
       this.log.info(item);
       this.log.info('----------------------------------------\n');
     }
