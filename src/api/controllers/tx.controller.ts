@@ -13,6 +13,7 @@ import { BigNumber as EBN } from 'ethers';
 // contract created signature
 const CONTRACT_CREATED_SIGNATURE = '0xb35bf4274d4295009f1ec66ed3f579db287889444366c03d3a695539372e8951';
 import { BaseController } from './baseController';
+import { Script } from 'vm';
 class TxController extends BaseController {
   public path = '/api/txs';
   public router = Router();
@@ -101,7 +102,38 @@ class TxController extends BaseController {
 
     let tokenTransfers = [];
     let contractAddress = [];
+    let bucketHighlights = [];
+    const nativeBucketEvents = [
+      ScriptEngine.NativeBucketOpen,
+      ScriptEngine.NativeBucketClose,
+      ScriptEngine.NativeBucketDeposit,
+      ScriptEngine.NativeBucketWithdraw,
+      ScriptEngine.NativeBucketTransferFund,
+      ScriptEngine.NativeBucketMerge,
+      ScriptEngine.NativeBucketUpdateCandidate,
+    ];
     for (const e of events) {
+      for (const evt of nativeBucketEvents) {
+        try {
+          if (evt.signature == e.topics[0]) {
+            const decoded = evt.decode(e.data, e.topics);
+            let r = {};
+            for (const key in decoded) {
+              if (Number.isNaN(Number(key))) {
+                if (typeof decoded[key] === 'object' && decoded[key] instanceof EBN) {
+                  r[key] = new BigNumber(decoded[key].toString()).toFixed();
+                } else {
+                  r[key] = decoded[key];
+                }
+              }
+            }
+            bucketHighlights.push({ ...r, name: evt.definition.name });
+          }
+        } catch (e) {
+          console.log('could not decode', evt.canonicalName, e);
+        }
+      }
+
       if (
         !e.topics ||
         ![
@@ -256,6 +288,7 @@ class TxController extends BaseController {
       eventCount: events.length,
       internaltxsCount: internaltxsCount,
       tokenTransfers,
+      bucketHighlights,
       contractAddress,
     };
 
