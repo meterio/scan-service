@@ -408,6 +408,11 @@ export class Pos {
   public async getBuckets() {
     return this.httpGet<Pos.Bucket[]>(`staking/buckets`);
   }
+
+  public async getBucketByID(id: string) {
+    return this.httpGet<Pos.Bucket>(`staking/buckets/${id}`);
+  }
+
   public async getValidatorRewards() {
     return this.httpGet<Pos.ValidatorReward[]>(`staking/validator-rewards`);
   }

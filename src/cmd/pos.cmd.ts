@@ -28,6 +28,7 @@ import {
   LogTransferRepo,
   InternalTxRepo,
   ContractFileRepo,
+  BucketRepo,
 } from '../repo';
 import { Token, ContractType, BlockType } from '../const';
 import {
@@ -80,6 +81,8 @@ import { MetricName, getPreAllocAccount } from '../const';
 import { KeyTransactionFeeAddress } from '../const/key';
 import { Withdraw } from '../model/withdraw.interface';
 import WithdrawRepo from '../repo/withdraw.repo';
+import { Script } from 'vm';
+import { decode } from 'punycode';
 
 const Web3 = require('web3');
 const meterify = require('meterify').meterify;
@@ -127,6 +130,7 @@ export class PosCMD extends CMD {
   private logEventRepo = new LogEventRepo();
   private logTransferRepo = new LogTransferRepo();
   private internalTxRepo = new InternalTxRepo();
+  private bucketRepo = new BucketRepo();
 
   private metricRepo = new MetricRepo(); // readonly
 
@@ -853,32 +857,81 @@ export class PosCMD extends CMD {
     await this.accountCache.bound(owner, token, amount, blockConcise);
   }
 
-  async handleBucketWithdraw(
+  async handleNativeBucketEvent(
     evt: Flex.Meter.Event,
     txHash: string,
     clauseIndex: number,
     logIndex: number,
     blockConcise: BlockConcise
   ) {
-    if (!evt.topics || evt.topics[0] != NativeBucketWithdraw.signature) {
+    if (!evt.topics || evt.topics.length <= 0) {
       return;
     }
-    const decoded = NativeBucketWithdraw.decode(evt.data, evt.topics);
-    const owner = decoded.owner.toLowerCase();
-    const recipient = decoded.recipient.toLowerCase();
-    const token = decoded.token == 1 ? Token.MTRG : Token.MTR;
-    const amount = new BigNumber(decoded.amount.toString());
-    this.withdrawCache.push({
-      owner,
-      recipient,
-      amount,
-      token,
-      txHash,
-      block: blockConcise,
-      clauseIndex,
-      logIndex,
-    });
-    await this.accountCache.withdraw(owner, recipient, token, amount, blockConcise);
+    let bucketIDs = [];
+
+    var decoded: abi.Decoded;
+    switch (evt.topics[0]) {
+      case ScriptEngine.NativeBucketOpen.signature:
+        decoded = ScriptEngine.NativeBucketOpen.decode(evt.data, evt.topics);
+        bucketIDs.push(decoded.bucketID);
+        break;
+
+      case ScriptEngine.NativeBucketClose.signature:
+        decoded = ScriptEngine.NativeBucketClose.decode(evt.data, evt.topics);
+        bucketIDs.push(decoded.bucketID);
+        break;
+
+      case ScriptEngine.NativeBucketDeposit.signature:
+        decoded = ScriptEngine.NativeBucketDeposit.decode(evt.data, evt.topics);
+        bucketIDs.push(decoded.bucketID);
+        break;
+
+      case ScriptEngine.NativeBucketWithdraw.signature:
+        decoded = ScriptEngine.NativeBucketWithdraw.decode(evt.data, evt.topics);
+        const owner = decoded.owner.toLowerCase();
+        const recipient = decoded.recipient.toLowerCase();
+        const token = decoded.token == 1 ? Token.MTRG : Token.MTR;
+        const amount = new BigNumber(decoded.amount.toString());
+        this.withdrawCache.push({
+          owner,
+          recipient,
+          amount,
+          token,
+          txHash,
+          block: blockConcise,
+          clauseIndex,
+          logIndex,
+        });
+        bucketIDs.push(decoded.fromBktID);
+        bucketIDs.push(decoded.toBktID);
+        await this.accountCache.withdraw(owner, recipient, token, amount, blockConcise);
+        break;
+
+      case ScriptEngine.NativeBucketMerge.signature:
+        decoded = ScriptEngine.NativeBucketMerge.decode(evt.data, evt.topics);
+        bucketIDs.push(decoded.fromBktID);
+        bucketIDs.push(decoded.toBktID);
+        break;
+
+      case ScriptEngine.NativeBucketTransferFund.signature:
+        decoded = ScriptEngine.NativeBucketTransferFund.decode(evt.data, evt.topics);
+        bucketIDs.push(decoded.fromBktID);
+        bucketIDs.push(decoded.toBktID);
+        break;
+
+      case ScriptEngine.NativeBucketUpdateCandidate.signature:
+        decoded = ScriptEngine.NativeBucketUpdateCandidate.decode(evt.data, evt.topics);
+        bucketIDs.push(decoded.bucketID);
+        break;
+    }
+
+    let buckets = [];
+    for (const id of bucketIDs) {
+      const b = await this.pos.getBucketByID(id);
+      buckets.push(b);
+    }
+
+    await this.bucketRepo.bulkUpsert(...buckets);
   }
 
   async handleUnbound(
@@ -1621,7 +1674,7 @@ export class PosCMD extends CMD {
         await this.handleUnbound(evt, tx.id, clauseIndex, logIndex, blockConcise);
 
         // ### Handle staking withdraw from liquid staking
-        await this.handleBucketWithdraw(evt, tx.id, clauseIndex, logIndex, blockConcise);
+        await this.handleNativeBucketEvent(evt, tx.id, clauseIndex, logIndex, blockConcise);
       } // End of handling events
 
       await this.handleSelfdestruct(clauseTrace, tx.id, blockConcise);
