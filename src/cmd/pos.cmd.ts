@@ -928,9 +928,15 @@ export class PosCMD extends CMD {
     let buckets = [];
     for (const id of bucketIDs) {
       const b = await this.pos.getBucketByID(id);
-      buckets.push(b);
+      buckets.push({
+        ...b,
+        value: new BigNumber(b.value),
+        bonusVotes: new BigNumber(b.bonusVotes),
+        totalVotes: new BigNumber(b.totalVotes),
+      });
     }
 
+    this.log.info(`update buckets: ${bucketIDs}`);
     await this.bucketRepo.bulkUpsert(...buckets);
   }
 
