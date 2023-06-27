@@ -45,6 +45,7 @@ import {
   Head,
   Tx,
   TxDigest,
+  Bucket,
 } from '../model';
 import { BigNumber } from 'bignumber.js';
 import { sha1 } from 'object-hash';
@@ -918,21 +919,34 @@ export class PosCMD extends CMD {
           break;
       }
       if (bucketIDs.length > 0) {
-        let buckets = [];
         for (const id of bucketIDs) {
+          console.log('bucket needs update: ', id);
           const b = await this.pos.getBucketByID(id);
-          console.log('bucket: ', b);
-          buckets.push({
-            ...b,
-            value: new BigNumber(b.value),
-            bonusVotes: new BigNumber(b.totalVotes).minus(b.value),
-            totalVotes: new BigNumber(b.totalVotes),
-          });
-          console.log(buckets[buckets.length - 1]);
+          const bkt = await this.bucketRepo.findByID(b.id);
+          if (bkt) {
+            bkt.value = new BigNumber(b.value);
+            bkt.bonusVotes = new BigNumber(b.totalVotes).minus(b.value);
+            bkt.totalVotes = new BigNumber(b.totalVotes);
+            bkt.candidate = b.candidate;
+            bkt.autobid = b.autobid;
+            bkt.unbounded = b.unbounded;
+            bkt.matureTime = b.matureTime;
+            bkt.calcLastTime = b.calcLastTime;
+            await bkt.save();
+            console.log('update bucket: ', bkt);
+          } else {
+            const newBkt = await this.bucketRepo.create({
+              ...b,
+              value: new BigNumber(b.value),
+              bonusVotes: new BigNumber(b.totalVotes).minus(b.value),
+              totalVotes: new BigNumber(b.totalVotes),
+            });
+            console.log('create bucket: ', newBkt);
+          }
         }
 
-        this.log.info(`update buckets: ${bucketIDs}`);
-        await this.bucketRepo.bulkUpsert(...buckets);
+        // this.log.info(`update buckets: ${bucketIDs}`);
+        // await this.bucketRepo.bulkUpsert(...buckets);
       }
     } catch (e) {
       console.log('error happened during native bucket event handling: ', e);
