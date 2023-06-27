@@ -91,7 +91,7 @@ const FASTFORWARD_INTERVAL = 300; // 0.3 second gap between each loop
 const NORMAL_INTERVAL = 2000; // 2 seconds gap between each loop
 const PRELOAD_WINDOW = 100;
 const LOOP_WINDOW = 100;
-const RECOVERY_INTERVAL = 5 * 60 * 1000; // 5 min for recovery
+const RECOVERY_INTERVAL = 2 * 60 * 1000; // 2 min for recovery
 
 // ERC-1967 standard (Proxy Storage Slots)
 // https://eips.ethereum.org/EIPS/eip-1967
