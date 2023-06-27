@@ -869,77 +869,81 @@ export class PosCMD extends CMD {
     }
     let bucketIDs = [];
 
-    var decoded: abi.Decoded;
-    switch (evt.topics[0]) {
-      case ScriptEngine.NativeBucketOpen.signature:
-        decoded = ScriptEngine.NativeBucketOpen.decode(evt.data, evt.topics);
-        bucketIDs.push(decoded.bucketID);
-        break;
+    try {
+      var decoded: abi.Decoded;
+      switch (evt.topics[0]) {
+        case ScriptEngine.NativeBucketOpen.signature:
+          decoded = ScriptEngine.NativeBucketOpen.decode(evt.data, evt.topics);
+          bucketIDs.push(decoded.bucketID);
+          break;
 
-      case ScriptEngine.NativeBucketClose.signature:
-        decoded = ScriptEngine.NativeBucketClose.decode(evt.data, evt.topics);
-        bucketIDs.push(decoded.bucketID);
-        break;
+        case ScriptEngine.NativeBucketClose.signature:
+          decoded = ScriptEngine.NativeBucketClose.decode(evt.data, evt.topics);
+          bucketIDs.push(decoded.bucketID);
+          break;
 
-      case ScriptEngine.NativeBucketDeposit.signature:
-        decoded = ScriptEngine.NativeBucketDeposit.decode(evt.data, evt.topics);
-        bucketIDs.push(decoded.bucketID);
-        break;
+        case ScriptEngine.NativeBucketDeposit.signature:
+          decoded = ScriptEngine.NativeBucketDeposit.decode(evt.data, evt.topics);
+          bucketIDs.push(decoded.bucketID);
+          break;
 
-      case ScriptEngine.NativeBucketWithdraw.signature:
-        decoded = ScriptEngine.NativeBucketWithdraw.decode(evt.data, evt.topics);
-        const owner = decoded.owner.toLowerCase();
-        const recipient = decoded.recipient.toLowerCase();
-        const token = decoded.token == 1 ? Token.MTRG : Token.MTR;
-        const amount = new BigNumber(decoded.amount.toString());
-        this.withdrawCache.push({
-          owner,
-          recipient,
-          amount,
-          token,
-          txHash,
-          block: blockConcise,
-          clauseIndex,
-          logIndex,
-        });
-        bucketIDs.push(decoded.fromBktID);
-        bucketIDs.push(decoded.toBktID);
-        await this.accountCache.withdraw(owner, recipient, token, amount, blockConcise);
-        break;
+        case ScriptEngine.NativeBucketWithdraw.signature:
+          decoded = ScriptEngine.NativeBucketWithdraw.decode(evt.data, evt.topics);
+          const owner = decoded.owner.toLowerCase();
+          const recipient = decoded.recipient.toLowerCase();
+          const token = decoded.token == 1 ? Token.MTRG : Token.MTR;
+          const amount = new BigNumber(decoded.amount.toString());
+          this.withdrawCache.push({
+            owner,
+            recipient,
+            amount,
+            token,
+            txHash,
+            block: blockConcise,
+            clauseIndex,
+            logIndex,
+          });
+          bucketIDs.push(decoded.fromBktID);
+          bucketIDs.push(decoded.toBktID);
+          await this.accountCache.withdraw(owner, recipient, token, amount, blockConcise);
+          break;
 
-      case ScriptEngine.NativeBucketMerge.signature:
-        decoded = ScriptEngine.NativeBucketMerge.decode(evt.data, evt.topics);
-        bucketIDs.push(decoded.fromBktID);
-        bucketIDs.push(decoded.toBktID);
-        break;
+        case ScriptEngine.NativeBucketMerge.signature:
+          decoded = ScriptEngine.NativeBucketMerge.decode(evt.data, evt.topics);
+          bucketIDs.push(decoded.fromBktID);
+          bucketIDs.push(decoded.toBktID);
+          break;
 
-      case ScriptEngine.NativeBucketTransferFund.signature:
-        decoded = ScriptEngine.NativeBucketTransferFund.decode(evt.data, evt.topics);
-        bucketIDs.push(decoded.fromBktID);
-        bucketIDs.push(decoded.toBktID);
-        break;
+        case ScriptEngine.NativeBucketTransferFund.signature:
+          decoded = ScriptEngine.NativeBucketTransferFund.decode(evt.data, evt.topics);
+          bucketIDs.push(decoded.fromBktID);
+          bucketIDs.push(decoded.toBktID);
+          break;
 
-      case ScriptEngine.NativeBucketUpdateCandidate.signature:
-        decoded = ScriptEngine.NativeBucketUpdateCandidate.decode(evt.data, evt.topics);
-        bucketIDs.push(decoded.bucketID);
-        break;
-    }
-    if (bucketIDs.length > 0) {
-      let buckets = [];
-      for (const id of bucketIDs) {
-        const b = await this.pos.getBucketByID(id);
-        console.log('bucket: ', b);
-        buckets.push({
-          ...b,
-          // value: new BigNumber(b.value),
-          // bonusVotes: new BigNumber(b.bonusVotes),
-          // totalVotes: new BigNumber(b.totalVotes),
-        });
-        console.log(buckets[buckets.length - 1]);
+        case ScriptEngine.NativeBucketUpdateCandidate.signature:
+          decoded = ScriptEngine.NativeBucketUpdateCandidate.decode(evt.data, evt.topics);
+          bucketIDs.push(decoded.bucketID);
+          break;
       }
+      if (bucketIDs.length > 0) {
+        let buckets = [];
+        for (const id of bucketIDs) {
+          const b = await this.pos.getBucketByID(id);
+          console.log('bucket: ', b);
+          buckets.push({
+            ...b,
+            // value: new BigNumber(b.value),
+            // bonusVotes: new BigNumber(b.bonusVotes),
+            // totalVotes: new BigNumber(b.totalVotes),
+          });
+          console.log(buckets[buckets.length - 1]);
+        }
 
-      this.log.info(`update buckets: ${bucketIDs}`);
-      await this.bucketRepo.bulkUpsert(...buckets);
+        this.log.info(`update buckets: ${bucketIDs}`);
+        await this.bucketRepo.bulkUpsert(...buckets);
+      }
+    } catch (e) {
+      console.log('error happened during native bucket event handling: ', e);
     }
   }
 
