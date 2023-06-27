@@ -50,7 +50,7 @@ export default class BucketRepo {
     return this.model.create(models);
   }
 
-  public async bulkUpsert(...bkts: Bucket[]) {
+  public async bulkUpsert(...bkts: any[]) {
     for (const b of bkts) {
       await this.model.findOneAndUpdate({ id: b.id }, b, {
         new: true,

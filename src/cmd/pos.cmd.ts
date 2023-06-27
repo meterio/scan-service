@@ -924,20 +924,23 @@ export class PosCMD extends CMD {
         bucketIDs.push(decoded.bucketID);
         break;
     }
+    if (bucketIDs.length > 0) {
+      let buckets = [];
+      for (const id of bucketIDs) {
+        const b = await this.pos.getBucketByID(id);
+        console.log('bucket: ', b);
+        buckets.push({
+          ...b,
+          // value: new BigNumber(b.value),
+          // bonusVotes: new BigNumber(b.bonusVotes),
+          // totalVotes: new BigNumber(b.totalVotes),
+        });
+        console.log(buckets[buckets.length - 1]);
+      }
 
-    let buckets = [];
-    for (const id of bucketIDs) {
-      const b = await this.pos.getBucketByID(id);
-      buckets.push({
-        ...b,
-        value: new BigNumber(b.value),
-        bonusVotes: new BigNumber(b.bonusVotes),
-        totalVotes: new BigNumber(b.totalVotes),
-      });
+      this.log.info(`update buckets: ${bucketIDs}`);
+      await this.bucketRepo.bulkUpsert(...buckets);
     }
-
-    this.log.info(`update buckets: ${bucketIDs}`);
-    await this.bucketRepo.bulkUpsert(...buckets);
   }
 
   async handleUnbound(
