@@ -2,15 +2,7 @@ import { EventEmitter } from 'events';
 
 import { abi, cry, ERC20, ERC1155, ERC721 } from '@meterio/devkit';
 import { ScriptEngine } from '@meterio/devkit';
-import {
-  AdminChangedEvent,
-  BeaconUpgradedEvent,
-  DeployStatus,
-  EmptyBytes32,
-  NativeBucketWithdraw,
-  Network,
-  UpgradedEvent,
-} from '../const';
+import { AdminChangedEvent, BeaconUpgradedEvent, DeployStatus, EmptyBytes32, Network, UpgradedEvent } from '../const';
 import {
   BlockRepo,
   BoundRepo,
@@ -932,9 +924,9 @@ export class PosCMD extends CMD {
           console.log('bucket: ', b);
           buckets.push({
             ...b,
-            // value: new BigNumber(b.value),
-            // bonusVotes: new BigNumber(b.bonusVotes),
-            // totalVotes: new BigNumber(b.totalVotes),
+            value: new BigNumber(b.value),
+            bonusVotes: new BigNumber(b.totalVotes).minus(b.value),
+            totalVotes: new BigNumber(b.totalVotes),
           });
           console.log(buckets[buckets.length - 1]);
         }

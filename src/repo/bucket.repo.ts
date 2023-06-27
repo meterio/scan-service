@@ -52,11 +52,13 @@ export default class BucketRepo {
 
   public async bulkUpsert(...bkts: any[]) {
     for (const b of bkts) {
-      await this.model.findOneAndUpdate({ id: b.id }, b, {
+      console.log('bucket: ', b);
+      const updated = await this.model.findOneAndUpdate({ id: b.id }, b, {
         new: true,
         upsert: true,
         overwrite: true,
       });
+      console.log('updated bucket: ', updated);
     }
     return true;
   }
