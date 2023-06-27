@@ -17,4 +17,5 @@ export interface Bucket {
   totalVotes: BigNumber;
   matureTime: number;
   calcLastTime: number;
+  autobid?: number;
 }
