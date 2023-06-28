@@ -17,7 +17,7 @@ import { URL } from 'url';
 
 // Set the AWS Region
 const REGION = 'ap-southeast-1';
-const ALBUM_BUCKET_NAME = 'nft-image.meter';
+const ALBUM_BUCKET_NAME = 'nft-image.meter.io';
 const S3_WEBSITE_BASE = 'nft-image.meter.io';
 // const INFURA_IPFS_PREFIX = 'https://metersync.infura-ipfs.io/ipfs/';
 const INFURA_IPFS_PREFIX = 'https://metersync.mypinata.cloud/ipfs/';
