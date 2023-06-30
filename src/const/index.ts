@@ -142,7 +142,7 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         powPort: 8332,
 
         // pos
-        posUrl: 'http://warringstakes.meter.io:8669',
+        posUrl: 'http://testnet.meter.io',
         rpcUrl: 'http://rpctest.meter.io',
 
         wmtrEnabled: false,

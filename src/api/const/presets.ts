@@ -126,35 +126,35 @@ const mainnetDelegates = [
 
 const testnetDelegates = [
   {
-    name: 'shoal-01',
+    name: 't01',
     address: '0x658B6da6723979eC56fef1296F115477460A8797',
     pub_key:
       'BD8rZwjdir9hidtqxDK5rbbGrGSZ9BZ0R98jAtpxKdLJ0n3BbFeI05tbptWtvJ5Xmkm45cKwpGZqx39a0uMka90=:::f9uhSGcTXRBkOqpYuDkjw4kmcvmAELGau7MJVGgQwP+G63+vzwEU+WCu0e0NFBmJFpsT9ZQgIvapzpY1dviKFQA=',
     voting_power: 100,
     network_addr: {
-      ip: '46.137.198.231',
+      ip: '35.81.5.183',
       port: 8670,
     },
   },
   {
-    name: 'shoal-02',
+    name: 't02',
     address: '0x34BD9720f4d83Db2c8d7de87eC38b7832301CA67',
     pub_key:
       'BHq/NmcbeOS/wEqZGGYOgm79/tLkZy004IFu4gjSt7jiD/fLrJsdKSHqe/oQqT5y78tt6H3zr016hvXte/Ntw70=:::bNpwfSjJbskU1czBj0p/2Y4s03jH8mx9nV+ahX55815HNRG03+nEjOLkh4WcNgUe2MQKVTw83mgNU8Ju79MF8gE=',
     voting_power: 100,
     network_addr: {
-      ip: '13.214.84.251',
+      ip: '44.226.23.79',
       port: 8670,
     },
   },
   {
-    name: 'shoal-03',
+    name: 't03',
     address: '0xe6c7317A261E0453a6793F0cE2466c508d3f2c04',
     pub_key:
       'BAYuQ+dcpHZP7fiBuKf0ddt9qqEbxek/5DFDgo897cR4HoVDXlrHtJvPdC6YCBM4UcSBq9+DBG99IsTEQnfSZaE=:::PKWq4VQqvX6+B+3GrvOnSELoPt2AhKfNozaY4iIz3t2DvoetKdD70rP0QwT86WncK1sUA70MJjOJ/+69ZAQ+AgE=',
     voting_power: 100,
     network_addr: {
-      ip: '54.255.124.217',
+      ip: '44.230.222.251',
       port: 8670,
     },
   },
