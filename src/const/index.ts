@@ -113,7 +113,7 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         powPort: 8332,
 
         // pos
-        posUrl: 'http://trace.meter.io:8669',
+        posUrl: 'http://trace.meter.io',
         rpcUrl: 'http://rpc-trace.meter.io',
 
         wmtrEnabled: true,

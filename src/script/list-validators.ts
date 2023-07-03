@@ -6,7 +6,7 @@ import axios from 'axios';
 
 (async () => {
   try {
-    const res = await axios.get(`http://mainnet.meter.io:8669/staking/candidates`);
+    const res = await axios.get(`http://mainnet.meter.io/staking/candidates`);
     let addrMap = {};
     for (const c of res.data) {
       addrMap[c.address] = true;

@@ -572,7 +572,7 @@ export class PosCMD extends CMD {
     let code: string | undefined = undefined;
     if (codeRes) {
       // there's a case where tx create a contract address with no code
-      // take a look at this: http://testnet.meter.io:8669/transactions/0xf2a9e4f458ace6488e03b7c4e050bca888e0c2da1acd6437629496fb40d160ef
+      // take a look at this: http://testnet.meter.io/transactions/0xf2a9e4f458ace6488e03b7c4e050bca888e0c2da1acd6437629496fb40d160ef
       code = codeRes.code;
     }
     const decoded = prototype.$Master.decode(evt.data, evt.topics);
