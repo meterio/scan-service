@@ -4,7 +4,7 @@ RUN npm install -g pm2
 # RUN pm2 install typescript
 
 WORKDIR /app
-RUN apt-get update && apt-get install -y ca-certificates wget && wget https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && apt-get autoremove -y wget
+RUN apt-get update && apt-get install -y ca-certificates wget && wget https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && apt-get autoremove -y wget
 
 # Bundle APP files
 COPY src ./src
