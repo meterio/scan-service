@@ -113,8 +113,8 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         powPort: 8332,
 
         // pos
-        posUrl: 'http://trace.meter.io',
-        rpcUrl: 'http://rpc-trace.meter.io',
+        posUrl: 'https://trace.meter.io',
+        rpcUrl: 'https://rpc-trace.meter.io',
 
         wmtrEnabled: true,
         wmtrAddress: '0x160361ce13ec33c993b5cca8f62b6864943eb083',
@@ -142,8 +142,8 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         powPort: 8332,
 
         // pos
-        posUrl: 'http://testnet.meter.io',
-        rpcUrl: 'http://rpctest.meter.io',
+        posUrl: 'https://testnet.meter.io',
+        rpcUrl: 'https://rpctest.meter.io',
 
         wmtrEnabled: false,
         wmtrAddress: '',

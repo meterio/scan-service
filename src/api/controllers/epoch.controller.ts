@@ -122,6 +122,7 @@ class EpochController extends BaseController {
   private getStatsByEpoch = async (req: Request, res: Response) => {
     const { epoch } = req.params;
     const committee = await this.committeeRepo.findByEpoch(parseInt(epoch));
+    console.log(`committee ${committee}`);
     if (!committee) {
       return res.json({
         startBlock: 0,
@@ -132,6 +133,7 @@ class EpochController extends BaseController {
     }
 
     let endBlock = { number: -1, timestamp: -1, hash: '0x00' };
+    console.log(`end block: ${endBlock}`);
     if (!committee.endBlock || committee.endBlock.number == 0) {
       const endBlocks = await this.blockRepo.findRecent();
       const bestBlock = endBlocks[0];
@@ -145,6 +147,7 @@ class EpochController extends BaseController {
     }
 
     const url = this.config.posUrl + `/staking/candidates?revision=${committee.startBlock.number}`;
+    console.log(`gettting ${url}`);
     const candidatesRes = await axios.get(url);
     let cmap = {};
     candidatesRes.data.forEach((c) => {
@@ -153,7 +156,6 @@ class EpochController extends BaseController {
         cmap[keyparts[0]] = c;
       }
     });
-    // console.log('cmap', cmap);
     // console.log('committee.members', committee.members);
     let visited = {};
     const members = committee.members
