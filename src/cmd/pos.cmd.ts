@@ -1188,6 +1188,7 @@ export class PosCMD extends CMD {
       return;
     }
 
+    // Handle WMTR just like ERC20, nothing more
     for (const [clauseIndex, o] of tx.outputs.entries()) {
       for (const [logIndex, evt] of o.events.entries()) {
         // handle WMTR deposit event
@@ -1227,8 +1228,8 @@ export class PosCMD extends CMD {
 
           const from = decoded.from.toLowerCase();
           const amount = new BigNumber(decoded.amount.toString());
-          // await this.tokenBalanceCache.minus(from, evt.address, amount, blockConcise);
-          await this.accountCache.plus(from, Token.MTR, amount, blockConcise);
+          await this.tokenBalanceCache.minus(from, evt.address, amount, blockConcise);
+          // await this.accountCache.plus(from, Token.MTR, amount, blockConcise);
         }
       }
     }
