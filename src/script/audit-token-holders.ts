@@ -34,7 +34,7 @@ const runAsync = async (options) => {
         'best'
       );
       const decoded = ERC20.totalSupply.decode(res[0].data);
-      const totalSupplyOnChain = decoded['0'];
+      const totalSupplyOnChain = decoded['0'].toString();
       console.log('----------------------------------------');
       console.log(`Total supply != Holder's holdings for token ${symbol} ${address}`);
       console.log(`total supply : ${c.totalSupply.toFixed(0)}`);

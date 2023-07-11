@@ -29,7 +29,7 @@ const runAsync = async (options) => {
         'best'
       );
       const decoded = ERC20.balanceOf.decode(outputs[0].data);
-      const chainBal = new BigNumber(decoded[0]);
+      const chainBal = new BigNumber(decoded[0].toString());
       if (!chainBal.isEqualTo(balance)) {
         console.log(`found NON-matching balance: chain ${chainBal} db:${balance}`);
         console.log(`tokenAddr: ${tokenAddress}, addr: ${address}`);
