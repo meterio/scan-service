@@ -51,16 +51,9 @@ export default class TxDigestRepo {
     console.time('count');
     const count = await this.model.count(query);
     console.timeEnd('count');
+
     console.time('paginate');
-    let skipSize = count - (page + 1) * limit;
-    let pageSize = limit;
-    if (skipSize < 0) {
-      pageSize += skipSize;
-      if (pageSize < 0) {
-        pageSize = 0;
-      }
-    }
-    console.log(`skipSize: ${skipSize}, pageSize: ${pageSize}`);
+    console.log(`query: ${JSON.stringify(query)}, limit: ${limit}, page: ${page}`);
 
     // const result = await this.model.find(query).skip(skipSize).limit(pageSize);
     const result = await this.model
@@ -72,8 +65,11 @@ export default class TxDigestRepo {
     // .sort({ 'block.number': -1 })
     // .limit(limit);
     // .skip(limit * page);
-    result.sort((a, b) => (a.block.number > b.block.number ? -1 : 1));
     console.timeEnd('paginate');
+
+    console.time('sort');
+    result.sort((a, b) => (a.block.number > b.block.number ? -1 : 1));
+    console.timeEnd('sort');
     return { count, result };
   }
 

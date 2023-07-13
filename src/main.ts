@@ -11,6 +11,7 @@ import { PowCMD } from './cmd/pow.cmd';
 import { ScriptEngineCMD } from './cmd/scriptEngine.cmd';
 import { Network } from './const';
 import { connectDB, disconnectDB } from './utils/db';
+import { RebaseCMD } from './cmd/rebase.cmd';
 
 const commander = require('commander');
 const program = new commander.Command();
@@ -35,6 +36,9 @@ const runSync = async (task, options) => {
       break;
     case 'scriptengine':
       cmd = new ScriptEngineCMD(options.network);
+      break;
+    case 'rebase':
+      cmd = new RebaseCMD(options.needs);
       break;
     default:
       throw new commander.InvalidArgumentError('Not a valid task to sync');

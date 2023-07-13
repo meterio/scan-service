@@ -84,6 +84,10 @@ export class NetworkConfig {
 
   wmtrEnabled: boolean;
   wmtrAddress: string;
+
+  stMTRGRebaseEnabled: boolean;
+  stMTRGAddress: string;
+
   powEnabled: boolean;
   auctionEnabled: boolean;
   sourcifyEnabled: boolean;
@@ -119,6 +123,9 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         wmtrEnabled: true,
         wmtrAddress: '0x160361ce13ec33c993b5cca8f62b6864943eb083',
 
+        stMTRGRebaseEnabled: true,
+        stMTRGAddress: '0x215d603293357ca222bE92A1bf75eEc38DeF0aad',
+
         powEnabled: true,
         auctionEnabled: true,
         sourcifyEnabled: true,
@@ -148,6 +155,9 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         wmtrEnabled: false,
         wmtrAddress: '',
 
+        stMTRGRebaseEnabled: false,
+        stMTRGAddress: '',
+
         powEnabled: true,
         auctionEnabled: true,
         sourcifyEnabled: true,
@@ -169,6 +179,9 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
 
         wmtrEnabled: false,
         wmtrAddress: '',
+
+        stMTRGRebaseEnabled: false,
+        stMTRGAddress: '',
 
         powEnabled: false,
         auctionEnabled: false,
@@ -192,6 +205,9 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
 
         wmtrEnabled: false,
         wmtrAddress: '',
+
+        stMTRGRebaseEnabled: false,
+        stMTRGAddress: '',
 
         powEnabled: false,
         auctionEnabled: false,
