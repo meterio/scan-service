@@ -88,7 +88,7 @@ class SearchController extends BaseController {
       console.log('could not find by number');
     }
 
-    // fuzzy search for account and contracts
+    // find contract by exact match
     let suggestions = [];
     let visitedAddrs = {};
     const contract = await this.contractRepo.findBySymbol(word);
@@ -104,9 +104,10 @@ class SearchController extends BaseController {
       });
     }
 
-    const accounts = await this.accountRepo.findByFuzzyName(word);
-    if (accounts && accounts.length > 0) {
-      for (const a of accounts) {
+    // find account by fuzzy name
+    const fuzzyNameAccounts = await this.accountRepo.findByFuzzyName(word);
+    if (fuzzyNameAccounts && fuzzyNameAccounts.length > 0) {
+      for (const a of fuzzyNameAccounts) {
         if (a.address in visitedAddrs) {
           continue;
         }
@@ -121,9 +122,10 @@ class SearchController extends BaseController {
       }
     }
 
-    const contracts = await this.contractRepo.findByFuzzyName(word);
-    if (contracts && contracts.length > 0) {
-      for (const c of contracts) {
+    // find contracts by fuzzy symbols
+    const fuzzySymbolContracts = await this.contractRepo.findByFuzzySymbol(word);
+    if (fuzzySymbolContracts && fuzzySymbolContracts.length > 0) {
+      for (const c of fuzzySymbolContracts) {
         if (c.address in visitedAddrs) {
           continue;
         }
@@ -138,6 +140,26 @@ class SearchController extends BaseController {
         });
       }
     }
+
+    // find contracts by fuzzy name
+    const fuzzyNameContracts = await this.contractRepo.findByFuzzyName(word);
+    if (fuzzyNameContracts && fuzzyNameContracts.length > 0) {
+      for (const c of fuzzyNameContracts) {
+        if (c.address in visitedAddrs) {
+          continue;
+        }
+        visitedAddrs[c.address] = true;
+        suggestions.push({
+          name: c.name,
+          address: c.address,
+          symbol: c.symbol,
+          type: 'address',
+          tag: ContractType[c.type],
+          logoURI: c.logoURI,
+        });
+      }
+    }
+
     if (suggestions.length > 0) {
       return res.json({ type: 'suggestions', data: suggestions.slice(0, 100) });
     }
