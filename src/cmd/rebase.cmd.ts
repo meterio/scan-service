@@ -20,6 +20,7 @@ export class RebaseCMD extends TxBlockListener {
         target: 'pino-pretty',
       },
     });
+    this.network = net;
     this.name = 'rebase';
   }
 
