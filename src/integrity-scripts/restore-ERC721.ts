@@ -3,7 +3,7 @@ require('../utils/validateEnv');
 
 import { ERC721, abi } from '@meterio/devkit';
 import { BigNumber } from 'bignumber.js';
-import { Movement } from '../model';
+import { IMovement } from '../model';
 import { HeadRepo, LogEventRepo, MovementRepo, ContractRepo } from '../repo';
 import { Token, ContractType } from '../const';
 import { connectDB, disconnectDB } from '../utils/db';
@@ -33,7 +33,7 @@ const runAsync = async (options) => {
 
     const transferEvts = await evtRepo.findByTopic0InBlockRangeSortAsc(ERC721.Transfer.signature, start, end);
     console.log(`searching for ERC721 transfers in blocks [${start}, ${end}]`);
-    let movementsCache: Movement[] = [];
+    let movementsCache: IMovement[] = [];
     let nftAuditor = new NFTBalanceAuditor();
     for (const evt of transferEvts) {
       if (evt.topics && evt.topics[0] === ERC721.Transfer.signature) {
@@ -51,7 +51,7 @@ const runAsync = async (options) => {
         const tokenId = new BigNumber(decoded.tokenId).toFixed();
         const nftTransfers = [{ tokenId, value: 1 }];
         // ### Handle movement
-        let movement: Movement = {
+        let movement: IMovement = {
           from,
           to,
           amount: new BigNumber(0),

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 require('../utils/validateEnv');
 
-import { Candidate } from '../model';
+import { ICandidate } from '../model';
 import { HeadRepo, BlockRepo, CandidateRepo } from '../repo';
 import { connectDB, disconnectDB } from '../utils/db';
 import { checkNetworkWithDB, Pos, runWithOptions } from '../utils';
@@ -26,12 +26,12 @@ const runAsync = async (options) => {
 
     const kblocks = await blockRepo.findKBlockInRangeSortAsc(start, end);
     console.log(`searching for candidates in blocks [${start}, ${end}]`);
-    let candidates: Candidate[] = [];
+    let candidates: ICandidate[] = [];
     for (const kb of kblocks) {
       const epoch = kb.qc.epochID;
       const candidateList = await pos.getCandidatesOnRevision(kb.number);
       for (const c of candidateList) {
-        candidates.push({ ...c, ipAddress: c.ipAddr, epoch } as Candidate);
+        candidates.push({ ...c, ipAddress: c.ipAddr, epoch } as ICandidate);
       }
     }
     if (candidates.length > 0) {

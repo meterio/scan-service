@@ -2,7 +2,7 @@
 require('../utils/validateEnv');
 
 import { HeadRepo, TxRepo } from '../repo';
-import { TraceOutput } from '../model';
+import { ITraceOutput } from '../model';
 import { connectDB, disconnectDB } from '../utils/db';
 
 import { checkNetworkWithDB, Pos, runWithOptions } from '../utils';
@@ -29,7 +29,7 @@ const runAsync = async (options) => {
     for (const tx of txs) {
       console.log(`processing tx ${tx.hash}`);
 
-      let traces: TraceOutput[] = [];
+      let traces: ITraceOutput[] = [];
       for (let i = 0; i < tx.clauseCount; i++) {
         const trace = await pos.newTraceClause(tx.hash, i);
         if (trace.error) {
@@ -38,7 +38,7 @@ const runAsync = async (options) => {
           await tx.save();
           break;
         }
-        const t: TraceOutput = { json: JSON.stringify(trace), clauseIndex: i };
+        const t: ITraceOutput = { json: JSON.stringify(trace), clauseIndex: i };
         traces.push(t);
       }
 

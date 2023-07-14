@@ -2,7 +2,7 @@
 require('../utils/validateEnv');
 
 import { connectDB, disconnectDB } from '../utils/db';
-import { PowInfo } from '../model';
+import { IPowInfo } from '../model';
 import { BlockRepo } from '../repo';
 import { Pos, runWithOptions } from '../utils';
 
@@ -16,7 +16,7 @@ const runAsync = async (options) => {
     for (let kb of kblks) {
       console.log('fix for kblock: ', kb.number, kb.epoch);
       const info = await pos.getEpochInfo(kb.epoch);
-      let powBlocks: PowInfo[] = [];
+      let powBlocks: IPowInfo[] = [];
       for (const pb of info.powBlocks) {
         powBlocks.push({
           hash: pb.hash,

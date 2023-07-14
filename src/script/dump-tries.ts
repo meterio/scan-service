@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 require('../utils/validateEnv');
 
-import { HeadRepo, TxRepo, ContractRepo, BlockRepo } from '../repo';
-import { TraceOutput } from '../model';
+import { BlockRepo } from '../repo';
 import { connectDB, disconnectDB } from '../utils/db';
-import { prototype, ZeroAddress } from '../const';
-import { Keccak } from 'sha3';
 
 import { checkNetworkWithDB, isTraceable, Pos, runWithOptions, saveCSV, sleep } from '../utils';
 

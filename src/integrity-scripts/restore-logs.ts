@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 require('../utils/validateEnv');
 
-import { LogEvent, LogTransfer } from '../model';
+import { ILogEvent, ILogTransfer } from '../model';
 import { HeadRepo, LogEventRepo, LogTransferRepo, TxRepo } from '../repo';
 import { connectDB, disconnectDB } from '../utils/db';
 import { checkNetworkWithDB, runWithOptions } from '../utils';
@@ -26,8 +26,8 @@ const runAsync = async (options) => {
     const txs = await txRepo.findInBlockRangeSortAsc(start, end);
 
     console.log(`start checking tx ${start} - ${end}`);
-    let trs: LogTransfer[] = [];
-    let evts: LogEvent[] = [];
+    let trs: ILogTransfer[] = [];
+    let evts: ILogEvent[] = [];
     for (const tx of txs) {
       const block = tx.block;
       for (const [clauseIndex, o] of tx.outputs.entries()) {
@@ -40,7 +40,7 @@ const runAsync = async (options) => {
             block,
             clauseIndex,
             logIndex,
-          } as LogEvent;
+          } as ILogEvent;
           evts.push(evt);
         }
         for (const [logIndex, t] of o.transfers.entries()) {
@@ -53,7 +53,7 @@ const runAsync = async (options) => {
             block,
             clauseIndex,
             logIndex,
-          } as LogTransfer;
+          } as ILogTransfer;
           trs.push(tr);
         }
       }

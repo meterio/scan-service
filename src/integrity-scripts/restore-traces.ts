@@ -2,7 +2,7 @@
 require('../utils/validateEnv');
 
 import { HeadRepo, TxRepo, ContractRepo } from '../repo';
-import { TraceOutput } from '../model';
+import { ITraceOutput } from '../model';
 import { connectDB, disconnectDB } from '../utils/db';
 import { prototype, ZeroAddress } from '../const';
 import { Keccak } from 'sha3';
@@ -38,7 +38,7 @@ const runAsync = async (options) => {
         continue;
       }
 
-      let traces: TraceOutput[] = [];
+      let traces: ITraceOutput[] = [];
       for (const [clauseIndex, clause] of tx.clauses.entries()) {
         let tracer: Pos.CallTracerOutput;
         if (isTraceable(tx.clauses[clauseIndex].data)) {

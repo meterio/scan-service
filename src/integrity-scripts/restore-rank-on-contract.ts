@@ -2,7 +2,7 @@
 require('../utils/validateEnv');
 
 import { BigNumber } from 'bignumber.js';
-import { InternalTx } from '../model';
+import { IInternalTx } from '../model';
 import { HeadRepo, TxRepo, InternalTxRepo, ContractRepo } from '../repo';
 import { connectDB, disconnectDB } from '../utils/db';
 import { ZeroAddress } from '../const';
@@ -23,7 +23,7 @@ const runAsync = async (options) => {
   const step = 500000;
 
   for (let i = 0; i < best; i += step) {
-    let internalTxs: InternalTx[] = [];
+    let internalTxs: IInternalTx[] = [];
     const start = i;
     const end = i + step - 1 > best ? best : i + step - 1;
 

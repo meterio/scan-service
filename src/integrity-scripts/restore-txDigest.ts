@@ -2,7 +2,7 @@
 require('../utils/validateEnv');
 
 import { BigNumber } from 'bignumber.js';
-import { Tx, TxDigest } from '../model';
+import { ITx, ITxDigest } from '../model';
 import { HeadRepo, TxRepo, TxDigestRepo } from '../repo';
 import { connectDB, disconnectDB } from '../utils/db';
 import { checkNetworkWithDB, runWithOptions } from '../utils';
@@ -23,8 +23,8 @@ const runAsync = async (options) => {
   const best = pos.num;
   const step = 1000;
 
-  const extractDigests = (tx: Tx) => {
-    let digests: TxDigest[] = [];
+  const extractDigests = (tx: ITx) => {
+    let digests: ITxDigest[] = [];
     let ids = {};
     // -------------------------------------
     // Handle direct digests
@@ -73,7 +73,7 @@ const runAsync = async (options) => {
     // Handle special case to KBlock ScriptEngine tx
     // related to transfers (indicating staking reward)
     // ---------------------------------------------
-    let kblockDigestMap: { [key: string]: TxDigest } = {};
+    let kblockDigestMap: { [key: string]: ITxDigest } = {};
     for (const [clauseIndex, o] of tx.outputs.entries()) {
       const clause = tx.clauses[clauseIndex];
       // special case for KBlock ScritpEngine tx

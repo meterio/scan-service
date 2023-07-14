@@ -4,7 +4,7 @@ require('../utils/validateEnv');
 import { abi, ERC1155 } from '@meterio/devkit';
 import { BigNumber } from 'bignumber.js';
 
-import { Movement, NFTTransfer } from '../model';
+import { INFTTransfer, IMovement } from '../model';
 import { HeadRepo, LogEventRepo, MovementRepo } from '../repo';
 import { Token } from '../const';
 import { connectDB, disconnectDB } from '../utils/db';
@@ -33,7 +33,7 @@ const runAsync = async (options) => {
 
     const singles = await evtRepo.findByTopic0InBlockRangeSortAsc(ERC1155.TransferSingle.signature, start, end);
     console.log(`searching for ERC1155 singles in blocks [${start}, ${end}]`);
-    let movementsCache: Movement[] = [];
+    let movementsCache: IMovement[] = [];
     let nftAuditor = new NFTBalanceAuditor();
     for (const evt of singles) {
       if (evt.topics && evt.topics[0] === ERC1155.TransferSingle.signature) {
@@ -47,7 +47,7 @@ const runAsync = async (options) => {
         const from = decoded.from.toLowerCase();
         const to = decoded.to.toLowerCase();
         const nftTransfers = [{ tokenId: decoded.id, value: Number(decoded.value) }];
-        const movement: Movement = {
+        const movement: IMovement = {
           from,
           to,
           token: Token.ERC1155,
@@ -76,13 +76,13 @@ const runAsync = async (options) => {
           console.log('error decoding transfer event');
           return;
         }
-        let nftTransfers: NFTTransfer[] = [];
+        let nftTransfers: INFTTransfer[] = [];
         for (const [i, id] of decoded.ids.entries()) {
           nftTransfers.push({ tokenId: id, value: Number(decoded.values[i]) });
         }
         const from = decoded.from.toLowerCase();
         const to = decoded.to.toLowerCase();
-        const movement: Movement = {
+        const movement: IMovement = {
           from,
           to,
           token: Token.ERC20,

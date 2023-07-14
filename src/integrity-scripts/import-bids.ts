@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 require('../utils/validateEnv');
 
-import { Candidate, Bid } from '../model';
-import { HeadRepo, BlockRepo, CandidateRepo, AuctionRepo, BidRepo } from '../repo';
+import { IBid } from '../model';
+import { BlockRepo, AuctionRepo, BidRepo } from '../repo';
 import { connectDB, disconnectDB } from '../utils/db';
 import { checkNetworkWithDB, Pos, runWithOptions } from '../utils';
 import BigNumber from 'bignumber.js';
@@ -39,7 +39,7 @@ const runAsync = async (options) => {
       }
       const savedBid = await bidRepo.findById(tx.txid);
       if (!savedBid) {
-        let bid: Bid = {
+        let bid: IBid = {
           id: tx.txid,
           address: tx.address,
           amount: tx.amount,
