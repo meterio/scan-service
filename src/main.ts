@@ -38,7 +38,7 @@ const runSync = async (task, options) => {
       cmd = new ScriptEngineCMD(options.network);
       break;
     case 'rebase':
-      cmd = new RebaseCMD(options.needs);
+      cmd = new RebaseCMD(options.network);
       break;
     default:
       throw new commander.InvalidArgumentError('Not a valid task to sync');

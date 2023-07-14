@@ -37,8 +37,11 @@ export class RebaseCMD extends TxBlockListener {
     }
     const content = fs.readFileSync(process.env.REBASE_KEYSTORE);
     const keystore = JSON.parse(content.toString());
+    console.log(JSON.stringify(keystore));
+    console.log('passphrase: ', process.env.REBASE_PASSPHRASE);
 
-    const encrypted = await devkit.cry.Keystore.decrypt(keystore, process.env.PASSPHRASE);
+    const encrypted = await devkit.cry.Keystore.decrypt(keystore, process.env.REBASE_PASSPHRASE);
+    console.log('encrypted');
     const pk = '0x' + encrypted.toString('hex');
     const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
     const signer = new ethers.Wallet(pk, provider);
