@@ -1,9 +1,8 @@
-import { LogEvent } from '../model/logEvent.interface';
-import logEventModel from '../model/logEvent.model';
+import { LogEvent, ILogEvent } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class LogEventRepo {
-  private model = logEventModel;
+export class LogEventRepo {
+  private model = LogEvent;
 
   public async findAll() {
     return this.model.find();
@@ -39,15 +38,15 @@ export default class LogEventRepo {
     return this.model.exists({ txHash, clauseIndex, logIndex });
   }
 
-  public async create(evt: LogEvent) {
+  public async create(evt: ILogEvent) {
     return this.model.create(evt);
   }
 
-  public async bulkInsert(...evts: LogEvent[]) {
+  public async bulkInsert(...evts: ILogEvent[]) {
     return this.model.create(evts);
   }
 
-  public async bulkUpsert(...evts: LogEvent[]) {
+  public async bulkUpsert(...evts: ILogEvent[]) {
     for (const e of evts) {
       await this.model.findOneAndUpdate({ txHash: e.txHash, clauseIndex: e.clauseIndex, logIndex: e.logIndex }, e, {
         new: true,

@@ -1,8 +1,7 @@
-import { PowTx } from '../model/powTx.interface';
-import powTxModel from '../model/powTx.model';
+import { PowTx, IPowTx } from '../model';
 
-export default class PowTxRepo {
-  private model = powTxModel;
+export class PowTxRepo {
+  private model = PowTx;
 
   public async findAll() {
     return this.model.find();
@@ -14,7 +13,7 @@ export default class PowTxRepo {
     });
   }
 
-  public async create(powPowTx: PowTx) {
+  public async create(powPowTx: IPowTx) {
     return this.model.create(powPowTx);
   }
 

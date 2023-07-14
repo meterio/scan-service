@@ -33,7 +33,7 @@ const runAsync = async (options) => {
           if (bal && !new BigNumber(nft.value).eq(bal)) {
             console.log(`updated NFT ${nft.address}[${nft.tokenId}] value from ${nft.value} to ${bal}`, nft);
             if (new BigNumber(0).eq(bal)) {
-              await nft.delete();
+              await nft.deleteOne();
             } else {
               nft.value = new BigNumber(bal).toNumber();
               await nft.save();

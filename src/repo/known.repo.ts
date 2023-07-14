@@ -1,8 +1,7 @@
-import { Known } from '../model/known.interface';
-import knownModel from '../model/known.model';
+import { Known, IKnown } from '../model';
 
-export default class KnownRepo {
-  private model = knownModel;
+export class KnownRepo {
+  private model = Known;
   public async findAll() {
     return this.model.find();
   }
@@ -19,7 +18,7 @@ export default class KnownRepo {
     return this.model.find({ ecdsaPK: { $in: keys } });
   }
 
-  public async create(known: Known) {
+  public async create(known: IKnown) {
     return this.model.create(known);
   }
 

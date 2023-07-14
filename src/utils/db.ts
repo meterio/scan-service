@@ -37,18 +37,15 @@ export const connectDB = async (network: Network, standby: boolean) => {
   }
   console.log(`connect to DB path: ${MONGO_PATH}/${dbName}`);
   let url = `mongodb://${MONGO_USER}:${MONGO_PWD}@${MONGO_PATH}/${dbName}`;
-  let options: mongoose.ConnectionOptions = {
+  let options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    useCreateIndex: true,
-    useFindAndModify: false,
+    sslValidate: false,
+    sslCA: undefined,
   };
   let query: { [key: string]: string } = {};
   query['retryWrites'] = 'false';
   if (MONGO_SSL_CA != '') {
-    const fs = require('fs');
-    //Specify the Amazon DocumentDB cert
-    var ca = [fs.readFileSync(MONGO_SSL_CA)];
     query['ssl'] = 'true';
     query['replicaSet'] = 'rs0';
     query['readPreference'] = 'secondaryPreferred';
@@ -56,11 +53,7 @@ export const connectDB = async (network: Network, standby: boolean) => {
     options = {
       ...options,
       sslValidate: true,
-      sslCA: ca,
-      useNewUrlParser: true,
-      // readConcern: { level: 'majority' },
-      // w: 'majority',
-      readPreference: 'primary',
+      sslCA: MONGO_SSL_CA,
     };
   }
   let queries = [];

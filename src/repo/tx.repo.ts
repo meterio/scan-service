@@ -1,10 +1,9 @@
 import { RECENT_WINDOW } from '../const';
-import { Tx } from '../model/tx.interface';
-import txModel from '../model/tx.model';
+import { Tx, ITx } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class TxRepo {
-  private model = txModel;
+export class TxRepo {
+  private model = Tx;
 
   public async findAll() {
     return this.model.find();
@@ -39,11 +38,11 @@ export default class TxRepo {
     return this.model.exists({ hash });
   }
 
-  public async create(tx: Tx) {
+  public async create(tx: ITx) {
     return this.model.create(tx);
   }
 
-  public async bulkInsert(...txs: Tx[]) {
+  public async bulkInsert(...txs: ITx[]) {
     await this.model.create(txs);
   }
 

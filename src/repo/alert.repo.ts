@@ -1,9 +1,8 @@
 import { RECENT_WINDOW } from '../const';
-import { Alert } from '../model/alert.interface';
-import alertModel from '../model/alert.model';
+import { Alert, IAlert } from '../model';
 
-export default class AlertRepo {
-  private model = alertModel;
+export class AlertRepo {
+  private model = Alert;
   public async findAll() {
     return this.model.find();
   }
@@ -28,11 +27,11 @@ export default class AlertRepo {
     });
   }
 
-  public async create(alert: Alert) {
+  public async create(alert: IAlert) {
     return this.model.create(alert);
   }
 
-  public async bulkInsert(...alert: Alert[]) {
+  public async bulkInsert(...alert: IAlert[]) {
     return this.model.create(alert);
   }
 

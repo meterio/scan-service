@@ -22,7 +22,7 @@ const runAsync = async (options) => {
   for (const p of contracts) {
     try {
       const ret = await pos.explain(
-        { clauses: [{ to: p.address, value: '0x0', data: ERC20.totalSupply.encode(), token: Token.MTR }] },
+        { clauses: [{ to: p.address, value: '0x0', data: ERC20.totalSupply.encode(), token: 0 }] },
         'best'
       );
       const decoded = ERC20.totalSupply.decode(ret[0].data);

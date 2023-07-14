@@ -6,42 +6,42 @@ export enum Network {
 }
 
 export enum Token {
-  MTR = 0,
-  MTRG,
-  ERC20,
-  ERC721,
-  ERC1155,
-  MTRGV2 = 1000,
+  MTR = 'MTR',
+  MTRG = 'MTRG',
+  ERC20 = 'ERC20',
+  ERC721 = 'ERC721',
+  ERC1155 = 'ERC1155',
+  MTRGV2 = 'MTRGV2',
 }
 
 export enum ContractType {
-  Unknown,
-  ERC20,
-  ERC721,
-  ERC1155,
+  Unknown = 'Unknown',
+  ERC20 = 'ERC20',
+  ERC721 = 'ERC721',
+  ERC1155 = 'ERC1155',
 }
 
 export enum DeployStatus {
-  New,
-  SelfDestructed,
-  ReDeployed,
+  New = 'New',
+  SelfDestructed = 'SelfDestructed',
+  ReDeployed = 'ReDeployed',
 }
 
 export enum BlockType {
-  MBlock,
-  KBlock,
+  MBlock = 'MBlock',
+  KBlock = 'KBlock',
 }
 
 export enum MetricType {
-  NUM = 0,
-  BIGNUM,
-  STRING,
+  NUM = 'NUM',
+  BIGNUM = 'BIGNUM',
+  STRING = 'STRING',
 }
 
 export enum ValidatorStatus {
-  CANDIDATE = 0,
-  DELEGATE,
-  JAILED,
+  CANDIDATE = 'CANDIDATE',
+  DELEGATE = 'DELEGATE',
+  JAILED = 'JAILED',
 }
 
 export const enumKeys = (es: any) => Object.values(es).filter((x) => typeof x === 'string');

@@ -1,14 +1,14 @@
 import { Network } from '../const';
 import { HeadRepo, NFTRepo, LogEventRepo, BlockRepo, ContractRepo } from '../repo';
-import { Head, NFT } from '../model';
 import pino from 'pino';
 import { GetNetworkConfig, ZeroAddress } from '../const';
 import { InterruptedError, sleep } from '../utils';
 import { CMD } from './cmd';
-import { ERC1155ABI, ERC721ABI, ERC1155, ERC721, EIP173, EIP173ABI, abi, ERC1155Metadata } from '@meterio/devkit';
+import { ERC1155ABI, ERC721ABI, ERC1155, ERC721, EIP173, abi } from '@meterio/devkit';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { NFTCache } from '../types/nftCache';
+import { INFT, IHead } from '../model';
 
 const FASTFORWARD_INTERVAL = 300; // 0.3 second gap between each loop
 const NORMAL_INTERVAL = 2000; // 2 seconds gap between each loop
@@ -53,7 +53,7 @@ export class NFTCMD extends CMD {
     this.shutdown = true;
   }
 
-  public async cleanUpIncompleteData(head: Head) {
+  public async cleanUpIncompleteData(head: IHead) {
     const nft = await this.nftRepo.deleteAfter(head.num);
     this.log.info({ nft }, `deleted dirty data higher than head ${head.num}`);
   }
@@ -119,7 +119,7 @@ export class NFTCMD extends CMD {
     }
   }
 
-  async updateHead(num, hash): Promise<Head> {
+  async updateHead(num, hash): Promise<IHead> {
     const exist = await this.headRepo.exists(this.name);
     if (!exist) {
       return await this.headRepo.create(this.name, num, hash);
@@ -172,7 +172,7 @@ export class NFTCMD extends CMD {
           tokenJSON = JSON.parse(content);
           tokenURI = BASE64_ENCODED_JSON;
         }
-        const nft: NFT = {
+        const nft: INFT = {
           address: tokenAddress,
           tokenId: id,
           tokenURI,
@@ -235,7 +235,7 @@ export class NFTCMD extends CMD {
           tokenJSON = JSON.parse(content.replaceAll("'", '"'));
         }
       }
-      const nft: NFT = {
+      const nft: INFT = {
         address: tokenAddress,
         tokenId,
         tokenURI,
@@ -298,7 +298,7 @@ export class NFTCMD extends CMD {
         }
       }
 
-      const nft: NFT = {
+      const nft: INFT = {
         address: tokenAddress,
         tokenId,
         value: 1,

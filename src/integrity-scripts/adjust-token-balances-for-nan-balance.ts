@@ -25,7 +25,7 @@ const runAsync = async (options) => {
     try {
       const outputs = await pos.explain(
         {
-          clauses: [{ to: tokenAddress, value: '0x0', data: ERC20.balanceOf.encode(address), token: Token.MTR }],
+          clauses: [{ to: tokenAddress, value: '0x0', data: ERC20.balanceOf.encode(address), token: 0 }],
         },
         'best'
       );
@@ -35,7 +35,7 @@ const runAsync = async (options) => {
         console.log(`found NON-matching balance: chain ${chainBal} db:${balance}`);
         console.log(`tokenAddr: ${tokenAddress}, addr: ${address}`);
         if (chainBal.isEqualTo(0)) {
-          await bal.delete();
+          await bal.deleteOne();
           console.log('deleted');
         } else {
           bal.balance = chainBal;

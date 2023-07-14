@@ -1,10 +1,8 @@
 import BigNumber from 'bignumber.js';
+import { EpochReward, IEpochReward } from '../model';
 
-import { EpochReward } from '../model/epochReward.interface';
-import EpochRewardModel from '../model/epochReward.model';
-
-export default class EpochRewardRepo {
-  private model = EpochRewardModel;
+export class EpochRewardRepo {
+  private model = EpochReward;
 
   public async findAll() {
     return this.model.find({}).sort({ createTime: -1 });
@@ -18,7 +16,7 @@ export default class EpochRewardRepo {
     return this.model.exists({ epoch });
   }
 
-  public async create(epochReward: EpochReward) {
+  public async create(epochReward: IEpochReward) {
     return this.model.create(epochReward);
   }
 

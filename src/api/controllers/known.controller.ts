@@ -1,6 +1,5 @@
 import { ContractType } from '../const';
-import { ContractFile } from '../../model';
-import { ABIFragment } from '../../model/abiFragment.interface';
+import { IABIFragment, IContractFile } from '../../model';
 import { ABIFragmentRepo, ContractRepo, KnownRepo, ContractFileRepo } from '../../repo';
 import { Interface, FormatTypes } from 'ethers/lib/utils';
 import { toChecksumAddress } from '@meterio/devkit/dist/cry';
@@ -72,7 +71,7 @@ class KnownController extends BaseController {
     // if (contract.verified) {
     //   return res.json({ verified: true, address });
     // }
-    let files = null
+    let files = null;
     if (contract.verified) {
       if (contract.status === 'match') {
         files = await this.contractFileRepo.findAllByContract(contract.verifiedFrom);
@@ -103,12 +102,12 @@ class KnownController extends BaseController {
       contract.tokensCount = new BigNumber(0);
     }
 
-    let contractFiles: ContractFile[] = [];
+    let contractFiles: IContractFile[] = [];
     for (const file of data.files) {
       contractFiles.push({
         ...file,
         address: address.toLowerCase(),
-      } as ContractFile);
+      } as IContractFile);
 
       if (file.name === 'metadata.json') {
         // decode metadata
@@ -116,7 +115,7 @@ class KnownController extends BaseController {
         const meta = JSON.parse(file.content);
         const abis = meta.output.abi;
 
-        let fragments: ABIFragment[] = [];
+        let fragments: IABIFragment[] = [];
         const iface = new Interface(abis);
         const funcMap = iface.functions;
         const evtMap = iface.events;

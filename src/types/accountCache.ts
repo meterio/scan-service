@@ -1,11 +1,11 @@
 import { BigNumber } from 'bignumber.js';
 import { AccountRepo } from '../repo';
-import { Account, BlockConcise } from '../model';
+import { IAccount, IBlockConcise } from '../model';
 import { getAccountName, ZeroAddress, Network, Token } from '../const';
 import { Pos, fromWei } from '../utils';
 
 export class AccountCache {
-  private accts: { [key: string]: Account & { save(); toJSON() } } = {};
+  private accts: { [key: string]: IAccount & { save(); toJSON() } } = {};
   private repo = new AccountRepo();
   private network: Network;
   private pos: Pos;
@@ -19,7 +19,7 @@ export class AccountCache {
     return Object.values(this.accts);
   }
 
-  private async fixAccount(addrStr: string, blockConcise: BlockConcise) {
+  private async fixAccount(addrStr: string, blockConcise: IBlockConcise) {
     const addr = addrStr.toLowerCase();
     const chainAcc = await this.pos.getAccount(addr, blockConcise.number.toString());
     let acct = this.accts[addr];
@@ -61,7 +61,7 @@ export class AccountCache {
     }
   }
 
-  public async minus(addrStr: string, token: Token, amount: string | BigNumber, blockConcise: BlockConcise) {
+  public async minus(addrStr: string, token: Token, amount: string | BigNumber, blockConcise: IBlockConcise) {
     if (addrStr === ZeroAddress || new BigNumber(amount).isLessThanOrEqualTo(0)) {
       return;
     }
@@ -90,7 +90,7 @@ export class AccountCache {
     this.accts[addr].lastUpdate = blockConcise;
   }
 
-  private async setDefault(addrStr: string, blockConcise: BlockConcise) {
+  private async setDefault(addrStr: string, blockConcise: IBlockConcise) {
     const address = addrStr.toLowerCase();
     if (this.accts[address]) {
       return;
@@ -105,7 +105,7 @@ export class AccountCache {
     }
   }
 
-  public async plus(addrStr: string, token: Token, amount: string | BigNumber, blockConcise: BlockConcise) {
+  public async plus(addrStr: string, token: Token, amount: string | BigNumber, blockConcise: IBlockConcise) {
     if (new BigNumber(amount).isLessThanOrEqualTo(0)) {
       return;
     }
@@ -133,7 +133,7 @@ export class AccountCache {
     this.accts[addr].lastUpdate = blockConcise;
   }
 
-  public async bound(addrStr: string, token: Token, amount: string | BigNumber, blockConcise: BlockConcise) {
+  public async bound(addrStr: string, token: Token, amount: string | BigNumber, blockConcise: IBlockConcise) {
     await this.setDefault(addrStr, blockConcise);
     const addr = addrStr.toLowerCase();
     const formattedAmount = new BigNumber(amount);
@@ -161,7 +161,7 @@ export class AccountCache {
     recipientStr: string,
     token: Token,
     amount: string | BigNumber,
-    blockConcise: BlockConcise
+    blockConcise: IBlockConcise
   ) {
     await this.setDefault(ownerStr, blockConcise);
     await this.setDefault(recipientStr, blockConcise);
@@ -190,7 +190,7 @@ export class AccountCache {
     this.accts[recipient].lastUpdate = blockConcise;
   }
 
-  public async unbound(addrStr: string, token: Token, amount: string | BigNumber, blockConcise: BlockConcise) {
+  public async unbound(addrStr: string, token: Token, amount: string | BigNumber, blockConcise: IBlockConcise) {
     await this.setDefault(addrStr, blockConcise);
     const addr = addrStr.toLowerCase();
     const formattedAmount = new BigNumber(amount);

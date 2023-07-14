@@ -1,8 +1,8 @@
 import { MetricType } from '../const';
-import metricModel from '../model/metric.model';
+import { Metric } from '../model';
 
-export default class MetricRepo {
-  private model = metricModel;
+export class MetricRepo {
+  private model = Metric;
 
   public async findByKey(key: string) {
     return this.model.findOne({ key });

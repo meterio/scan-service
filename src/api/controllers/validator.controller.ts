@@ -1,6 +1,6 @@
 import { BigNumber } from 'bignumber.js';
 import { MetricName, Network } from '../../const';
-import { Validator } from '../../model';
+import { IValidator } from '../../model';
 import { BlockRepo, BucketRepo, MetricRepo, EpochRewardRepo, EpochRewardSummaryRepo, ValidatorRepo } from '../../repo';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -139,7 +139,7 @@ class ValidatorController extends BaseController {
     });
   };
 
-  private convertCandidate = (v: Validator) => {
+  private convertCandidate = (v: IValidator) => {
     return {
       name: v.name,
       address: v.address,
@@ -179,7 +179,7 @@ class ValidatorController extends BaseController {
     });
   };
 
-  private convertDelegate = (v: Validator, totalStaked: string) => {
+  private convertDelegate = (v: IValidator, totalStaked: string) => {
     return {
       name: v.name,
       address: v.address,
@@ -222,7 +222,7 @@ class ValidatorController extends BaseController {
     });
   };
 
-  private convertJailed = (v: Validator) => {
+  private convertJailed = (v: IValidator) => {
     return {
       name: v.name,
       address: v.address,

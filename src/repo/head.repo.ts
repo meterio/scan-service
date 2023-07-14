@@ -1,7 +1,7 @@
-import headModel from '../model/head.model';
+import { Head, IHead } from '../model';
 
-export default class HeadRepo {
-  private model = headModel;
+export class HeadRepo {
+  private model = Head;
 
   public async exists(key: string) {
     return this.model.exists({ key });

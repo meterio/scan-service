@@ -1,8 +1,7 @@
-import { Candidate } from '../model/candidate.interface';
-import model from '../model/candidate.model';
+import { Candidate, ICandidate } from '../model';
 
-export default class CandidateRepo {
-  private model = model;
+export class CandidateRepo {
+  private model = Candidate;
   public async findAll() {
     return this.model.find();
   }
@@ -15,7 +14,7 @@ export default class CandidateRepo {
     return this.model.find({ epoch });
   }
 
-  public async create(candidate: Candidate) {
+  public async create(candidate: ICandidate) {
     return this.model.create(candidate);
   }
 
@@ -23,11 +22,11 @@ export default class CandidateRepo {
     return this.model.deleteOne({ epoch, pubKey });
   }
 
-  public async bulkInsert(...cans: Candidate[]) {
+  public async bulkInsert(...cans: ICandidate[]) {
     return this.model.create(cans);
   }
 
-  public async bulkUpsert(...cans: Candidate[]) {
+  public async bulkUpsert(...cans: ICandidate[]) {
     for (const c of cans) {
       await this.model.findOneAndUpdate({ epoch: c.epoch, pubKey: c.pubKey }, c, {
         new: true,

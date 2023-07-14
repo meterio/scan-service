@@ -1,8 +1,7 @@
-import { Bid } from '../model/bid.interface';
-import bidModel from '../model/bid.model';
+import { Bid, IBid } from '../model';
 import { formalizePageAndLimit } from '../utils';
-export default class BidRepo {
-  private model = bidModel;
+export class BidRepo {
+  private model = Bid;
 
   public async findAll() {
     return this.model.find();
@@ -14,7 +13,7 @@ export default class BidRepo {
     });
   }
 
-  public async create(bid: Bid) {
+  public async create(bid: IBid) {
     return this.model.create(bid);
   }
 
@@ -34,7 +33,7 @@ export default class BidRepo {
     return this.model.find({ auctionID, type: 'userbid' });
   }
 
-  public async bulkInsert(...bids: Bid[]) {
+  public async bulkInsert(...bids: IBid[]) {
     return this.model.create(bids);
   }
 

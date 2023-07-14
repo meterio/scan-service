@@ -3,16 +3,16 @@ import pino from 'pino';
 import { BigNumber } from 'bignumber.js';
 import { Network } from '../const';
 import {
-  AuctionTx,
-  AuctionDist,
-  Bid,
-  Block,
-  EpochReward,
-  EpochRewardSummary,
-  Known,
-  Tx,
-  RewardInfo,
-  Candidate,
+  IAuctionTx,
+  IAuctionDist,
+  IBid,
+  IBlock,
+  IEpochReward,
+  IEpochRewardSummary,
+  IKnown,
+  ITx,
+  IRewardInfo,
+  ICandidate,
 } from '../model';
 import {
   AuctionRepo,
@@ -69,7 +69,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
     );
   }
 
-  async processTx(tx: Tx, txIndex: number, blk: Block) {
+  async processTx(tx: ITx, txIndex: number, blk: IBlock) {
     const epoch = blk.epoch;
     const blockNum = blk.number;
     if (tx.reverted) {
@@ -113,12 +113,12 @@ export class ScriptEngineCMD extends TxBlockReviewer {
               break;
             }
 
-            const dists: AuctionDist[] = endedAuction.distMTRG.map((d) => ({
+            const dists: IAuctionDist[] = endedAuction.distMTRG.map((d) => ({
               address: d.addr,
               amount: new BigNumber(d.amount),
               token: Token.MTRG,
             }));
-            const txs: AuctionTx[] = endedAuction.auctionTxs.map((t) => ({ ...t }));
+            const txs: IAuctionTx[] = endedAuction.auctionTxs.map((t) => ({ ...t }));
 
             // upsert auction summary
             const sExist = await this.auctionSummaryRepo.existID(endedAuction.auctionID);
@@ -151,7 +151,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
               let bid = await this.bidRepo.findById(t.txid);
               if (!bid) {
                 this.log.info('Bid not found! probably missed one bid');
-                const newBid: Bid = {
+                const newBid: IBid = {
                   id: t.txid,
                   address: t.address,
                   amount: t.amount,
@@ -240,7 +240,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
             this.log.info('handle auction bid');
             const atx = se.getAuctionTxFromAuctionBody(body);
             const presentAuction = await this.auctionRepo.findPresent();
-            const bid: Bid = {
+            const bid: IBid = {
               id: atx.ID(),
               address: '0x' + atx.address.toString('hex').toLowerCase(),
               amount: atx.amount,
@@ -298,7 +298,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
 
           const exist = await this.knownRepo.exist(ecdsaPK);
           if (!exist) {
-            const known: Known = {
+            const known: IKnown = {
               ecdsaPK,
               blsPK,
               name: body.candidateName.toString(),
@@ -381,7 +381,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
 
               if (!savedBid) {
                 this.log.info({ txid: atx.txid }, 'saved new bid');
-                let bid: Bid = {
+                let bid: IBid = {
                   id: atx.txid,
                   address: atx.address,
                   amount: atx.amount,
@@ -399,7 +399,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
                 };
                 savedBid = await this.bidRepo.create(bid);
               }
-              let reward: EpochReward = {
+              let reward: IEpochReward = {
                 epoch,
                 blockNum,
                 txHash: tx.hash,
@@ -422,7 +422,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
 
           const vreward = await this.pos.getLastValidatorReward(blockNum);
           for (const r of vreward.rewards) {
-            const reward: EpochReward = {
+            const reward: IEpochReward = {
               epoch,
               blockNum,
               txHash: tx.hash,
@@ -438,7 +438,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
 
           // upsert validator rewards
           const vExist = await this.validatorRewardRepo.existEpoch(epoch);
-          const rewards: RewardInfo[] = vreward.rewards.map((info) => {
+          const rewards: IRewardInfo[] = vreward.rewards.map((info) => {
             return { amount: new BigNumber(info.amount), address: info.address };
           });
           if (!vExist) {
@@ -453,7 +453,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
           // update epoch reward summary
           const sExist = await this.epochRewardSummaryRepo.existEpoch(epoch);
           if (!sExist) {
-            const epochSummary: EpochRewardSummary = {
+            const epochSummary: IEpochRewardSummary = {
               epoch,
               blockNum,
               timestamp: blk.timestamp,
@@ -471,7 +471,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
     this.log.info(`processed tx ${tx.hash}`);
   }
 
-  async processBlock(blk: Block) {
+  async processBlock(blk: IBlock) {
     this.log.info(`start to process block ${blk.number}`);
     const number = blk.number;
     const epoch = blk.epoch;

@@ -1,9 +1,7 @@
-import { BlockConcise } from '../model/blockConcise.interface';
-import { Committee } from '../model/committee.interface';
-import committeeModel from '../model/committee.model';
+import { Committee, ICommittee, IBlockConcise } from '../model';
 import { formalizePageAndLimit } from '../utils';
-export default class CommitteeRepo {
-  private committee = committeeModel;
+export class CommitteeRepo {
+  private committee = Committee;
 
   public async findCurrent() {
     return this.committee.findOne({ epoch: -1 });
@@ -12,7 +10,7 @@ export default class CommitteeRepo {
     return this.committee.findOne({ epoch });
   }
 
-  public async create(committee: Committee) {
+  public async create(committee: ICommittee) {
     return this.committee.create(committee);
   }
 
@@ -20,7 +18,7 @@ export default class CommitteeRepo {
     return this.committee.deleteOne({ hash });
   }
 
-  public async updateEndBlock(epoch: number, endBlock: BlockConcise) {
+  public async updateEndBlock(epoch: number, endBlock: IBlockConcise) {
     return this.committee.updateOne({ epoch }, { $set: { endBlock } });
   }
 
@@ -28,7 +26,7 @@ export default class CommitteeRepo {
     return this.committee.deleteMany({ 'startBlock.number': { $gt: blockNum } });
   }
 
-  public async bulkInsert(...committees: Committee[]) {
+  public async bulkInsert(...committees: ICommittee[]) {
     return this.committee.create(committees);
   }
 

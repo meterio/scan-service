@@ -40,7 +40,7 @@ const runAsync = async (options) => {
               to: PrototypeAddress,
               value: '0x0',
               data: prototype.master.encode(acc.address),
-              token: Token.MTR,
+              token: 0,
             },
           ],
         },

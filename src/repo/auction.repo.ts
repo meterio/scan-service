@@ -1,9 +1,8 @@
-import { Auction } from '../model/auction.interface';
-import AuctionModel from '../model/auction.model';
+import { Auction, IAuction } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class AuctionRepo {
-  private model = AuctionModel;
+export class AuctionRepo {
+  private model = Auction;
 
   public async findAll() {
     return this.model.find({}).sort({ createTime: -1 });
@@ -32,7 +31,7 @@ export default class AuctionRepo {
     return this.model.exists({ id });
   }
 
-  public async create(auction: Auction) {
+  public async create(auction: IAuction) {
     return this.model.create(auction);
   }
 

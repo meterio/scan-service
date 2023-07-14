@@ -29,7 +29,7 @@ const runAsync = async (options) => {
     if (!c.totalSupply.isEqualTo(sum)) {
       const res = await pos.explain(
         {
-          clauses: [{ to: address, value: '0x0', data: ERC20.totalSupply.encode(), token: Token.MTR }],
+          clauses: [{ to: address, value: '0x0', data: ERC20.totalSupply.encode(), token: 0 }],
         },
         'best'
       );

@@ -1,4 +1,4 @@
-import { Block } from '../../model';
+import { IBlock } from '../../model';
 import { BlockType } from '../const';
 import { BlockRepo, CommitteeRepo, KnownRepo } from '../../repo';
 import axios from 'axios';
@@ -200,7 +200,7 @@ class EpochController extends BaseController {
     });
   };
 
-  private calcStats = (lastKBlock: Block, blocks: Block[], memberMap: { [key: number]: any }, lastRound: number) => {
+  private calcStats = (lastKBlock: IBlock, blocks: IBlock[], memberMap: { [key: number]: any }, lastRound: number) => {
     let stats: {
       status: number; // status code: 1-success, 2-timeout
       b: number; // expected block number

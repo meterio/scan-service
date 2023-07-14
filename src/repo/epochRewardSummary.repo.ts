@@ -1,9 +1,8 @@
-import { EpochRewardSummary } from '../model/epochRewardSummary.interface';
-import EpochRewardSummaryModel from '../model/epochRewardSummary.model';
+import { EpochRewardSummary, IEpochRewardSummary } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class EpochRewardSummaryRepo {
-  private model = EpochRewardSummaryModel;
+export class EpochRewardSummaryRepo {
+  private model = EpochRewardSummary;
 
   public async findAll() {
     return this.model.find({}).sort({ createTime: -1 });
@@ -17,7 +16,7 @@ export default class EpochRewardSummaryRepo {
     return this.model.exists({ epoch });
   }
 
-  public async create(epochRewardSummary: EpochRewardSummary) {
+  public async create(epochRewardSummary: IEpochRewardSummary) {
     return this.model.create(epochRewardSummary);
   }
 

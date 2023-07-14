@@ -1,8 +1,7 @@
-import { ValidatorReward } from '../model/validatorReward.interface';
-import ValidatorRewardModel from '../model/validatorReward.model';
+import { ValidatorReward, IValidatorReward } from '../model';
 
-export default class ValidatorRewardRepo {
-  private model = ValidatorRewardModel;
+export class ValidatorRewardRepo {
+  private model = ValidatorReward;
 
   public async findAll() {
     return this.model.find({}).sort({ createTime: -1 });
@@ -16,7 +15,7 @@ export default class ValidatorRewardRepo {
     return this.model.exists({ epoch });
   }
 
-  public async create(validatorReward: ValidatorReward) {
+  public async create(validatorReward: IValidatorReward) {
     return this.model.create(validatorReward);
   }
 }

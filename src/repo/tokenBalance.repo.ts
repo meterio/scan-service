@@ -1,12 +1,10 @@
 import BigNumber from 'bignumber.js';
 
-import { BlockConcise } from '../model/blockConcise.interface';
-import tokenBalanceModel from '../model/tokenBalance.model';
+import { IBlockConcise, INFTBalance, TokenBalance, ITokenBalance } from '../model';
 import { formalizePageAndLimit } from '../utils';
-import { NFTBalance } from '../model/tokenBalance.interface';
 
-export default class TokenBalanceRepo {
-  private model = tokenBalanceModel;
+export class TokenBalanceRepo {
+  private model = TokenBalance;
 
   public async findAll() {
     return this.model.find();
@@ -119,7 +117,7 @@ export default class TokenBalanceRepo {
     });
   }
 
-  public async create(address: string, tokenAddress: string, firstSeen: BlockConcise) {
+  public async create(address: string, tokenAddress: string, firstSeen: IBlockConcise) {
     return this.model.create({
       address: address.toLowerCase(),
       tokenAddress: tokenAddress.toLowerCase(),
@@ -263,7 +261,7 @@ export default class TokenBalanceRepo {
     return { count: resCount[0] ? resCount[0]['count'] : 0, result };
   }
 
-  public async updateNFTBalances(address: string, tokenAddress: string, nftBalances: NFTBalance[]) {
+  public async updateNFTBalances(address: string, tokenAddress: string, nftBalances: INFTBalance[]) {
     return this.model.updateOne({ address, tokenAddress }, { $set: { nftBalances } });
   }
 

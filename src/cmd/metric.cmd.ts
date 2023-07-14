@@ -15,7 +15,7 @@ import {
   MovementRepo,
   TokenBalanceRepo,
 } from '../repo';
-import { ContractFile, Validator, Bucket } from '../model';
+import { IContractFile, IValidator, IBucket, IABIFragment } from '../model';
 import { ERC20 } from '@meterio/devkit/dist';
 import { toChecksumAddress } from '@meterio/devkit/dist/cry';
 import pino from 'pino';
@@ -36,7 +36,7 @@ import { CMD } from './cmd';
 import axios from 'axios';
 import { FormatTypes, Interface } from 'ethers/lib/utils';
 import PromisePool from '@supercharge/promise-pool/dist';
-import { ABIFragment } from '../model/abiFragment.interface';
+import { ABIFragment } from '../model';
 const SAMPLING_INTERVAL = 3000;
 
 const SOURCIFY_SERVER_API = 'https://sourcify.dev/server';
@@ -523,7 +523,7 @@ export class MetricCMD extends CMD {
           this.log.error({ err: e }, 'could not parse stats');
         }
 
-        let vs: { [key: string]: Validator } = {}; // address -> validator object
+        let vs: { [key: string]: IValidator } = {}; // address -> validator object
         for (const c of candidates) {
           if (!(c.address in vs)) {
             vs[c.address] = {
@@ -587,11 +587,12 @@ export class MetricCMD extends CMD {
       // refresh bucket collection if updated
       if (bUpdated) {
         const buckets = await this.pos.getBuckets();
-        const bkts: Bucket[] = [];
+        const bkts: IBucket[] = [];
 
         for (const b of buckets) {
           bkts.push({
             ...b,
+            token: b.token == 0 ? Token.MTR : Token.MTRG,
             value: new BigNumber(b.value),
             bonusVotes: new BigNumber(b.bonusVotes),
             totalVotes: new BigNumber(b.totalVotes),
@@ -733,12 +734,12 @@ export class MetricCMD extends CMD {
         c.verified = true;
         c.status = data.status;
 
-        let contractFiles: ContractFile[] = [];
+        let contractFiles: IContractFile[] = [];
         for (const file of data.files) {
           contractFiles.push({
             ...file,
             address: c.address,
-          } as ContractFile);
+          } as IContractFile);
 
           if (file.name === 'metadata.json') {
             // decode metadata
@@ -746,7 +747,7 @@ export class MetricCMD extends CMD {
             const meta = JSON.parse(file.content);
             const abis = meta.output.abi;
 
-            let fragments: ABIFragment[] = [];
+            let fragments: IABIFragment[] = [];
             const iface = new Interface(abis);
             const funcMap = iface.functions;
             const evtMap = iface.events;
@@ -829,7 +830,7 @@ export class MetricCMD extends CMD {
       for (const p of contracts) {
         try {
           const ret = await this.pos.explain(
-            { clauses: [{ to: p.address, value: '0x0', data: ERC20.totalSupply.encode(), token: Token.MTR }] },
+            { clauses: [{ to: p.address, value: '0x0', data: ERC20.totalSupply.encode(), token: 0 }] },
             'best'
           );
           const decoded = ERC20.totalSupply.decode(ret[0].data);

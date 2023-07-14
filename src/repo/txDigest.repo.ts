@@ -1,10 +1,9 @@
 import { ZeroAddress } from '../const';
-import { TxDigest } from '../model/txDigest.interface';
-import txDigestModel from '../model/txDigest.model';
+import { TxDigest, ITxDigest } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class TxDigestRepo {
-  private model = txDigestModel;
+export class TxDigestRepo {
+  private model = TxDigest;
 
   public async findAll() {
     return this.model.find();
@@ -22,11 +21,11 @@ export default class TxDigestRepo {
     return this.model.exists({ 'block.number': blockNum, txHash, from, to });
   }
 
-  public async create(txDigest: TxDigest) {
+  public async create(txDigest: ITxDigest) {
     return this.model.create(txDigest);
   }
 
-  public async bulkInsert(...txDigests: TxDigest[]) {
+  public async bulkInsert(...txDigests: ITxDigest[]) {
     return this.model.create(txDigests);
   }
 
@@ -137,7 +136,7 @@ export default class TxDigestRepo {
     return this.model.deleteMany({ _id: { $in: ids } });
   }
 
-  public async bulkUpsert(txDigest: { id: TxDigest[] } | {}) {
+  public async bulkUpsert(txDigest: { id: ITxDigest[] } | {}) {
     for (const id in txDigest) {
       await this.model.findOneAndUpdate({ _id: id }, txDigest[id], { new: true, upsert: true, overwrite: true });
     }

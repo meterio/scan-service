@@ -1,8 +1,7 @@
-import { Bound } from '../model/bound.interface';
-import boundModel from '../model/bound.model';
+import { Bound, IBound } from '../model';
 
-export default class BoundRepo {
-  private model = boundModel;
+export class BoundRepo {
+  private model = Bound;
 
   public async findAll() {
     return this.model.find();
@@ -20,11 +19,11 @@ export default class BoundRepo {
     return this.model.exists({ txHash, clauseIndex });
   }
 
-  public async create(bound: Bound) {
+  public async create(bound: IBound) {
     return this.model.create(bound);
   }
 
-  public async bulkInsert(...bounds: Bound[]) {
+  public async bulkInsert(...bounds: IBound[]) {
     return this.model.create(bounds);
   }
 

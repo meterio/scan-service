@@ -1,9 +1,8 @@
-import { NFT } from '../model/nft.interface';
-import nftModel from '../model/nft.model';
+import { NFT, INFT } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class NFTRepo {
-  private model = nftModel;
+export class NFTRepo {
+  private model = NFT;
 
   public async findAll() {
     return this.model.find();
@@ -71,11 +70,11 @@ export default class NFTRepo {
     });
   }
 
-  public async create(nft: NFT) {
+  public async create(nft: INFT) {
     return this.model.create(nft);
   }
 
-  public async bulkInsert(...nfts: NFT[]) {
+  public async bulkInsert(...nfts: INFT[]) {
     return this.model.create(nfts);
   }
 

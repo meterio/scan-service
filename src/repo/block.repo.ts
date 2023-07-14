@@ -2,12 +2,11 @@ import { Document } from 'mongoose';
 
 import { RECENT_WINDOW } from '../const';
 import { BlockType } from '../const';
-import { Block } from '../model/block.interface';
-import blockModel from '../model/block.model';
+import { Block, IBlock } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class BlockRepo {
-  private model = blockModel;
+export class BlockRepo {
+  private model = Block;
   public async getBestBlock() {
     return this.model.findOne({}).sort({ timestamp: -1 });
   }
@@ -73,7 +72,7 @@ export default class BlockRepo {
       .sort({ number: 1 });
   }
 
-  public async findFutureBlocks(num: number): Promise<(Block & Document)[]> {
+  public async findFutureBlocks(num: number): Promise<(IBlock & Document)[]> {
     return this.model.find({ number: { $gt: num } });
   }
 
@@ -87,11 +86,11 @@ export default class BlockRepo {
     return this.model.count({ type: BlockType.KBlock });
   }
 
-  public async create(block: Block) {
+  public async create(block: IBlock) {
     return this.model.create(block);
   }
 
-  public async bulkInsert(...block: Block[]) {
+  public async bulkInsert(...block: IBlock[]) {
     return this.model.create(block);
   }
 

@@ -39,7 +39,7 @@ const runAsync = async (options) => {
     try {
       const outputs = await pos.explain(
         {
-          clauses: [{ to: tokenAddress, value: '0x0', data: balanceOfFunc.encode(address), token: Token.MTR }],
+          clauses: [{ to: tokenAddress, value: '0x0', data: balanceOfFunc.encode(address), token: 0 }],
         },
         posHead.hash
       );

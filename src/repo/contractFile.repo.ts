@@ -1,8 +1,7 @@
-import { ContractFile } from '../model/contractFile.interface';
-import contractFileModel from '../model/contractFile.model';
+import { ContractFile, IContractFile } from '../model';
 
-export default class ContractFileRepo {
-  private model = contractFileModel;
+export class ContractFileRepo {
+  private model = ContractFile;
 
   public async findAll() {
     return this.model.find();
@@ -24,11 +23,11 @@ export default class ContractFileRepo {
     return this.model.deleteOne({ address: address.toLowerCase() });
   }
 
-  public async create(contractFile: ContractFile) {
+  public async create(contractFile: IContractFile) {
     return this.model.create(contractFile);
   }
 
-  public async bulkUpsert(...contractFiles: ContractFile[]) {
+  public async bulkUpsert(...contractFiles: IContractFile[]) {
     for (const f of contractFiles) {
       console.log(`name: ${f.name} path: ${f.path}`);
       await this.model.findOneAndUpdate({ path: f.path }, f, { new: true, upsert: true, overwrite: true });
@@ -37,7 +36,7 @@ export default class ContractFileRepo {
     return true;
   }
 
-  public async bulkInsert(...contractFiles: ContractFile[]) {
+  public async bulkInsert(...contractFiles: IContractFile[]) {
     return this.model.create(contractFiles);
   }
 }

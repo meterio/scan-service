@@ -1,9 +1,8 @@
 import { ZeroAddress } from '../const';
-import { LogTransfer } from '../model/logTransfer.interface';
-import logTransferModel from '../model/logTransfer.model';
+import { LogTransfer, ILogTransfer } from '../model';
 
-export default class LogTransferRepo {
-  private model = logTransferModel;
+export class LogTransferRepo {
+  private model = LogTransfer;
 
   public async findAll() {
     return this.model.find();
@@ -25,15 +24,15 @@ export default class LogTransferRepo {
     return this.model.exists({ txHash, clauseIndex, logIndex });
   }
 
-  public async create(evt: LogTransfer) {
+  public async create(evt: ILogTransfer) {
     return this.model.create(evt);
   }
 
-  public async bulkInsert(...evts: LogTransfer[]) {
+  public async bulkInsert(...evts: ILogTransfer[]) {
     return this.model.create(evts);
   }
 
-  public async bulkUpsert(...trs: LogTransfer[]) {
+  public async bulkUpsert(...trs: ILogTransfer[]) {
     for (const t of trs) {
       await this.model.findOneAndUpdate({ txHash: t.txHash, clauseIndex: t.clauseIndex, logIndex: t.logIndex }, t, {
         new: true,

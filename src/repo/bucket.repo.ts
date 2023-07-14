@@ -1,9 +1,8 @@
-import { Bucket } from '../model/bucket.interface';
-import bucketModel from '../model/bucket.model';
+import { Bucket, IBucket } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class BucketRepo {
-  private model = bucketModel;
+export class BucketRepo {
+  private model = Bucket;
 
   public async findAll() {
     return this.model.find({});
@@ -42,11 +41,11 @@ export default class BucketRepo {
     return this.model.count({ owner: address.toLowerCase() });
   }
 
-  public async create(bucket: Bucket) {
+  public async create(bucket: IBucket) {
     return this.model.create(bucket);
   }
 
-  public async bulkInsert(...models: Bucket[]) {
+  public async bulkInsert(...models: IBucket[]) {
     return this.model.create(models);
   }
 

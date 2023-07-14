@@ -1,11 +1,10 @@
 import BigNumber from 'bignumber.js';
 import { ValidatorStatus } from '../const';
-import { Validator } from '../model/validator.interface';
-import validatorModel from '../model/validator.model';
+import { Validator, IValidator } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class ValidatorRepo {
-  private model = validatorModel;
+export class ValidatorRepo {
+  private model = Validator;
 
   public async findAll() {
     return this.model.find({});
@@ -40,7 +39,7 @@ export default class ValidatorRepo {
     return this.model.count({ status });
   }
 
-  public async bulkInsert(...models: Validator[]) {
+  public async bulkInsert(...models: IValidator[]) {
     return this.model.create(models);
   }
 

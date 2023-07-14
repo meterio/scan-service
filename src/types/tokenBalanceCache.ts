@@ -1,12 +1,13 @@
 import { BigNumber } from 'bignumber.js';
 import { Network } from '../const';
-import { NFTBalance, BlockConcise, TokenBalance } from '../model';
+import { INFTBalance, IBlockConcise, ITokenBalance } from '../model';
 import { ContractRepo, MovementRepo, TokenBalanceRepo } from '../repo';
 import { ZeroAddress } from '../const';
 import { Pos } from '../utils';
 import PromisePool from '@supercharge/promise-pool/dist';
+import { Document, Types } from 'mongoose';
 
-const printNFT = (bals: NFTBalance[], deltas: NFTBalance[]) => {
+const printNFT = (bals: INFTBalance[], deltas: INFTBalance[]) => {
   if (bals.length <= 0) {
     return '[]';
   }
@@ -23,7 +24,7 @@ const printNFT = (bals: NFTBalance[], deltas: NFTBalance[]) => {
   return matches.length === 0 ? '[...]' : `[${matches.join(', ')} ${matches.length === bals.length ? '' : '...'}]`;
 };
 
-const printDelta = (deltas: NFTBalance[]) => {
+const printDelta = (deltas: INFTBalance[]) => {
   let tokens = [];
   for (const d of deltas) {
     tokens.push(`${d.tokenId}=>${d.value}`);
@@ -31,7 +32,7 @@ const printDelta = (deltas: NFTBalance[]) => {
   return `[${tokens.join(', ')}]`;
 };
 
-export const mergeNFTBalances = (origin: NFTBalance[], delta: NFTBalance[], plus = true) => {
+export const mergeNFTBalances = (origin: INFTBalance[], delta: INFTBalance[], plus = true) => {
   let resultMap: { [key: number]: number } = {};
   for (const i in origin) {
     const { tokenId, value } = origin[i];
@@ -53,7 +54,7 @@ export const mergeNFTBalances = (origin: NFTBalance[], delta: NFTBalance[], plus
       }
     }
   }
-  let bals: NFTBalance[] = [];
+  let bals: INFTBalance[] = [];
   for (const tokenId in resultMap) {
     const value = resultMap[tokenId];
     if (value > 0) {
@@ -64,7 +65,7 @@ export const mergeNFTBalances = (origin: NFTBalance[], delta: NFTBalance[], plus
 };
 
 export class TokenBalanceCache {
-  private bals: { [key: string]: TokenBalance & { save(); remove() } } = {};
+  private bals: { [key: string]: ITokenBalance & Document<unknown, {}, ITokenBalance> & { _id: Types.ObjectId } } = {};
   private tokenBalanceRepo = new TokenBalanceRepo();
   private contractRepo = new ContractRepo();
   private movementRepo = new MovementRepo();
@@ -73,7 +74,7 @@ export class TokenBalanceCache {
   // normally we could just update the nftBalances in bals map
   // but mongoose is really slow on large array init (even just an update in memory!!)
   // so here save nft into a separate map would boost the performance
-  private nfts: { [key: string]: NFTBalance[] } = {};
+  private nfts: { [key: string]: INFTBalance[] } = {};
 
   constructor(net: Network) {
     this.pos = new Pos(net);
@@ -83,7 +84,7 @@ export class TokenBalanceCache {
     return Object.values(this.bals);
   }
 
-  private async fixTokenBalance(addrStr: string, tokenAddr: string, blockConcise: BlockConcise) {
+  private async fixTokenBalance(addrStr: string, tokenAddr: string, blockConcise: IBlockConcise) {
     const key = `${addrStr}_${tokenAddr}`.toLowerCase();
     let bal = this.bals[key];
 
@@ -99,7 +100,7 @@ export class TokenBalanceCache {
     }
   }
 
-  private async setDefault(addrStr: string, tokenAddr: string, blockConcise: BlockConcise) {
+  private async setDefault(addrStr: string, tokenAddr: string, blockConcise: IBlockConcise) {
     const key = `${addrStr}_${tokenAddr}`.toLowerCase();
     if (this.bals[key]) {
       return;
@@ -116,7 +117,7 @@ export class TokenBalanceCache {
     this.nfts[key] = mergeNFTBalances(this.bals[key].nftBalances, []);
   }
 
-  public async minus(addrStr: string, tokenAddr: string, amount: string | BigNumber, blockConcise: BlockConcise) {
+  public async minus(addrStr: string, tokenAddr: string, amount: string | BigNumber, blockConcise: IBlockConcise) {
     if (addrStr === ZeroAddress || new BigNumber(amount).isLessThanOrEqualTo(0)) {
       return;
     }
@@ -133,7 +134,7 @@ export class TokenBalanceCache {
     this.bals[key].lastUpdate = blockConcise;
   }
 
-  public async plus(addrStr: string, tokenAddr: string, amount: string | BigNumber, blockConcise: BlockConcise) {
+  public async plus(addrStr: string, tokenAddr: string, amount: string | BigNumber, blockConcise: IBlockConcise) {
     if (addrStr === ZeroAddress || new BigNumber(amount).isLessThanOrEqualTo(0)) {
       return;
     }
@@ -150,7 +151,7 @@ export class TokenBalanceCache {
     this.bals[key].lastUpdate = blockConcise;
   }
 
-  public async plusNFT(addrStr: string, tokenAddr: string, nftDeltas: NFTBalance[], blockConcise: BlockConcise) {
+  public async plusNFT(addrStr: string, tokenAddr: string, nftDeltas: INFTBalance[], blockConcise: IBlockConcise) {
     if (addrStr === ZeroAddress) {
       return;
     }
@@ -166,7 +167,7 @@ export class TokenBalanceCache {
     this.bals[key].lastUpdate = blockConcise;
   }
 
-  public async minusNFT(addrStr: string, tokenAddr: string, nftDeltas: NFTBalance[], blockConcise: BlockConcise) {
+  public async minusNFT(addrStr: string, tokenAddr: string, nftDeltas: INFTBalance[], blockConcise: IBlockConcise) {
     if (addrStr === ZeroAddress) {
       return;
     }
@@ -243,11 +244,11 @@ export class TokenBalanceCache {
 }
 
 export class NFTBalanceAuditor {
-  private bals: { [key: string]: NFTBalance[] } = {};
-  private lastUpdates: { [key: string]: BlockConcise } = {};
+  private bals: { [key: string]: INFTBalance[] } = {};
+  private lastUpdates: { [key: string]: IBlockConcise } = {};
   private tbRepo = new TokenBalanceRepo();
 
-  private setDefault(addrStr: string, tokenAddr: string, blockConcise: BlockConcise) {
+  private setDefault(addrStr: string, tokenAddr: string, blockConcise: IBlockConcise) {
     const key = `${addrStr}_${tokenAddr}`.toLowerCase();
     if (this.bals[key]) {
       return;
@@ -256,7 +257,7 @@ export class NFTBalanceAuditor {
     this.lastUpdates[key] = blockConcise;
   }
 
-  public plusNFT(addrStr: string, tokenAddr: string, nftDeltas: NFTBalance[], blockConcise: BlockConcise) {
+  public plusNFT(addrStr: string, tokenAddr: string, nftDeltas: INFTBalance[], blockConcise: IBlockConcise) {
     this.setDefault(addrStr, tokenAddr, blockConcise);
     const key = `${addrStr}_${tokenAddr}`.toLowerCase();
     console.log(
@@ -273,7 +274,7 @@ export class NFTBalanceAuditor {
     this.lastUpdates[key] = blockConcise;
   }
 
-  public minusNFT(addrStr: string, tokenAddr: string, nftDeltas: NFTBalance[], blockConcise: BlockConcise) {
+  public minusNFT(addrStr: string, tokenAddr: string, nftDeltas: INFTBalance[], blockConcise: IBlockConcise) {
     if (addrStr === ZeroAddress) {
       return;
     }

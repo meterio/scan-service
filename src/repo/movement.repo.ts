@@ -1,13 +1,11 @@
-import BigNumber from 'bignumber.js';
 import { Token } from '../const';
 import { RECENT_WINDOW } from '../const';
-import { Movement } from '../model/movement.interface';
-import movementModel from '../model/movement.model';
+import { Movement, IMovement } from '../model';
 
 import { formalizePageAndLimit } from '../utils';
 
-export default class MovementRepo {
-  private model = movementModel;
+export class MovementRepo {
+  private model = Movement;
 
   public async findAll() {
     return this.model.find();
@@ -52,7 +50,7 @@ export default class MovementRepo {
     return this.model.exists({ txHash, clauseIndex });
   }
 
-  public async create(movement: Movement) {
+  public async create(movement: IMovement) {
     return this.model.create(movement);
   }
 
@@ -60,11 +58,11 @@ export default class MovementRepo {
     return this.model.find({ 'block.number': { $gt: num } });
   }
 
-  public async bulkInsert(...movements: Movement[]) {
+  public async bulkInsert(...movements: IMovement[]) {
     return this.model.create(movements);
   }
 
-  public async bulkUpsert(...movements: Movement[]) {
+  public async bulkUpsert(...movements: IMovement[]) {
     for (const m of movements) {
       const r = await this.model.findOneAndUpdate(
         { txHash: m.txHash, clauseIndex: m.clauseIndex, logIndex: m.logIndex, token: m.token },
@@ -169,13 +167,16 @@ export default class MovementRepo {
     return this.paginate({ tokenAddress: addr.toLowerCase() }, pageNum, limitNum);
   }
 
-  public async paginateByTokenAddressInRange(start: number, end: number, addr: string, pageNum?: number, limitNum?: number) {
+  public async paginateByTokenAddressInRange(
+    start: number,
+    end: number,
+    addr: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
     return this.paginate(
       {
-        $and: [
-          { 'block.timestamp': { $gte: start, $lte: end } },
-          { tokenAddress: addr.toLowerCase() }
-        ],
+        $and: [{ 'block.timestamp': { $gte: start, $lte: end } }, { tokenAddress: addr.toLowerCase() }],
       },
       pageNum,
       limitNum

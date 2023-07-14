@@ -21,31 +21,33 @@ import {
   InternalTxRepo,
   ContractFileRepo,
   BucketRepo,
+  WithdrawRepo,
 } from '../repo';
 import { Token, ContractType, BlockType } from '../const';
 import {
-  Block,
-  BlockConcise,
-  Bound,
-  Committee,
-  CommitteeMember,
-  TxOutput,
-  Movement,
-  Clause,
-  LogTransfer,
-  InternalTx,
-  Account,
-  LogEvent,
-  Unbound,
-  VMError,
-  TraceOutput,
-  TokenBalance,
-  NFTTransfer,
-  Contract,
-  Head,
-  Tx,
-  TxDigest,
-  Bucket,
+  IBlock,
+  IBlockConcise,
+  IBound,
+  ICommittee,
+  ICommitteeMember,
+  ITxOutput,
+  IMovement,
+  IClause,
+  ILogTransfer,
+  IInternalTx,
+  IAccount,
+  ILogEvent,
+  IUnbound,
+  IVMError,
+  ITraceOutput,
+  ITokenBalance,
+  INFTTransfer,
+  IContract,
+  IHead,
+  ITx,
+  ITxDigest,
+  IBucket,
+  IWithdraw,
 } from '../model';
 import { BigNumber } from 'bignumber.js';
 import { sha1 } from 'object-hash';
@@ -72,10 +74,6 @@ import { newIterator, LogItem } from '../utils/log-traverser';
 import { AccountCache, TokenBalanceCache } from '../types';
 import { MetricName, getPreAllocAccount } from '../const';
 import { KeyTransactionFeeAddress } from '../const/key';
-import { Withdraw } from '../model/withdraw.interface';
-import WithdrawRepo from '../repo/withdraw.repo';
-import { Script } from 'vm';
-import { decode } from 'punycode';
 
 const Web3 = require('web3');
 const meterify = require('meterify').meterify;
@@ -135,22 +133,22 @@ export class PosCMD extends CMD {
   private mtrgV2SysToken: TokenBasic;
 
   // cache
-  private blocksCache: Block[] = [];
-  private txsCache: Tx[] = [];
-  private committeesCache: Committee[] = [];
-  private txDigestsCache: TxDigest[] = [];
-  private movementsCache: Movement[] = [];
-  private boundsCache: Bound[] = [];
-  private unboundsCache: Unbound[] = [];
-  private withdrawCache: Withdraw[] = [];
+  private blocksCache: IBlock[] = [];
+  private txsCache: ITx[] = [];
+  private committeesCache: ICommittee[] = [];
+  private txDigestsCache: ITxDigest[] = [];
+  private movementsCache: IMovement[] = [];
+  private boundsCache: IBound[] = [];
+  private unboundsCache: IUnbound[] = [];
+  private withdrawCache: IWithdraw[] = [];
   private rebasingsCache: string[] = [];
-  private contractsCache: Contract[] = [];
+  private contractsCache: IContract[] = [];
   private accountCache: AccountCache;
   private tokenBalanceCache: TokenBalanceCache;
   private beneficiaryCache = ZeroAddress;
-  private logEventCache: LogEvent[] = [];
-  private logTransferCache: LogTransfer[] = [];
-  private internalTxCache: InternalTx[] = [];
+  private logEventCache: ILogEvent[] = [];
+  private logTransferCache: ILogTransfer[] = [];
+  private internalTxCache: IInternalTx[] = [];
 
   constructor(net: Network) {
     super();
@@ -216,14 +214,14 @@ export class PosCMD extends CMD {
     return b;
   }
 
-  private async fixAccount(acct: Account & { save() }, blockNum: number) {
+  private async fixAccount(acct: IAccount & { save() }, blockNum: number) {
     this.log.info(`Start to fix account on block ${blockNum}`);
     const blk = await this.blockRepo.findByNumber(blockNum);
     if (!blk) {
       this.log.info(`[WARN] could not find block ${blockNum}`);
       return;
     }
-    const blockConcise = { number: blk.number, timestamp: blk.timestamp, hash: blk.hash } as BlockConcise;
+    const blockConcise = { number: blk.number, timestamp: blk.timestamp, hash: blk.hash } as IBlockConcise;
     const chainAcc = await this.pos.getAccount(acct.address, blockNum.toString());
 
     const balance = new BigNumber(chainAcc.balance);
@@ -263,14 +261,14 @@ export class PosCMD extends CMD {
     }
   }
 
-  private async fixTokenBalance(bal: TokenBalance & { save() }, blockNum: number) {
+  private async fixTokenBalance(bal: ITokenBalance & { save() }, blockNum: number) {
     this.log.info(`Start to fix token balance on block ${blockNum}`);
     const blk = await this.blockRepo.findByNumber(blockNum);
     if (!blk) {
       this.log.info(`[WARN] could not find block ${blockNum}`);
       return;
     }
-    const blockConcise = { number: blk.number, timestamp: blk.timestamp, hash: blk.hash } as BlockConcise;
+    const blockConcise = { number: blk.number, timestamp: blk.timestamp, hash: blk.hash } as IBlockConcise;
     const chainBal = await this.pos.getERC20BalanceOf(bal.address, bal.tokenAddress, blockNum.toString());
 
     const preBal = bal.balance;
@@ -283,7 +281,7 @@ export class PosCMD extends CMD {
     }
   }
 
-  private async updateTxFeeBeneficiary(head: Head) {
+  private async updateTxFeeBeneficiary(head: IHead) {
     const txFeeAddr = await this.pos.getStorage(ParamsAddress, KeyTransactionFeeAddress, head.hash);
     if (!!txFeeAddr && txFeeAddr.value) {
       const addrVal = txFeeAddr.value;
@@ -297,7 +295,7 @@ export class PosCMD extends CMD {
     }
   }
 
-  public async cleanUpIncompleteData(head: Head) {
+  public async cleanUpIncompleteData(head: IHead) {
     const blockNum = head.num;
     const blockHash = head.hash;
     // delete invalid/incomplete blocks
@@ -507,7 +505,7 @@ export class PosCMD extends CMD {
           this.log.info(`save contract ${c.address} with existing`);
           if (ec.deployStatus && ec.deployStatus === DeployStatus.SelfDestructed) {
             // if contract was self-destructed, delete this and save the latest info
-            await ec.delete();
+            await ec.deleteOne();
             await this.contractFileRepo.deleteByContract(c.address);
             c.deployStatus = DeployStatus.ReDeployed;
             await this.contractRepo.bulkInsert(c);
@@ -544,7 +542,7 @@ export class PosCMD extends CMD {
     this.log.debug('done handling rebasing');
   }
 
-  async updateHead(num, hash): Promise<Head> {
+  async updateHead(num, hash): Promise<IHead> {
     const exist = await this.headRepo.exists(this.name);
     if (!exist) {
       return await this.headRepo.create(this.name, num, hash);
@@ -561,7 +559,7 @@ export class PosCMD extends CMD {
   async handleContractCreation(
     evt: Flex.Meter.Event,
     txHash: string,
-    blockConcise: BlockConcise,
+    blockConcise: IBlockConcise,
     tracer: Pos.CallTracerOutput | undefined
   ) {
     if (!evt.topics || evt.topics[0] !== prototype.$Master.signature) {
@@ -627,7 +625,7 @@ export class PosCMD extends CMD {
       verifiedFrom = verifiedContract.address;
     }
 
-    let c: Contract = {
+    let c: IContract = {
       type: ContractType.Unknown,
       name: '',
       symbol: '',
@@ -695,7 +693,7 @@ export class PosCMD extends CMD {
     this.contractsCache.push(c);
   }
 
-  async handleSelfdestruct(tracer: Pos.CallTracerOutput | undefined, txHash: string, block: BlockConcise) {
+  async handleSelfdestruct(tracer: Pos.CallTracerOutput | undefined, txHash: string, block: IBlockConcise) {
     let destructedContracts = {};
     try {
       if (tracer) {
@@ -829,7 +827,7 @@ export class PosCMD extends CMD {
     txHash: string,
     clauseIndex: number,
     logIndex: number,
-    blockConcise: BlockConcise
+    blockConcise: IBlockConcise
   ) {
     if (!evt.topics || evt.topics[0] != BoundEvent.signature) {
       return;
@@ -855,7 +853,7 @@ export class PosCMD extends CMD {
     txHash: string,
     clauseIndex: number,
     logIndex: number,
-    blockConcise: BlockConcise
+    blockConcise: IBlockConcise
   ) {
     if (!evt.topics || evt.topics.length <= 0) {
       return;
@@ -937,6 +935,7 @@ export class PosCMD extends CMD {
           } else {
             const newBkt = await this.bucketRepo.create({
               ...b,
+              token: b.token == 0 ? Token.MTR : Token.MTRG,
               value: new BigNumber(b.value),
               bonusVotes: new BigNumber(b.totalVotes).minus(b.value),
               totalVotes: new BigNumber(b.totalVotes),
@@ -958,7 +957,7 @@ export class PosCMD extends CMD {
     txHash: string,
     clauseIndex: number,
     logIndex: number,
-    blockConcise: BlockConcise
+    blockConcise: IBlockConcise
   ) {
     if (!evt.topics || evt.topics[0] !== UnboundEvent.signature) {
       return;
@@ -983,7 +982,7 @@ export class PosCMD extends CMD {
     logIndex: number,
     evt: Flex.Meter.Event,
     clauseIndex: number,
-    blockConcise: BlockConcise,
+    blockConcise: IBlockConcise,
     txHash: string
   ) {
     if (evt.topics && evt.topics[0] === ERC20.Transfer.signature) {
@@ -998,7 +997,7 @@ export class PosCMD extends CMD {
       const from = decoded.from.toLowerCase();
       const to = decoded.to.toLowerCase();
       const amount = new BigNumber(decoded.value.toString());
-      let movement: Movement = {
+      let movement: IMovement = {
         from,
         to,
         token: Token.ERC20,
@@ -1036,7 +1035,7 @@ export class PosCMD extends CMD {
     logIndex: number,
     evt: Flex.Meter.Event,
     clauseIndex: number,
-    blockConcise: BlockConcise,
+    blockConcise: IBlockConcise,
     txHash: string
   ) {
     if (evt.topics && evt.topics[0] === ERC721.Transfer.signature) {
@@ -1053,7 +1052,7 @@ export class PosCMD extends CMD {
       const tokenId = new BigNumber(decoded.tokenId.toString()).toFixed();
       const nftTransfers = [{ tokenId, value: 1 }];
       // ### Handle movement
-      let movement: Movement = {
+      let movement: IMovement = {
         from,
         to,
         amount: new BigNumber(0),
@@ -1077,7 +1076,7 @@ export class PosCMD extends CMD {
     logIndex: number,
     evt: Flex.Meter.Event,
     clauseIndex: number,
-    blockConcise: BlockConcise,
+    blockConcise: IBlockConcise,
     txHash: string
   ) {
     if (evt.topics && evt.topics[0] === ERC1155.TransferSingle.signature) {
@@ -1091,7 +1090,7 @@ export class PosCMD extends CMD {
       const from = decoded.from.toLowerCase();
       const to = decoded.to.toLowerCase();
       const nftTransfers = [{ tokenId: decoded.id, value: Number(decoded.value.toString()) }];
-      const movement: Movement = {
+      const movement: IMovement = {
         from,
         to,
         token: Token.ERC1155,
@@ -1116,13 +1115,13 @@ export class PosCMD extends CMD {
         this.log.warn('error decoding transfer event');
         return;
       }
-      let nftTransfers: NFTTransfer[] = [];
+      let nftTransfers: INFTTransfer[] = [];
       for (const [i, id] of decoded.ids.entries()) {
         nftTransfers.push({ tokenId: id, value: Number(decoded.values[i].toString()) });
       }
       const from = decoded.from.toLowerCase();
       const to = decoded.to.toLowerCase();
-      const movement: Movement = {
+      const movement: IMovement = {
         from,
         to,
         token: Token.ERC1155,
@@ -1143,7 +1142,7 @@ export class PosCMD extends CMD {
 
   async updateLogs(
     tx: Omit<Flex.Meter.Transaction, 'meta'> & Omit<Flex.Meter.Receipt, 'meta'>,
-    blockConcise: BlockConcise
+    blockConcise: IBlockConcise
   ): Promise<void> {
     if (!tx.outputs || tx.outputs.length <= 0) {
       return;
@@ -1177,7 +1176,7 @@ export class PosCMD extends CMD {
   }
   async updateWMTR(
     tx: Omit<Flex.Meter.Transaction, 'meta'> & Omit<Flex.Meter.Receipt, 'meta'>,
-    blockConcise: BlockConcise
+    blockConcise: IBlockConcise
   ): Promise<void> {
     if (tx.reverted) {
       return;
@@ -1237,7 +1236,7 @@ export class PosCMD extends CMD {
 
   async updateMovements(
     tx: Omit<Flex.Meter.Transaction, 'meta'> & Omit<Flex.Meter.Receipt, 'meta'>,
-    blockConcise: BlockConcise
+    blockConcise: IBlockConcise
   ): Promise<void> {
     if (tx.reverted) {
       return;
@@ -1280,10 +1279,10 @@ export class PosCMD extends CMD {
 
   protected updateTxDigests(
     tx: Omit<Flex.Meter.Transaction, 'meta'> & Omit<Flex.Meter.Receipt, 'meta'>,
-    blockConcise: BlockConcise,
+    blockConcise: IBlockConcise,
     txIndex: number
   ) {
-    let digests: TxDigest[] = [];
+    let digests: ITxDigest[] = [];
     let ids = {};
     // -------------------------------------
     // Handle direct digests
@@ -1312,8 +1311,8 @@ export class PosCMD extends CMD {
         fee: new BigNumber(tx.paid),
         from: tx.origin,
         to: clause.to || ZeroAddress,
-        mtr: token === Token.MTR ? new BigNumber(clause.value) : new BigNumber(0),
-        mtrg: token === Token.MTRG ? new BigNumber(clause.value) : new BigNumber(0),
+        mtr: token === 0 ? new BigNumber(clause.value) : new BigNumber(0),
+        mtrg: token === 1 ? new BigNumber(clause.value) : new BigNumber(0),
         method: signature,
         reverted: tx.reverted,
         clauseIndexs: [clauseIndex],
@@ -1332,7 +1331,7 @@ export class PosCMD extends CMD {
     // Handle special case to KBlock ScriptEngine tx
     // related to transfers (indicating staking reward)
     // ---------------------------------------------
-    let kblockDigestMap: { [key: string]: TxDigest } = {};
+    let kblockDigestMap: { [key: string]: ITxDigest } = {};
     for (const [clauseIndex, o] of tx.outputs.entries()) {
       const clause = tx.clauses[clauseIndex];
       // special case for KBlock ScritpEngine tx
@@ -1491,11 +1490,11 @@ export class PosCMD extends CMD {
 
   async getVMError(
     tx: Omit<Flex.Meter.Transaction, 'meta'> & Omit<Flex.Meter.Receipt, 'meta'>,
-    blockConcise: BlockConcise,
+    blockConcise: IBlockConcise,
     txIndex: number
   ) {
-    let vmError: VMError | null = null;
-    let traces: TraceOutput[] = [];
+    let vmError: IVMError | null = null;
+    let traces: ITraceOutput[] = [];
     for (const [clauseIndex, _] of tx.clauses.entries()) {
       try {
         const tracer = await this.pos.newTraceClause(tx.id, clauseIndex);
@@ -1544,13 +1543,13 @@ export class PosCMD extends CMD {
 
   async getTxOutputs(
     tx: Omit<Flex.Meter.Transaction, 'meta'> & Omit<Flex.Meter.Receipt, 'meta'>,
-    blockConcise: BlockConcise,
+    blockConcise: IBlockConcise,
     txIndex: number
   ) {
-    let outputs: TxOutput[] = [];
-    let traces: TraceOutput[] = [];
+    let outputs: ITxOutput[] = [];
+    let traces: ITraceOutput[] = [];
     for (const [clauseIndex, o] of tx.outputs.entries()) {
-      const output: TxOutput = {
+      const output: ITxOutput = {
         contractAddress: o.contractAddress,
         events: [],
         transfers: [],
@@ -1638,9 +1637,9 @@ export class PosCMD extends CMD {
 
     this.updateTxDigests(tx, blockConcise, txIndex);
 
-    let traces: TraceOutput[] = [];
-    let outputs: TxOutput[] = [];
-    let vmError: VMError | null = null;
+    let traces: ITraceOutput[] = [];
+    let outputs: ITxOutput[] = [];
+    let vmError: IVMError | null = null;
 
     if (tx.reverted) {
       const e = await this.getVMError(tx, blockConcise, txIndex);
@@ -1745,7 +1744,7 @@ export class PosCMD extends CMD {
       }
     }
 
-    const txModel: Tx = {
+    const txModel: ITx = {
       hash: tx.id,
       block: blockConcise,
       txIndex,
@@ -1781,7 +1780,7 @@ export class PosCMD extends CMD {
 
   async processBlock(blk: Pos.ExpandedBlock): Promise<void> {
     // this.log.info({ number: blk.number }, 'start to process block');
-    const blockConcise: BlockConcise = { ...blk, hash: blk.id, timestamp: blk.timestamp };
+    const blockConcise: IBlockConcise = { ...blk, hash: blk.id, timestamp: blk.timestamp };
 
     let score = 0;
     let gasChanged = 0;
@@ -1795,7 +1794,7 @@ export class PosCMD extends CMD {
     }
 
     let txHashs: string[] = [];
-    let members: CommitteeMember[] = [];
+    let members: ICommitteeMember[] = [];
     for (const [txIndex, tx] of blk.transactions.entries()) {
       await this.processTx(blk, tx, txIndex);
       txHashs.push(tx.id);
@@ -1847,7 +1846,7 @@ export class PosCMD extends CMD {
       }
     }
     if (members.length > 0) {
-      let committee: Committee = {
+      let committee: ICommittee = {
         epoch: blk.qc.epochID + 1,
         kblockHeight: blk.lastKBlockHeight,
         startBlock: blockConcise,
@@ -1858,7 +1857,7 @@ export class PosCMD extends CMD {
 
       if (blk.qc.epochID > 0) {
         const prevEndBlock = await this.getBlockFromREST(blk.lastKBlockHeight);
-        const endBlock: BlockConcise = {
+        const endBlock: IBlockConcise = {
           hash: prevEndBlock.id,
           timestamp: prevEndBlock.timestamp,
           number: prevEndBlock.number,
@@ -1894,7 +1893,7 @@ export class PosCMD extends CMD {
     this.blocksCache.push(block);
   }
 
-  private async updateCommitteeEndBlock(epoch: number, endBlock: BlockConcise) {
+  private async updateCommitteeEndBlock(epoch: number, endBlock: IBlockConcise) {
     for (const c of this.committeesCache) {
       if (c.epoch === epoch) {
         c.endBlock = endBlock;
@@ -1912,7 +1911,7 @@ export class PosCMD extends CMD {
       const c = await this.contractRepo.findByAddress(tokenAddr);
       if (c) {
         const res = await this.pos.explain(
-          { clauses: [{ to: tokenAddr, value: '0x0', token: Token.MTR, data: ERC20.totalSupply.encode() }] },
+          { clauses: [{ to: tokenAddr, value: '0x0', token: 0, data: ERC20.totalSupply.encode() }] },
           'best'
         );
         const decoded = ERC20.totalSupply.decode(res[0].data);
@@ -1923,7 +1922,7 @@ export class PosCMD extends CMD {
       for (const bal of bals) {
         const res = await this.pos.explain(
           {
-            clauses: [{ to: tokenAddr, value: '0x0', token: Token.MTR, data: ERC20.balanceOf.encode(bal.address) }],
+            clauses: [{ to: tokenAddr, value: '0x0', token: 0, data: ERC20.balanceOf.encode(bal.address) }],
           },
           'best'
         );

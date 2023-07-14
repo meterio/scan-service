@@ -1,9 +1,8 @@
-import { InternalTx } from '../model/internalTx.interface';
-import internalTxModel from '../model/internalTx.model';
+import { InternalTx, IInternalTx } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class InternalTxRepo {
-  private model = internalTxModel;
+export class InternalTxRepo {
+  private model = InternalTx;
 
   public async findAll() {
     return this.model.find();
@@ -29,11 +28,11 @@ export default class InternalTxRepo {
     return this.model.exists({ txHash, clauseIndex, name });
   }
 
-  public async create(internalTx: InternalTx) {
+  public async create(internalTx: IInternalTx) {
     return this.model.create(internalTx);
   }
 
-  public async bulkInsert(...internalTxs: InternalTx[]) {
+  public async bulkInsert(...internalTxs: IInternalTx[]) {
     await this.model.create(internalTxs);
   }
 

@@ -9,7 +9,7 @@ import {
   TxRepo,
   ValidatorRepo,
 } from '../../repo';
-import { Validator } from '../../model';
+import { IValidator } from '../../model';
 import axios from 'axios';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -84,7 +84,7 @@ class MetricController extends BaseController {
         avgBlockTime: avgBlockTime,
         txsCount,
         inflation: '5%',
-        addressCount: Number(map[MetricName.ADDRESS_COUNT])  ,
+        addressCount: Number(map[MetricName.ADDRESS_COUNT]),
       },
       staking: {
         buckets: Number(map[MetricName.BUCKET_COUNT]),
@@ -235,7 +235,7 @@ class MetricController extends BaseController {
 
     // build validator map
     const validators = await this.validatorRepo.findAll();
-    let vMap: { [key: string]: Validator } = {}; // validator map [ip -> validator obj]
+    let vMap: { [key: string]: IValidator } = {}; // validator map [ip -> validator obj]
     validators.forEach((v) => {
       const ecdsaKey = v.pubKey.split(':::')[0];
       vMap[ecdsaKey] = v;

@@ -1,11 +1,10 @@
 import BigNumber from 'bignumber.js';
 
-import accountModel from '../model/account.model';
-import { BlockConcise } from '../model/blockConcise.interface';
+import { IBlockConcise, Account } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class AccountRepo {
-  private model = accountModel;
+export class AccountRepo {
+  private model = Account;
 
   public async findAll() {
     return this.model.find();
@@ -62,7 +61,7 @@ export default class AccountRepo {
     return this.model.find({ name: { $regex: `^${name}$`, $options: 'i' } });
   }
 
-  public async create(name: string, address: string, firstSeen: BlockConcise) {
+  public async create(name: string, address: string, firstSeen: IBlockConcise) {
     return this.model.create({
       name: name,
       address: address.toLowerCase(),

@@ -1,8 +1,7 @@
-import { AuctionSummary } from '../model/auctionSummary.interface';
-import AuctionSummaryModel from '../model/auctionSummary.model';
+import { AuctionSummary, IAuctionSummary } from '../model';
 
-export default class AuctionSummaryRepo {
-  private model = AuctionSummaryModel;
+export class AuctionSummaryRepo {
+  private model = AuctionSummary;
 
   public async findAll() {
     return this.model.find({}).sort({ createTime: -1 });
@@ -16,7 +15,7 @@ export default class AuctionSummaryRepo {
     return this.model.exists({ id });
   }
 
-  public async create(auctionSummary: AuctionSummary) {
+  public async create(auctionSummary: IAuctionSummary) {
     return this.model.create(auctionSummary);
   }
 

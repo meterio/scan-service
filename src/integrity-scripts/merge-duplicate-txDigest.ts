@@ -43,7 +43,7 @@ const runAsync = async (options) => {
         first.mtrg = first.mtrg.plus(d.mtrg);
         first.clauseIndexs.push(...d.clauseIndexs);
         console.log(`delete digest (${d.txHash}, ${d.from}, ${d.to}, ${d.clauseIndexs})`);
-        await d.delete();
+        await d.deleteOne();
         deleteCount++;
       }
       first.clauseIndexs = Array.from(new Set(first.clauseIndexs));

@@ -1,5 +1,5 @@
 import { Network } from '../const';
-import { NFT } from '../model';
+import { INFT, NFT } from '../model';
 import { ContractRepo, MovementRepo, NFTRepo } from '../repo';
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
@@ -11,7 +11,7 @@ import {
   CopyObjectCommandInput,
 } from '@aws-sdk/client-s3';
 import PromisePool from '@supercharge/promise-pool/dist';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { ZeroAddress } from '../const';
 import { URL } from 'url';
 
@@ -38,8 +38,13 @@ const s3 = new S3Client({
 
 class NotEnoughBalance extends Error {}
 export class NFTCache {
-  private minted: { [key: string]: NFT } = {};
-  private updated: { [key: string]: NFT & Document<any, any, any> } = {};
+  private minted: { [key: string]: INFT } = {};
+  private updated: {
+    [key: string]: Document<unknown, {}, INFT> &
+      INFT & {
+        _id: Types.ObjectId;
+      };
+  } = {};
   private repo = new NFTRepo();
   private contractRepo = new ContractRepo();
   private movementRepo = new MovementRepo();
@@ -57,7 +62,7 @@ export class NFTCache {
     return `${tokenAddress}[${tokenId}]_${owner}`;
   }
 
-  public async mint721(nft: NFT) {
+  public async mint721(nft: INFT) {
     if (nft.type !== 'ERC721') {
       return;
     }
@@ -80,7 +85,7 @@ export class NFTCache {
     // console.log(JSON.stringify(this.minted[key]));
   }
 
-  public async mint1155(nft: NFT) {
+  public async mint1155(nft: INFT) {
     if (nft.type !== 'ERC1155') {
       return;
     }
@@ -188,7 +193,7 @@ export class NFTCache {
     }
 
     // if token exists in dirty cache
-    let fromNFT: NFT & Document<any, any, any>;
+    let fromNFT: INFT & Document<unknown, {}, INFT> & { _id: Types.ObjectId };
     if (key in this.updated) {
       fromNFT = this.updated[key];
     } else {
@@ -245,7 +250,7 @@ export class NFTCache {
           for (let i = 0; i < 3; i++) {
             try {
               if (i > 0) {
-                console.log(`retry ${i + 1} time to update NFT Info for [${nft.tokenId}] of ${nft.address}`);
+                console.log(`retry ${i + 1} time to update INFT Info for [${nft.tokenId}] of ${nft.address}`);
               }
               await this.updateNFTInfo(nft);
               return;
@@ -288,7 +293,7 @@ export class NFTCache {
           if (u.owner === ZeroAddress) {
             // Burnt
             console.log(`burned token: ${u.type} ${u.address}[${u.tokenId}:${u.value}] id:${u._id}`);
-            await u.delete();
+            await u.deleteOne();
           } else {
             // Update
             await u.save();
@@ -372,7 +377,7 @@ export class NFTCache {
     }
   }
 
-  async updateNFTInfo(nft: NFT) {
+  async updateNFTInfo(nft: INFT) {
     console.log(`update info for ${nft.type}:${nft.address}[${nft.tokenId}] with tokenURI: ${nft.tokenURI}`);
     if (!nft.tokenURI || nft.tokenURI == '') {
       console.log('SKIPPED due to empty tokenURI');

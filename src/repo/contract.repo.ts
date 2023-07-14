@@ -1,14 +1,11 @@
 import { BigNumber } from 'bignumber.js';
-import { number } from 'bitcoinjs-lib/src/script';
 import { ContractType } from '../const';
 
-import { BlockConcise } from '../model/blockConcise.interface';
-import { Contract } from '../model/contract.interface';
-import contractModel from '../model/contract.model';
+import { Contract, IContract, IBlockConcise } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-export default class ContractRepo {
-  private model = contractModel;
+export class ContractRepo {
+  private model = Contract;
 
   public async findAll() {
     return this.model.find();
@@ -52,7 +49,7 @@ export default class ContractRepo {
     master: string,
     code: string,
     creationTxHash: string,
-    firstSeen: BlockConcise,
+    firstSeen: IBlockConcise,
     decimals = 18
   ) {
     return this.model.create({
@@ -75,7 +72,7 @@ export default class ContractRepo {
     });
   }
 
-  public async bulkInsert(...contracts: Contract[]) {
+  public async bulkInsert(...contracts: IContract[]) {
     return this.model.create(contracts);
   }
 

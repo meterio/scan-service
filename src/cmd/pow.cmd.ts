@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { Network } from '../const';
 import { HeadRepo, PowBlockRepo, PowTxRepo } from '../repo';
-import { PowBlock } from '../model';
+import { IPowBlock } from '../model';
 import pino from 'pino';
 
 import { Pow } from '../utils/pow-rpc';
@@ -47,7 +47,7 @@ export class PowCMD extends CMD {
     });
   }
 
-  public async processBlock(blk: PowBlock) {
+  public async processBlock(blk: IPowBlock) {
     if (blk.height > 0) {
       const prevBlock = await this.getBlockFromRPC(blk.height - 1);
       blk.previousBlockHash = prevBlock.hash;

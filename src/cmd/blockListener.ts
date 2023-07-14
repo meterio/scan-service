@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 
 import { Network } from '../const';
 import { AccountRepo, BlockRepo, CommitteeRepo, HeadRepo, MovementRepo, TxRepo } from '../repo';
-import { Block } from '../model';
+import { IBlock } from '../model';
 import pino, { Logger } from 'pino';
 
 import { InterruptedError, Pos, sleep } from '../utils';
@@ -144,5 +144,5 @@ export abstract class TxBlockListener extends CMD {
     }
   }
 
-  abstract processBlock(blk: Block);
+  abstract processBlock(blk: IBlock);
 }

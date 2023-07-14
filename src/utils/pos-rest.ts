@@ -526,22 +526,22 @@ export class Pos {
               to: address,
               value: '0x0',
               data: ERC165.supportsInterface.encode(ERC721.interfaceID),
-              token: Token.MTR,
+              token: 0,
             },
             {
               to: address,
               value: '0x0',
               data: ERC165.supportsInterface.encode(ERC721Metadata.interfaceID),
-              token: Token.MTR,
+              token: 0,
             },
             {
               to: address,
               value: '0x0',
               data: ERC165.supportsInterface.encode(ERC1155.interfaceID),
-              token: Token.MTR,
+              token: 0,
             },
-            { to: address, value: '0x0', data: ERC20.name.encode(), token: Token.MTR },
-            { to: address, value: '0x0', data: ERC20.symbol.encode(), token: Token.MTR },
+            { to: address, value: '0x0', data: ERC20.name.encode(), token: 0 },
+            { to: address, value: '0x0', data: ERC20.symbol.encode(), token: 0 },
           ],
         },
         blockHash
@@ -572,10 +572,10 @@ export class Pos {
       const outputs = await this.explain(
         {
           clauses: [
-            { to: address, value: '0x0', data: ERC20.name.encode(), token: Token.MTR },
-            { to: address, value: '0x0', data: ERC20.symbol.encode(), token: Token.MTR },
-            { to: address, value: '0x0', data: ERC20.decimals.encode(), token: Token.MTR },
-            { to: address, value: '0x0', data: ERC20.totalSupply.encode(), token: Token.MTR },
+            { to: address, value: '0x0', data: ERC20.name.encode(), token: 0 },
+            { to: address, value: '0x0', data: ERC20.symbol.encode(), token: 0 },
+            { to: address, value: '0x0', data: ERC20.decimals.encode(), token: 0 },
+            { to: address, value: '0x0', data: ERC20.totalSupply.encode(), token: 0 },
           ],
         },
         blockHash
@@ -597,7 +597,7 @@ export class Pos {
     try {
       const outputs = await this.explain(
         {
-          clauses: [{ to: tokenAddress, value: '0x0', data: ERC20.balanceOf.encode(address), token: Token.MTR }],
+          clauses: [{ to: tokenAddress, value: '0x0', data: ERC20.balanceOf.encode(address), token: 0 }],
         },
         blockHash
       );
@@ -613,9 +613,7 @@ export class Pos {
     try {
       const outputs = await this.explain(
         {
-          clauses: [
-            { to: tokenAddress, value: '0x0', data: ERC1155.balanceOf.encode(address, tokenId), token: Token.MTR },
-          ],
+          clauses: [{ to: tokenAddress, value: '0x0', data: ERC1155.balanceOf.encode(address, tokenId), token: 0 }],
         },
         blockHash
       );

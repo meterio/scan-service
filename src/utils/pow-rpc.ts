@@ -2,7 +2,7 @@ import '@meterio/flex';
 
 import { BigNumber } from 'bignumber.js';
 import { Network } from '../const';
-import { PowBlock, PowTx } from '../model';
+import { IPowBlock, IPowTx } from '../model';
 import Client from 'bitcoin-core';
 import LRU from 'lru-cache';
 
@@ -43,12 +43,12 @@ export class Pow {
     this.cache = new LRU<string, any>({ max: 1024 * 4 });
   }
 
-  public async getBlock(height: number): Promise<PowBlock | null> {
-    const cacheOrLoad = async (func: () => Promise<PowBlock | null>) => {
+  public async getBlock(height: number): Promise<IPowBlock | null> {
+    const cacheOrLoad = async (func: () => Promise<IPowBlock | null>) => {
       let key = 'b' + height.toString();
 
       if (this.cache.has(key!)) {
-        return this.cache.get(key!) as PowBlock;
+        return this.cache.get(key!) as IPowBlock;
       }
 
       const b = await func();
@@ -64,12 +64,12 @@ export class Pow {
     });
   }
 
-  public async getTx(txhash: string): Promise<PowTx | null> {
-    const cacheOrLoad = async (func: () => Promise<PowTx | null>) => {
+  public async getTx(txhash: string): Promise<IPowTx | null> {
+    const cacheOrLoad = async (func: () => Promise<IPowTx | null>) => {
       let key = 't' + txhash;
 
       if (this.cache.has(key!)) {
-        return this.cache.get(key!) as PowTx;
+        return this.cache.get(key!) as IPowTx;
       }
 
       const tx = await func();
@@ -91,7 +91,7 @@ export class Pow {
     return this.btc.getMiningInfo();
   }
 
-  private async getBlockRPC(height: number): Promise<PowBlock | null> {
+  private async getBlockRPC(height: number): Promise<IPowBlock | null> {
     try {
       const hash = await this.btc.getBlockHash(height);
       const blk = await this.btc.getBlock(hash);
@@ -114,13 +114,13 @@ export class Pow {
     }
   }
 
-  private async getTransactionRPC(txhash: string): Promise<PowTx | null> {
+  private async getTransactionRPC(txhash: string): Promise<IPowTx | null> {
     const raw = await this.btc.getRawTransaction(txhash);
     if (!raw || raw.length <= 0) {
       return;
     }
     var tx = bitcoin.Transaction.fromHex(raw);
-    let powTx: PowTx = {
+    let powTx: IPowTx = {
       hash: txhash,
       version: tx.version,
       locktime: tx.locktime,

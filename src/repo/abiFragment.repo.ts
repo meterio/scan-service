@@ -1,8 +1,7 @@
-import model from '../model/abiFragment.model';
-import { ABIFragment } from '../model/abiFragment.interface';
+import { ABIFragment, IABIFragment } from '../model';
 
 export class ABIFragmentRepo {
-  private model = model;
+  private model = ABIFragment;
 
   public async findAllEvents() {
     return this.model.find({ type: 'event' });
@@ -28,20 +27,18 @@ export class ABIFragmentRepo {
     return this.model.find({ signature: { $in: signatures } });
   }
 
-  public async create(abiFragment: ABIFragment) {
+  public async create(abiFragment: IABIFragment) {
     return this.model.create(abiFragment);
   }
 
-  public async bulkUpsert(...abiFragments: ABIFragment[]) {
+  public async bulkUpsert(...abiFragments: IABIFragment[]) {
     for (const f of abiFragments) {
       await this.model.findOneAndUpdate({ abi: f.abi }, f, { new: true, upsert: true, overwrite: true });
     }
     return true;
   }
 
-  public async bulkInsert(...abiFragment: ABIFragment[]) {
+  public async bulkInsert(...abiFragment: IABIFragment[]) {
     return this.model.create(abiFragment);
   }
 }
-
-export default ABIFragmentRepo;

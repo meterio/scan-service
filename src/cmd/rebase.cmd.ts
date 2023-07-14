@@ -3,7 +3,7 @@ import pino from 'pino';
 import { Network } from '../const';
 import { ethers } from 'ethers';
 import * as fs from 'fs';
-import { Block, Tx } from '../model';
+import { IBlock, ITx } from '../model';
 import { CandidateRepo } from '../repo';
 import { GetNetworkConfig } from '../const';
 
@@ -55,7 +55,7 @@ export class RebaseCMD extends TxBlockListener {
     console.log(`received receipt:`, receipt);
   }
 
-  async processTx(tx: Tx, txIndex: number, blk: Block) {
+  async processTx(tx: ITx, txIndex: number, blk: IBlock) {
     const epoch = blk.epoch;
     const blockNum = blk.number;
     if (tx.reverted) {
@@ -79,7 +79,7 @@ export class RebaseCMD extends TxBlockListener {
     this.log.info(`processed tx ${tx.hash}`);
   }
 
-  async processBlock(blk: Block) {
+  async processBlock(blk: IBlock) {
     this.log.info(`start to process block ${blk.number}`);
     for (const [txIndex, txHash] of blk.txHashs.entries()) {
       const txModel = await this.txRepo.findByHash(txHash);

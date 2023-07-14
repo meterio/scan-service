@@ -1,8 +1,7 @@
-import { Withdraw } from '../model/withdraw.interface';
-import withdrawModel from '../model/withdraw.model';
+import { Withdraw, IWithdraw } from '../model';
 
-export default class WithdrawRepo {
-  private model = withdrawModel;
+export class WithdrawRepo {
+  private model = Withdraw;
 
   public async findAll() {
     return this.model.find();
@@ -20,11 +19,11 @@ export default class WithdrawRepo {
     return this.model.exists({ txHash, clauseIndex });
   }
 
-  public async create(withdraw: Withdraw) {
+  public async create(withdraw: IWithdraw) {
     return this.model.create(withdraw);
   }
 
-  public async bulkInsert(...withdraws: Withdraw[]) {
+  public async bulkInsert(...withdraws: IWithdraw[]) {
     return this.model.create(withdraws);
   }
 

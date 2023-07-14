@@ -29,7 +29,7 @@ const runAsync = async (options) => {
       const outputs = await pos.explain(
         {
           clauses: [
-            { to: nft.address, value: '0x0', data: ERC1155.balanceOf.encode(nft.owner, nft.tokenId), token: Token.MTR },
+            { to: nft.address, value: '0x0', data: ERC1155.balanceOf.encode(nft.owner, nft.tokenId), token: 0 },
           ],
         },
         'best'
@@ -48,7 +48,7 @@ const runAsync = async (options) => {
           await nft.save();
         } else {
           console.log(`delete nft`);
-          await nft.delete();
+          await nft.deleteOne();
         }
       }
     }

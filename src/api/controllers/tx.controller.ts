@@ -1,6 +1,6 @@
 import { BigNumber } from 'bignumber.js';
 import { Token } from '../const';
-import { PosEvent, TxDigest } from '../../model';
+import { IPosEvent, ITxDigest } from '../../model';
 import { TxDigestRepo, ContractRepo, TxRepo, ABIFragmentRepo, NFTRepo } from '../../repo';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -42,17 +42,17 @@ class TxController extends BaseController {
     const paginate = await this.txRepo.paginateAll(page, limit);
     const txHashs = paginate.result.map((tx) => tx.hash);
     const txDigests = await this.txDigestRepo.findByTxHashList(...txHashs);
-    let digestMap: { [key: string]: TxDigest } = {};
+    let digestMap: { [key: string]: ITxDigest } = {};
     txDigests.forEach((d) => {
       if (d.txHash in digestMap) {
         const digest = digestMap[d.txHash];
         const total = new BigNumber(d.mtr).plus(d.mtrg);
         const curTotal = new BigNumber(digest.mtr).plus(digest.mtrg);
         if (curTotal.isGreaterThan(total)) {
-          digestMap[d.txHash] = d.toJSON() as TxDigest;
+          digestMap[d.txHash] = d.toJSON() as ITxDigest;
         }
       } else {
-        digestMap[d.txHash] = d.toJSON() as TxDigest;
+        digestMap[d.txHash] = d.toJSON() as ITxDigest;
       }
     });
     const methods = await this.abiFragmentRepo.findAllFunctions();
@@ -308,7 +308,7 @@ class TxController extends BaseController {
         return res.json({ hash, events: [] });
       }
 
-      let events: PosEvent[] = [];
+      let events: IPosEvent[] = [];
       let topic0s = [];
       for (const o of tx.outputs) {
         for (const e of o.events) {

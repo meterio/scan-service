@@ -1,9 +1,8 @@
 import { RECENT_WINDOW } from '../const';
-import { PowBlock } from '../model/powBlock.interface';
-import powBlockModel from '../model/powBlock.model';
+import { PowBlock, IPowBlock } from '../model';
 
-export default class PowBlockRepo {
-  private model = powBlockModel;
+export class PowBlockRepo {
+  private model = PowBlock;
 
   public async getBestBlock() {
     return this.model.findOne({}).sort({ height: -1 });
@@ -33,7 +32,7 @@ export default class PowBlockRepo {
     return this.model.find({ height: { $gt: num } });
   }
 
-  public async create(powBlock: PowBlock) {
+  public async create(powBlock: IPowBlock) {
     return this.model.create(powBlock);
   }
 

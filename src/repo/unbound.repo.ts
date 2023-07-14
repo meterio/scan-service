@@ -1,8 +1,7 @@
-import { Unbound } from '../model/unbound.interface';
-import unboundModel from '../model/unbound.model';
+import { Unbound, IUnbound } from '../model';
 
-export default class UnboundRepo {
-  private model = unboundModel;
+export class UnboundRepo {
+  private model = Unbound;
 
   public async findAll() {
     return this.model.find();
@@ -20,11 +19,11 @@ export default class UnboundRepo {
     return this.model.exists({ txHash, clauseIndex });
   }
 
-  public async create(unbound: Unbound) {
+  public async create(unbound: IUnbound) {
     return this.model.create(unbound);
   }
 
-  public async bulkInsert(...unbounds: Unbound[]) {
+  public async bulkInsert(...unbounds: IUnbound[]) {
     return this.model.create(unbounds);
   }
 
