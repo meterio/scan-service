@@ -51,7 +51,7 @@ export class RebaseCMD extends TxBlockListener {
       to: config.stMTRGAddress,
       value: 0,
       data,
-      gasLimit: 60000,
+      gasLimit: 120000,
     };
     console.log(`prepare to send tx:`, tx);
 
