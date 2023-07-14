@@ -52,7 +52,7 @@ export abstract class TxBlockListener extends CMD {
   }
 
   public async start() {
-    await this.beforeStart();
+    // await this.beforeStart();
     this.log.info(`${this.name}: start`);
     await this.loop();
     return;
