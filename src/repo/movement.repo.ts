@@ -16,11 +16,11 @@ export class MovementRepo {
   }
 
   public async findRecent() {
-    return this.model.find().sort({ 'block.number': -1 }).limit(RECENT_WINDOW);
+    return this.model.find().sort({ _id: -1 }).limit(RECENT_WINDOW);
   }
 
   public async findRecentWithLimit(count: number) {
-    return this.model.find().sort({ 'block.number': -1 }).limit(count);
+    return this.model.find().sort({ _id: -1 }).limit(count);
   }
 
   public async findByHash(hash: string) {
@@ -37,7 +37,7 @@ export class MovementRepo {
         token,
         'block.number': { $gte: startNum, $lte: endNum },
       })
-      .sort({ 'block.number': 1 });
+      .sort({ _id: 1 });
   }
 
   public async countByTokenAddress(tokenAddress: string) {
@@ -83,7 +83,7 @@ export class MovementRepo {
     const count = await this.model.count(query);
     const result = await this.model
       .find(query)
-      .sort({ 'block.number': -1 })
+      .sort({ _id: -1 })
       .limit(limit)
       .skip(limit * page);
     return { count, result };
@@ -110,7 +110,7 @@ export class MovementRepo {
     const count = await this.model.count(query);
     const result = await this.model.aggregate([
       { $match: query },
-      { $sort: { 'block.number': -1 } },
+      { $sort: { _id: -1 } },
       { $skip: limit * page },
       { $limit: limit },
       { $lookup: { from: 'contract', localField: 'tokenAddress', foreignField: 'address', as: 'contract' } },

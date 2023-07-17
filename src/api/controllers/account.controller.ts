@@ -453,14 +453,18 @@ class AccountController extends BaseController {
     const contract = await this.contractRepo.findByAddress(address);
 
     if (contract) {
+      console.time('paginate');
       const paginate = await this.movementRepo.paginateByTokenAddress(address, page, limit);
+      console.timeEnd('paginate');
 
       const addresses = [];
       for (const tx of paginate.result) {
         addresses.push(tx.from, tx.to);
       }
 
+      console.time('findByAddress');
       const contracts = await this.contractRepo.findByAddressList(addresses);
+      console.timeEnd('findByAddress');
       const existAddrs = contracts.map((c) => c.address);
 
       return res.json({
