@@ -476,7 +476,7 @@ export class PosCMD extends CMD {
           const erc20Data = await this.pos.fetchERC20Data(mvt.tokenAddress, '');
           const tokenContract = await this.contractRepo.findByAddress(mvt.tokenAddress);
           if (tokenContract && tokenContract.type === ContractType.ERC20) {
-            tokenContract.totalSupply = new BigNumber(erc20Data.totalSupply);
+            tokenContract.totalSupply = new BigNumber(erc20Data.totalSupply.toString());
             await tokenContract.save();
             this.log.info({ token: mvt.tokenAddress, totalSupply: erc20Data.totalSupply }, `token totalSupply updated`);
           }

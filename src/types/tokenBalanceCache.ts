@@ -126,8 +126,8 @@ export class TokenBalanceCache {
     const key = `${addrStr}_${tokenAddr}`.toLowerCase();
     console.log(`Token ${tokenAddr} on ${addrStr} minus: ${this.bals[key].balance} - ${formattedAmount} `);
     this.bals[key].balance = this.bals[key].balance.minus(formattedAmount);
-    if (this.bals[key].balance.isLessThan(0)) {
-      console.log(`Got negative balance: ${this.bals[key].balance}`);
+    if (this.bals[key].balance.isLessThan(0) || Number.isNaN(this.bals[key].balance.toNumber())) {
+      console.log(`Got invalid balance: ${this.bals[key].balance}`);
       await this.fixTokenBalance(addrStr, tokenAddr, blockConcise);
     }
     console.log(`Got => ${this.bals[key].balance}`);
@@ -143,8 +143,8 @@ export class TokenBalanceCache {
     const key = `${addrStr}_${tokenAddr}`.toLowerCase();
     console.log(`Token ${tokenAddr} on ${addrStr} plus: ${this.bals[key].balance} + ${formattedAmount} `);
     this.bals[key].balance = this.bals[key].balance.plus(formattedAmount);
-    if (this.bals[key].balance.isLessThan(0)) {
-      console.log(`Got negative balance: ${this.bals[key].balance}`);
+    if (this.bals[key].balance.isLessThan(0) || Number.isNaN(this.bals[key].balance.toNumber())) {
+      console.log(`Got invalid balance: ${this.bals[key].balance}`);
       await this.fixTokenBalance(addrStr, tokenAddr, blockConcise);
     }
     console.log(`Got => ${this.bals[key].balance}`);
