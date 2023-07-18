@@ -65,7 +65,7 @@ export class RebaseCMD extends TxBlockListener {
       to: config.stMTRG_MTRG_Pair,
       value: 0,
       data: syncData,
-      gasLimit: 120000,
+      gasLimit: 180000,
     };
     console.log(`prepare to send receipt tx:`, rebaseTx);
     const syncReceipt = await signer.sendTransaction(syncTx);
