@@ -87,6 +87,7 @@ export class NetworkConfig {
 
   stMTRGRebaseEnabled: boolean;
   stMTRGAddress: string;
+  stMTRG_MTRG_Pair: string;
 
   powEnabled: boolean;
   auctionEnabled: boolean;
@@ -125,6 +126,7 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
 
         stMTRGRebaseEnabled: true,
         stMTRGAddress: '0x215d603293357ca222bE92A1bf75eEc38DeF0aad',
+        stMTRG_MTRG_Pair: '0x6bff2fd2554ad25e662dd6d7c902115e6b76f046',
 
         powEnabled: true,
         auctionEnabled: true,
@@ -157,6 +159,7 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
 
         stMTRGRebaseEnabled: false,
         stMTRGAddress: '',
+        stMTRG_MTRG_Pair: '',
 
         powEnabled: true,
         auctionEnabled: true,
@@ -182,6 +185,7 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
 
         stMTRGRebaseEnabled: false,
         stMTRGAddress: '',
+        stMTRG_MTRG_Pair: '',
 
         powEnabled: false,
         auctionEnabled: false,
@@ -208,6 +212,7 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
 
         stMTRGRebaseEnabled: false,
         stMTRGAddress: '',
+        stMTRG_MTRG_Pair: '',
 
         powEnabled: false,
         auctionEnabled: false,

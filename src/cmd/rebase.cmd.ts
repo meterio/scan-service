@@ -45,18 +45,31 @@ export class RebaseCMD extends TxBlockListener {
     const pk = '0x' + encrypted.toString('hex');
     const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
     const signer = new ethers.Wallet(pk, provider);
-    const iface = new ethers.utils.Interface(['function rebase()']);
-    const data = iface.encodeFunctionData('rebase', []);
-    const tx = {
+    const iface = new ethers.utils.Interface(['function rebase()', 'function sync()']);
+
+    // send rebase tx
+    const rebaseData = iface.encodeFunctionData('rebase', []);
+    const rebaseTx = {
       to: config.stMTRGAddress,
       value: 0,
-      data,
+      data: rebaseData,
       gasLimit: 120000,
     };
-    console.log(`prepare to send tx:`, tx);
+    console.log(`prepare to send rebase tx:`, rebaseTx);
+    const rebaseReceipt = await signer.sendTransaction(rebaseTx);
+    console.log(`received rebase receipt:`, rebaseReceipt);
 
-    const receipt = await signer.sendTransaction(tx);
-    console.log(`received receipt:`, receipt);
+    // send sync tx
+    const syncData = iface.encodeFunctionData('sync', []);
+    const syncTx = {
+      to: config.stMTRG_MTRG_Pair,
+      value: 0,
+      data: syncData,
+      gasLimit: 120000,
+    };
+    console.log(`prepare to send receipt tx:`, rebaseTx);
+    const syncReceipt = await signer.sendTransaction(syncTx);
+    console.log(`received rebase receipt:`, syncReceipt);
   }
 
   async processTx(tx: ITx, txIndex: number, blk: IBlock) {
