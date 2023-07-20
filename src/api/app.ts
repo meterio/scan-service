@@ -9,11 +9,13 @@ import express = require('express');
 import cors = require('cors');
 import cookieParser = require('cookie-parser');
 import { Network } from '../const';
+import morgan from 'morgan';
 
-function loggerMiddleware(request: express.Request, response: express.Response, next: express.NextFunction) {
-  console.log(`${request.method} ${request.path}`);
-  next();
-}
+// function loggerMiddleware(request: express.Request, response: express.Response, next: express.NextFunction) {
+//   const p = `${request.method} ${request.path}`;
+//   console.log(p);
+//   next();
+// }
 
 class App {
   public app: express.Application;
@@ -44,7 +46,7 @@ class App {
 
   private initializeMiddlewares() {
     this.app.set('view engine', 'ejs');
-    this.app.use(loggerMiddleware);
+    this.app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
     this.app.use(cors());
     this.app.use(express.urlencoded({ extended: false }));
     this.app.use(express.json());

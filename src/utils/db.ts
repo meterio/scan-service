@@ -42,6 +42,8 @@ export const connectDB = async (network: Network, standby: boolean) => {
     useUnifiedTopology: true,
     sslValidate: false,
     sslCA: undefined,
+    maxPoolSize: 10,
+    maxIdleTimeMS: 5000,
   };
   let query: { [key: string]: string } = {};
   query['retryWrites'] = 'false';
@@ -63,6 +65,7 @@ export const connectDB = async (network: Network, standby: boolean) => {
   let queryStr = queries.join('&');
   // mongoose.set("debug", true);
   await mongoose.connect(queryStr ? url + '?' + queryStr : url, options);
+  mongoose.set('debug', true);
 };
 
 export const disconnectDB = async () => {

@@ -34,41 +34,26 @@ export class TxDigestRepo {
   }
 
   public async countByAddress(address: string) {
-    console.time('fromCount');
     const fromCount = await this.model.count({ from: address.toLowerCase() });
-    console.timeEnd('fromCount');
 
-    console.time('toCount');
     const toCount = await this.model.count({ to: address.toLowerCase() });
-    console.timeEnd('toCount');
     return fromCount + toCount;
   }
 
   // paginates
   private async paginate(query: any, pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
-    console.time('count');
     const count = await this.model.count(query);
-    console.timeEnd('count');
 
-    console.time('paginate');
-    console.log(`query: ${JSON.stringify(query)}, limit: ${limit}, page: ${page}`);
-
-    // const result = await this.model.find(query).skip(skipSize).limit(pageSize);
+    console.time('txdigest paginate by account');
     const result = await this.model
       .find(query)
-      .sort({ _id: -1 })
+      .sort({ 'block.number': -1 })
       .limit(limit)
       .skip(limit * page);
-    // .sort({ 'block.number': -1 });
-    // .sort({ 'block.number': -1 })
-    // .limit(limit);
-    // .skip(limit * page);
-    console.timeEnd('paginate');
+    console.timeEnd('txdigest paginate by account');
 
-    console.time('sort');
     result.sort((a, b) => (a.block.number > b.block.number ? -1 : 1));
-    console.timeEnd('sort');
     return { count, result };
   }
 

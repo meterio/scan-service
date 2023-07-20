@@ -164,7 +164,10 @@ export class MovementRepo {
   }
 
   public async paginateByTokenAddress(addr: string, pageNum?: number, limitNum?: number) {
-    return this.paginate({ tokenAddress: addr.toLowerCase() }, pageNum, limitNum);
+    console.time('movement paginate by token');
+    const r = await this.paginate({ tokenAddress: addr.toLowerCase() }, pageNum, limitNum);
+    console.timeEnd('movement paginate by token');
+    return r;
   }
 
   public async paginateByTokenAddressInRange(
