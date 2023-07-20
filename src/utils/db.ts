@@ -42,8 +42,6 @@ export const connectDB = async (network: Network, standby: boolean) => {
     useUnifiedTopology: true,
     sslValidate: false,
     sslCA: undefined,
-    maxPoolSize: 10,
-    maxIdleTimeMS: 5000,
   };
   let query: { [key: string]: string } = {};
   query['retryWrites'] = 'false';
