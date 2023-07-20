@@ -1872,7 +1872,7 @@ export class PosCMD extends CMD {
     } else {
       epoch = blk.qc.epochID;
     }
-    const block = {
+    let block = {
       ...blk,
       hash: blk.id,
       txHashs,
@@ -1889,6 +1889,8 @@ export class PosCMD extends CMD {
       qc: { ...blk.qc },
       powBlocks,
     };
+    delete block.id;
+
     this.log.info({ txCount: blk.transactions.length }, `processed PoS block ${blk.number}`);
     this.blocksCache.push(block);
   }
