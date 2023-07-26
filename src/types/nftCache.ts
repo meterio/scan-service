@@ -345,7 +345,7 @@ export class NFTCache {
       Bucket: ALBUM_BUCKET_NAME,
       Key: key,
       Body: imageArraybuffer,
-      ACL: 'public-read',
+      // ACL: 'public-read',
       ContentType: mediaType,
     };
     try {
@@ -365,7 +365,7 @@ export class NFTCache {
       CopySource: `${ALBUM_BUCKET_NAME}/${key}`,
       Bucket: ALBUM_BUCKET_NAME,
       Key: key,
-      ACL: 'public-read',
+      // ACL: 'public-read',
       ContentType: mediaType,
       MetadataDirective: 'REPLACE',
     } as CopyObjectCommandInput;
