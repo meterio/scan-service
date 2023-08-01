@@ -116,7 +116,7 @@ schema.methods.toSummary = function () {
     dist.push({
       address: d.address,
       amount: d.amount,
-      amountStr: `${fromWei(d.amount)} ${Token[d.token]}`,
+      amountStr: `${fromWei(d.amount)} ${d.token}`,
     });
   }
   return {

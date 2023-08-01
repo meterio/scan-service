@@ -88,9 +88,9 @@ class ValidatorController extends BaseController {
           id: b.id,
           address: b.owner,
           value: b.value.toFixed(),
-          valueStr: fromWei(b.value, 2) + ' ' + Token[b.token],
+          valueStr: fromWei(b.value, 2) + ' ' + b.token,
           totalVotes: b.totalVotes,
-          totalVotesStr: fromWei(b.totalVotes, 2) + ' ' + Token[b.token],
+          totalVotesStr: fromWei(b.totalVotes, 2) + ' ' + b.token,
           timestamp: b.createTime,
         };
       }),

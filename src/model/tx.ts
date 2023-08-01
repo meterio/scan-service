@@ -285,7 +285,7 @@ schema.methods.toSummary = function () {
     vmError: this.vmError,
     txIndex: this.txIndex,
 
-    token: Token[token],
+    token: token,
     reverted: this.reverted,
     clauses: this.clauses,
   };

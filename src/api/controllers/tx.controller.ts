@@ -422,7 +422,7 @@ class TxController extends BaseController {
             sender: t.sender,
             recipient: t.recipient,
             amount: t.amount,
-            token: Token[t.token],
+            token: t.token == 0 ? 'MTR' : t.token == 1 ? 'MTRG' : '',
             overallIndex: t.overallIndex,
           };
         })

@@ -5,7 +5,7 @@ class TokenNotSupported extends Error {
   public message: string;
 
   constructor(token: Token) {
-    const message = `token value ${Token[token]} is not supported`;
+    const message = `token value ${token} is not supported`;
     super(message);
     this.token = token;
     this.message = message;
