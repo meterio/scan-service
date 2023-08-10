@@ -61,9 +61,8 @@ export const connectDB = async (network: Network, standby: boolean) => {
     queries.push(`${key}=${query[key]}`);
   }
   let queryStr = queries.join('&');
-  // mongoose.set("debug", true);
   await mongoose.connect(queryStr ? url + '?' + queryStr : url, options);
-  mongoose.set('debug', true);
+  // mongoose.set('debug', true);
 };
 
 export const disconnectDB = async () => {
