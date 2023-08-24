@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 require('../utils/validateEnv');
 import { BigNumber } from 'bignumber.js';
-import { Token } from '../const';
 import { AccountRepo, HeadRepo } from '../repo';
 import { connectDB, disconnectDB } from '../utils/db';
-
+import PromisePool from '@supercharge/promise-pool/dist';
 import { PrototypeAddress, ZeroAddress, prototype } from '../const';
 import { Pos, checkNetworkWithDB, fromWei, runWithOptions } from '../utils';
 
@@ -25,72 +24,74 @@ const runAsync = async (options) => {
 
   const accounts = await accountRepo.findAll();
   console.log('start checking...');
-  for (const acc of accounts) {
-    let chainAcc: Flex.Meter.Account;
-    let chainCode: Flex.Meter.Code;
-    let chainMaster: string | null = null;
-    try {
-      chainAcc = await pos.getAccount(acc.address, revision);
-      chainCode = await pos.getCode(acc.address, revision);
-      // Get master
-      let ret = await pos.explain(
-        {
-          clauses: [
-            {
-              to: PrototypeAddress,
-              value: '0x0',
-              data: prototype.master.encode(acc.address),
-              token: 0,
-            },
-          ],
-        },
-        revision
-      );
-      let decoded = prototype.master.decode(ret[0].data);
-      if (decoded['0'] !== ZeroAddress) {
-        chainMaster = decoded['0'];
+  await PromisePool.withConcurrency(20)
+    .for(accounts)
+    .process(async (acc, index, pool) => {
+      let chainAcc: Flex.Meter.Account;
+      let chainCode: Flex.Meter.Code;
+      let chainMaster: string | null = null;
+      try {
+        chainAcc = await pos.getAccount(acc.address, revision);
+        chainCode = await pos.getCode(acc.address, revision);
+        // Get master
+        let ret = await pos.explain(
+          {
+            clauses: [
+              {
+                to: PrototypeAddress,
+                value: '0x0',
+                data: prototype.master.encode(acc.address),
+                token: 0,
+              },
+            ],
+          },
+          revision
+        );
+        let decoded = prototype.master.decode(ret[0].data);
+        if (decoded['0'] !== ZeroAddress) {
+          chainMaster = decoded['0'];
+        }
+      } catch {
+        return;
       }
-    } catch {
-      continue;
-    }
 
-    const balance = new BigNumber(chainAcc.balance);
-    const energy = new BigNumber(chainAcc.energy);
-    const boundedBalance = new BigNumber(chainAcc.boundbalance);
-    const boundedEnergy = new BigNumber(chainAcc.boundenergy);
-    if (
-      acc.mtrgBalance.toFixed() !== balance.toFixed() ||
-      acc.mtrBalance.toFixed() !== energy.toFixed() ||
-      acc.mtrgBounded.toFixed() !== boundedBalance.toFixed() ||
-      acc.mtrBounded.toFixed() !== boundedEnergy.toFixed()
-    ) {
-      const preMTR = acc.mtrBalance;
-      const preMTRG = acc.mtrgBalance;
-      const preBoundedMTR = acc.mtrBounded;
-      const preBoundedMTRG = acc.mtrgBounded;
-      acc.mtrBalance = energy;
-      acc.mtrgBalance = balance;
-      acc.mtrBounded = boundedEnergy;
-      acc.mtrgBounded = boundedBalance;
+      const balance = new BigNumber(chainAcc.balance);
+      const energy = new BigNumber(chainAcc.energy);
+      const boundedBalance = new BigNumber(chainAcc.boundbalance);
+      const boundedEnergy = new BigNumber(chainAcc.boundenergy);
+      if (
+        acc.mtrgBalance.toFixed() !== balance.toFixed() ||
+        acc.mtrBalance.toFixed() !== energy.toFixed() ||
+        acc.mtrgBounded.toFixed() !== boundedBalance.toFixed() ||
+        acc.mtrBounded.toFixed() !== boundedEnergy.toFixed()
+      ) {
+        const preMTR = acc.mtrBalance;
+        const preMTRG = acc.mtrgBalance;
+        const preBoundedMTR = acc.mtrBounded;
+        const preBoundedMTRG = acc.mtrgBounded;
+        acc.mtrBalance = energy;
+        acc.mtrgBalance = balance;
+        acc.mtrBounded = boundedEnergy;
+        acc.mtrgBounded = boundedBalance;
 
-      await acc.save();
+        await acc.save();
 
-      console.log('-'.repeat(50));
-      console.log(`Fixing Account(${acc.address}):`);
-      if (!preMTR.isEqualTo(energy)) {
-        console.log(`MTR: ${fromWei(preMTR)} -> ${fromWei(energy)} `);
+        console.log('-'.repeat(50));
+        console.log(`Fixing Account(${acc.address}):`);
+        if (!preMTR.isEqualTo(energy)) {
+          console.log(`MTR: ${fromWei(preMTR)} -> ${fromWei(energy)} `);
+        }
+        if (!preMTRG.isEqualTo(balance)) {
+          console.log(`MTRG: ${fromWei(preMTRG)} -> ${fromWei(balance)}`);
+        }
+        if (!preBoundedMTR.isEqualTo(boundedEnergy)) {
+          console.log(`Bounded MTR: ${fromWei(preBoundedMTR)} -> ${fromWei(boundedEnergy)}`);
+        }
+        if (!preBoundedMTRG.isEqualTo(boundedBalance)) {
+          console.log(`Bounded MTRG: ${fromWei(preBoundedMTRG)} -> ${fromWei(boundedBalance)}`);
+        }
       }
-      if (!preMTRG.isEqualTo(balance)) {
-        console.log(`MTRG: ${fromWei(preMTRG)} -> ${fromWei(balance)}`);
-      }
-      if (!preBoundedMTR.isEqualTo(boundedEnergy)) {
-        console.log(`Bounded MTR: ${fromWei(preBoundedMTR)} -> ${fromWei(boundedEnergy)}`);
-      }
-      if (!preBoundedMTRG.isEqualTo(boundedBalance)) {
-        console.log(`Bounded MTRG: ${fromWei(preBoundedMTRG)} -> ${fromWei(boundedBalance)}`);
-      }
-    }
-  }
+    });
 };
 
 (async () => {
