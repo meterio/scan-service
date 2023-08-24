@@ -1044,7 +1044,7 @@ export class PosCMD extends CMD {
       try {
         decoded = ERC721.Transfer.decode(evt.data, evt.topics);
       } catch (e) {
-        this.log.warn('error decoding ERC721 transfer event');
+        this.log.debug('error decoding ERC721 transfer event');
         return;
       }
 
@@ -1271,6 +1271,7 @@ export class PosCMD extends CMD {
 
       for (const [logIndex, evt] of o.events.entries()) {
         // ### Handle ERC20 Transfer event (they have the same signature)
+        console.log(`process log ${logIndex} ${evt.topics}`);
         await this.parseERC20Movement(logIndex, evt, clauseIndex, blockConcise, tx.id);
         await this.parseERC721Movement(logIndex, evt, clauseIndex, blockConcise, tx.id);
         await this.parseERC1155Movement(logIndex, evt, clauseIndex, blockConcise, tx.id);
