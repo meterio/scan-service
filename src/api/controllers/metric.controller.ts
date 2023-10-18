@@ -61,10 +61,15 @@ class MetricController extends BaseController {
     let map = await this.getMetricMap();
     const paginate = await this.blockRepo.paginateAll(1, 100);
     let avgBlockTime = 2;
+    let tps = 0;
     if (paginate && paginate.count > 2) {
       const last = paginate.result[0];
       const first = paginate.result[paginate.result.length - 1];
       avgBlockTime = Math.floor((100 * (last.timestamp - first.timestamp)) / (paginate.result.length - 1)) / 100;
+      for (const b of paginate.result) {
+        tps += b.txCount;
+      }
+      tps = (100 * tps) / (last.timestamp - first.timestamp) / 100;
     }
     const txsCount = await this.movementRepo.count();
 
@@ -81,6 +86,7 @@ class MetricController extends BaseController {
         kblock: Number(map[MetricName.KBLOCK]),
         epoch: Number(map[MetricName.EPOCH]),
         seq: Number(map[MetricName.SEQ]),
+        tps: tps,
         avgBlockTime: avgBlockTime,
         txsCount,
         inflation: '5%',
