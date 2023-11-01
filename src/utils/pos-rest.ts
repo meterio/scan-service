@@ -295,8 +295,7 @@ export namespace Pos {
     bestQC: ProbeQC;
     qcHigh: ProbeQC;
     bestQCCandidate: ProbeQC;
-    isCommitteeMember: Boolean;
-    isPacemakerRunning: Boolean;
+    inCommittee: Boolean;
   };
 }
 

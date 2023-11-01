@@ -412,7 +412,7 @@ export class MetricCMD extends CMD {
               return;
             }
             this.log.info(`got probe for ${v.ipAddress}`);
-            if (!(probe.isCommitteeMember && probe.isPacemakerRunning)) {
+            if (!probe.inCommittee) {
               invalidNodes.push({ ...base, reason: 'in committee without pacemaker running' });
               return;
             }
