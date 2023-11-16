@@ -687,7 +687,7 @@ export class PosCMD extends CMD {
         c.name = erc20.name;
         c.symbol = erc20.symbol;
         c.decimals = erc20.decimals;
-        c.totalSupply = new BigNumber(erc20.totalSupply);
+        c.totalSupply = new BigNumber(erc20.totalSupply.toString());
       }
     }
     this.log.info(c, 'found contract: ');
