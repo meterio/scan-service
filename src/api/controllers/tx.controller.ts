@@ -13,7 +13,6 @@ import { BigNumber as EBN } from 'ethers';
 // contract created signature
 const CONTRACT_CREATED_SIGNATURE = '0xb35bf4274d4295009f1ec66ed3f579db287889444366c03d3a695539372e8951';
 import { BaseController } from './baseController';
-import { Script } from 'vm';
 class TxController extends BaseController {
   public path = '/api/txs';
   public router = Router();
@@ -35,6 +34,7 @@ class TxController extends BaseController {
     this.router.get(`${this.path}/:hash/transfers`, try$(this.getTransfers));
     this.router.get(`${this.path}/:hash/events`, try$(this.getEvents));
     this.router.get(`${this.path}/:hash/internaltxs`, try$(this.getInternalTxs));
+    this.router.get(`${this.path}/from/:fromBlock/to/:toBlock`, try$(this.getTxsInRange));
   }
 
   private getRecent = async (req: Request, res: Response) => {
@@ -566,6 +566,17 @@ class TxController extends BaseController {
         }
         return result;
       }),
+    });
+  };
+
+  private getTxsInRange = async (req: Request, res: Response) => {
+    const { fromBlock, toBlock } = req.params;
+    const txs = await this.txRepo.findInRange(Number(fromBlock), Number(toBlock));
+
+    return res.json({
+      txs: Object.values(txs).map((tx) => ({
+        ...tx.toJSON(),
+      })),
     });
   };
 }
