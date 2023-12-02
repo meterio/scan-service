@@ -3,8 +3,7 @@ import BigNumber from 'bignumber.js';
 import { IBlockConcise, Account } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-let stringComparison = require('string-comparison');
-let cos = stringComparison.cosine;
+import Cosine from 'string-comparison';
 
 export class AccountRepo {
   private model = Account;
@@ -59,7 +58,9 @@ export class AccountRepo {
       ],
     });
 
-    return result.sort((a, b) => (cos.similarity(a.name, fuzzyName) >= cos.similarity(b.name, fuzzyName) ? 1 : -1));
+    return result.sort((a, b) =>
+      Cosine.cosine.similarity(a.name, fuzzyName) >= Cosine.cosine.similarity(b.name, fuzzyName) ? 1 : -1
+    );
   }
 
   public async findByName(name: string) {

@@ -4,8 +4,7 @@ import { ContractType } from '../const';
 import { Contract, IContract, IBlockConcise } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
-let stringComparison = require('string-comparison');
-let cos = stringComparison.cosine;
+import Cosine from 'string-comparison';
 
 export class ContractRepo {
   private model = Contract;
@@ -134,13 +133,15 @@ export class ContractRepo {
   public async findByFuzzySymbol(fuzzySymbol: string) {
     const result = await this.model.find({ symbol: { $regex: new RegExp(`.*${fuzzySymbol}.*`, 'i') } });
     return result.sort((a, b) =>
-      cos.similarity(a.symbol, fuzzySymbol) >= cos.similarity(b.symbol, fuzzySymbol) ? 1 : -1
+      Cosine.cosine.similarity(a.symbol, fuzzySymbol) >= Cosine.cosine.similarity(b.symbol, fuzzySymbol) ? 1 : -1
     );
   }
 
   public async findByFuzzyName(fuzzyName: string) {
     const result = await this.model.find({ name: { $regex: new RegExp(`.*${fuzzyName}.*`, 'i') } });
-    return result.sort((a, b) => (cos.similarity(a.name, fuzzyName) >= cos.similarity(b.name, fuzzyName) ? 1 : -1));
+    return result.sort((a, b) =>
+      Cosine.cosine.similarity(a.name, fuzzyName) >= Cosine.cosine.similarity(b.name, fuzzyName) ? 1 : -1
+    );
   }
 
   // paginates
