@@ -347,10 +347,10 @@ class MetricController extends BaseController {
     const start = end - 7 * 24 * 3600;
     const step = '24h';
     const hashrates = await axios.get(
-      `http://monitor.meter.io:9090/api/v1/query_range?query=bitcoind_blockchain_hashrate&start=${start}&end=${end}&step=${step}`
+      `http://52.77.74.149:9090/api/v1/query_range?query=bitcoind_blockchain_hashrate&start=${start}&end=${end}&step=${step}`
     );
     const diffs = await axios.get(
-      `http://monitor.meter.io:9090/api/v1/query_range?query=bitcoind_blockchain_difficulty&start=${start}&end=${end}&step=${step}`
+      `http://52.77.74.149:9090/api/v1/query_range?query=bitcoind_blockchain_difficulty&start=${start}&end=${end}&step=${step}`
     );
 
     if (!hashrates || !hashrates.data || !hashrates.data.data || !diffs || !diffs.data || !diffs.data.data) {
