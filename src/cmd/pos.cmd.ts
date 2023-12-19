@@ -3,7 +3,6 @@ import { EventEmitter } from 'events';
 import { abi, cry, ERC20, ERC1155, ERC721 } from '@meterio/devkit';
 import { ScriptEngine } from '@meterio/devkit';
 import { AdminChangedEvent, BeaconUpgradedEvent, DeployStatus, EmptyBytes32, Network, UpgradedEvent } from '../const';
-import moment from 'moment';
 import {
   BlockRepo,
   BoundRepo,
@@ -98,6 +97,21 @@ const Minimal_Proxy = '363d3d373d3d3d363d73bebebebebebebebebebebebebebebebebebeb
 
 const revertReasonSelector = '0x' + cry.keccak256('Error(string)').toString('hex').slice(0, 8);
 const panicErrorSelector = '0x' + cry.keccak256('Panic(uint256)').toString('hex').slice(0, 8);
+
+const timeDiff = (start: number) => {
+  const now = new Date().getTime();
+  const diff = now - start;
+  if (diff > 60 * 60 * 1000) {
+    return `${diff / 60 / 60 / 1000} h`;
+  }
+  if (diff > 60 * 1000) {
+    return `${diff / 60 / 1000} min`;
+  }
+  if (diff > 1000) {
+    return `${diff / 1000} s`;
+  }
+  return `${diff} ms`;
+};
 
 export class PosCMD extends CMD {
   private shutdown = false;
@@ -437,7 +451,7 @@ export class PosCMD extends CMD {
           if (head) {
             await this.cleanUpIncompleteData(head);
           }
-          const elapsed = new Date().getTime() - start;
+          const elapsed = new Date().getTime();
 
           this.log.info(`clean up elapsed: ${elapsed / 1000} seconds`);
           this.log.error(`sleep for ${RECOVERY_INTERVAL / 1000 / 60} minutes, hope it will resolve`);
@@ -1632,21 +1646,21 @@ export class PosCMD extends CMD {
     let start = new Date().getTime();
     // update movement && accounts
     await this.updateMovements(tx, blockConcise);
-    const mvmtElapsed = moment.duration(new Date().getTime() - start).humanize();
+    const mvmtElapsed = timeDiff(start);
 
     start = new Date().getTime();
     // update accounts with WMTR wrap
     // skip WMTR handling because this duplicates with native transfer
     await this.updateWMTR(tx, blockConcise);
-    const wmtrElapsed = moment.duration(new Date().getTime() - start).humanize();
+    const wmtrElapsed = timeDiff(start);
 
     start = new Date().getTime();
     await this.updateLogs(tx, blockConcise);
-    const logsElapsed = moment.duration(new Date().getTime() - start).humanize();
+    const logsElapsed = timeDiff(start);
 
     start = new Date().getTime();
     this.updateTxDigests(tx, blockConcise, txIndex);
-    const digestElapsed = moment.duration(new Date().getTime() - start).humanize();
+    const digestElapsed = timeDiff(start);
 
     start = new Date().getTime();
     let traces: ITraceOutput[] = [];
@@ -1662,7 +1676,7 @@ export class PosCMD extends CMD {
       outputs = o.outputs;
       traces = o.traces;
     }
-    const traceElapsed = moment.duration(new Date().getTime() - start).humanize();
+    const traceElapsed = timeDiff(start);
 
     start = new Date().getTime();
     // prepare events and outputs
@@ -1712,7 +1726,7 @@ export class PosCMD extends CMD {
 
       await this.handleSelfdestruct(clauseTrace, tx.id, blockConcise);
     }
-    const evtsElapsed = moment.duration(new Date().getTime() - start).humanize();
+    const evtsElapsed = timeDiff(start);
 
     start = new Date().getTime();
     // extract internal txs from traces
@@ -1759,7 +1773,7 @@ export class PosCMD extends CMD {
         }
       }
     }
-    const internalTxElapsed = moment.duration(new Date().getTime() - start).humanize();
+    const internalTxElapsed = timeDiff(start);
 
     start = new Date().getTime();
     const txModel: ITx = {
@@ -1793,7 +1807,7 @@ export class PosCMD extends CMD {
     };
 
     this.txsCache.push(txModel);
-    const cacheElapsed = moment.duration(new Date().getTime() - start).humanize();
+    const cacheElapsed = timeDiff(start);
 
     this.log.info(
       {
