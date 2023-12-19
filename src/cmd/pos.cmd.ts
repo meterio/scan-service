@@ -451,7 +451,7 @@ export class PosCMD extends CMD {
           if (head) {
             await this.cleanUpIncompleteData(head);
           }
-          const elapsed = new Date().getTime();
+          const elapsed = new Date().getTime() - start;
 
           this.log.info(`clean up elapsed: ${elapsed / 1000} seconds`);
           this.log.error(`sleep for ${RECOVERY_INTERVAL / 1000 / 60} minutes, hope it will resolve`);
@@ -1672,9 +1672,15 @@ export class PosCMD extends CMD {
       vmError = e.vmError;
       traces = e.traces;
     } else {
-      const o = await this.getTxOutputs(tx, blockConcise, txIndex);
-      outputs = o.outputs;
-      traces = o.traces;
+      if (tx.clauses.length > 0) {
+        const isContractCall = await this.contractRepo.findByAddress(tx.clauses[0].to);
+        const isContractCreate = !tx.clauses[0].to;
+        if (isContractCall || isContractCreate) {
+          const o = await this.getTxOutputs(tx, blockConcise, txIndex);
+          outputs = o.outputs;
+          traces = o.traces;
+        }
+      }
     }
     const traceElapsed = timeDiff(start);
 
