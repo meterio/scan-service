@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 import { abi, cry, ERC20, ERC1155, ERC721 } from '@meterio/devkit';
 import { ScriptEngine } from '@meterio/devkit';
 import { AdminChangedEvent, BeaconUpgradedEvent, DeployStatus, EmptyBytes32, Network, UpgradedEvent } from '../const';
+import moment from 'moment';
 import {
   BlockRepo,
   BoundRepo,
@@ -1628,17 +1629,26 @@ export class PosCMD extends CMD {
     this.log.info(`start to process tx ${tx.id}`);
     const blockConcise = { number: blk.number, hash: blk.id, timestamp: blk.timestamp };
 
+    let start = new Date().getTime();
     // update movement && accounts
     await this.updateMovements(tx, blockConcise);
+    const mvmtElapsed = moment.duration(new Date().getTime() - start).humanize();
 
+    start = new Date().getTime();
     // update accounts with WMTR wrap
     // skip WMTR handling because this duplicates with native transfer
     await this.updateWMTR(tx, blockConcise);
+    const wmtrElapsed = moment.duration(new Date().getTime() - start).humanize();
 
+    start = new Date().getTime();
     await this.updateLogs(tx, blockConcise);
+    const logsElapsed = moment.duration(new Date().getTime() - start).humanize();
 
+    start = new Date().getTime();
     this.updateTxDigests(tx, blockConcise, txIndex);
+    const digestElapsed = moment.duration(new Date().getTime() - start).humanize();
 
+    start = new Date().getTime();
     let traces: ITraceOutput[] = [];
     let outputs: ITxOutput[] = [];
     let vmError: IVMError | null = null;
@@ -1652,7 +1662,9 @@ export class PosCMD extends CMD {
       outputs = o.outputs;
       traces = o.traces;
     }
+    const traceElapsed = moment.duration(new Date().getTime() - start).humanize();
 
+    start = new Date().getTime();
     // prepare events and outputs
     for (const [clauseIndex, o] of tx.outputs.entries()) {
       // ----------------------------------
@@ -1700,7 +1712,9 @@ export class PosCMD extends CMD {
 
       await this.handleSelfdestruct(clauseTrace, tx.id, blockConcise);
     }
+    const evtsElapsed = moment.duration(new Date().getTime() - start).humanize();
 
+    start = new Date().getTime();
     // extract internal txs from traces
     if (traces) {
       for (const t of traces) {
@@ -1745,7 +1759,9 @@ export class PosCMD extends CMD {
         }
       }
     }
+    const internalTxElapsed = moment.duration(new Date().getTime() - start).humanize();
 
+    start = new Date().getTime();
     const txModel: ITx = {
       hash: tx.id,
       block: blockConcise,
@@ -1777,7 +1793,22 @@ export class PosCMD extends CMD {
     };
 
     this.txsCache.push(txModel);
-    this.log.info({ hash: txModel.hash }, 'processed tx');
+    const cacheElapsed = moment.duration(new Date().getTime() - start).humanize();
+
+    this.log.info(
+      {
+        hash: txModel.hash,
+        mvmtElapsed,
+        wmtrElapsed,
+        logsElapsed,
+        evtsElapsed,
+        digestElapsed,
+        traceElapsed,
+        internalTxElapsed,
+        cacheElapsed,
+      },
+      'processed tx'
+    );
   }
 
   async processBlock(blk: Pos.ExpandedBlock): Promise<void> {
