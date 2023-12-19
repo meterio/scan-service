@@ -463,6 +463,7 @@ export class PosCMD extends CMD {
 
   async saveCacheToDB() {
     if (this.txsCache.length > 0) {
+      const start = new Date().getTime();
       await this.txRepo.bulkInsert(...this.txsCache);
       this.log.info(`saved ${this.txsCache.length} txs`);
     }
@@ -1675,7 +1676,8 @@ export class PosCMD extends CMD {
       if (tx.clauses.length > 0) {
         const isContractCall = await this.contractRepo.findByAddress(tx.clauses[0].to);
         const isContractCreate = !tx.clauses[0].to;
-        if (isContractCall || isContractCreate) {
+        const isKBlockTx = tx.origin == ZeroAddress;
+        if (isContractCall || isContractCreate || isKBlockTx) {
           const o = await this.getTxOutputs(tx, blockConcise, txIndex);
           outputs = o.outputs;
           traces = o.traces;
