@@ -1674,8 +1674,8 @@ export class PosCMD extends CMD {
       traces = e.traces;
     } else {
       if (tx.clauses.length > 0) {
-        const isContractCall = await this.contractRepo.findByAddress(tx.clauses[0].to);
         const isContractCreate = !tx.clauses[0].to;
+        const isContractCall = !isContractCreate && !!(await this.contractRepo.findByAddress(tx.clauses[0].to));
         const isKBlockTx = tx.origin == ZeroAddress;
         if (isContractCall || isContractCreate || isKBlockTx) {
           const o = await this.getTxOutputs(tx, blockConcise, txIndex);
