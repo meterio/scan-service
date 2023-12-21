@@ -46,6 +46,12 @@ export class MovementRepo {
     });
   }
 
+  public async countByTxHash(txHash: string) {
+    return this.model.count({
+      txHash,
+    });
+  }
+
   public async exist(txHash: string, clauseIndex: number) {
     return this.model.exists({ txHash, clauseIndex });
   }

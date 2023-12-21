@@ -140,6 +140,7 @@ export interface ITx {
   clauses: IClause[];
   traces: ITraceOutput[];
   clauseCount: number;
+  movementCount: number;
   size: number;
 
   // receipt
@@ -175,6 +176,7 @@ const schema = new Schema<ITx>({
   clauses: [clauseSchema],
   traces: [traceOutputSchema],
   clauseCount: { type: Number, required: true },
+  movementCount: { type: Number, require: true },
   size: { type: Number, required: true },
 
   // receipt
@@ -276,6 +278,7 @@ schema.methods.toSummary = function () {
     block: this.block,
     origin: this.origin,
     clauseCount: this.clauses ? this.clauses.length : 0,
+    movementCount: this.movementCount,
     paid: this.paid.toFixed(),
     gasUsed: this.gasUsed,
     gasPriceCoef: this.gasPriceCoef,

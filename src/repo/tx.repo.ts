@@ -50,6 +50,10 @@ export class TxRepo {
     return this.model.deleteOne({ hash });
   }
 
+  public async updateMovementCount(hash: string, movementCount) {
+    return this.model.updateOne({ hash }, { $set: { movementCount } });
+  }
+
   public async findTxsAfter(blockNum: number) {
     return this.model.find({ 'block.number': { $gt: blockNum } });
   }
