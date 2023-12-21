@@ -462,6 +462,23 @@ export class PosCMD extends CMD {
   }
 
   async saveCacheToDB() {
+    if (this.movementsCache.length > 0) {
+      await this.movementRepo.bulkInsert(...this.movementsCache);
+      for (const mvt of this.movementsCache) {
+        if (mvt.token === Token.ERC20 && (mvt.from === ZeroAddress || mvt.to === ZeroAddress)) {
+          this.log.info({ token: mvt.tokenAddress }, `mint/burn noticed, update totalSupply for ERC20 token`);
+          const erc20Data = await this.pos.fetchERC20Data(mvt.tokenAddress, '');
+          const tokenContract = await this.contractRepo.findByAddress(mvt.tokenAddress);
+          if (tokenContract && tokenContract.type === ContractType.ERC20) {
+            tokenContract.totalSupply = new BigNumber(erc20Data.totalSupply.toString());
+            await tokenContract.save();
+            this.log.info({ token: mvt.tokenAddress, totalSupply: erc20Data.totalSupply }, `token totalSupply updated`);
+          }
+        }
+      }
+      this.log.info(`saved ${this.movementsCache.length} movements`);
+    }
+    
     if (this.txsCache.length > 0) {
       const start = new Date().getTime();
       await this.txRepo.bulkInsert(...this.txsCache);
@@ -484,22 +501,7 @@ export class PosCMD extends CMD {
       await this.txDigestRepo.bulkInsert(...this.txDigestsCache);
       this.log.info(`saved ${this.txDigestsCache.length} tx digests`);
     }
-    if (this.movementsCache.length > 0) {
-      await this.movementRepo.bulkInsert(...this.movementsCache);
-      for (const mvt of this.movementsCache) {
-        if (mvt.token === Token.ERC20 && (mvt.from === ZeroAddress || mvt.to === ZeroAddress)) {
-          this.log.info({ token: mvt.tokenAddress }, `mint/burn noticed, update totalSupply for ERC20 token`);
-          const erc20Data = await this.pos.fetchERC20Data(mvt.tokenAddress, '');
-          const tokenContract = await this.contractRepo.findByAddress(mvt.tokenAddress);
-          if (tokenContract && tokenContract.type === ContractType.ERC20) {
-            tokenContract.totalSupply = new BigNumber(erc20Data.totalSupply.toString());
-            await tokenContract.save();
-            this.log.info({ token: mvt.tokenAddress, totalSupply: erc20Data.totalSupply }, `token totalSupply updated`);
-          }
-        }
-      }
-      this.log.info(`saved ${this.movementsCache.length} movements`);
-    }
+    
     if (this.boundsCache.length > 0) {
       await this.boundRepo.bulkInsert(...this.boundsCache);
       this.log.info(`saved ${this.boundsCache.length} bounds`);
@@ -1784,6 +1786,8 @@ export class PosCMD extends CMD {
     const internalTxElapsed = timeDiff(start);
 
     start = new Date().getTime();
+    const movementCount = await this.movementRepo.countByTxHash(tx.id)
+    
     const txModel: ITx = {
       hash: tx.id,
       block: blockConcise,
@@ -1804,6 +1808,7 @@ export class PosCMD extends CMD {
       })),
       traces,
       clauseCount: tx.clauses.length,
+      movementCount,
       size: tx.size,
       gasUsed: tx.gasUsed,
       gasPayer: tx.gasPayer,
