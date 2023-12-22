@@ -79,7 +79,7 @@ export const isHex = (str: string): boolean => {
 
 export const isTraceable = (data: string) => {
   // has data and not script engine data
-  return data.length > 0 && data !== '0x' && !ScriptEngine.IsScriptEngineData(data) && data != '0x64617461';
+  return data.length > 0 && data !== '0x' && !ScriptEngine.IsScriptEngineData(data) && !data.startsWith('0x64617461');
 };
 
 WaitNextTickError.prototype.name = 'WaitNextTickError';
