@@ -1675,9 +1675,16 @@ export class PosCMD extends CMD {
       vmError = e.vmError;
       traces = e.traces;
     } else {
-      const o = await this.getTxOutputs(tx, blockConcise, txIndex);
-      outputs = o.outputs;
-      traces = o.traces;
+      if (tx.clauses.length > 0) {
+        const isContractCreate = !tx.clauses[0].to;
+        const isContractCall = !isContractCreate && !!(await this.contractRepo.findByAddress(tx.clauses[0].to));
+        const isKBlockTx = tx.origin == ZeroAddress;
+        if (isContractCall || isContractCreate || isKBlockTx) {
+          const o = await this.getTxOutputs(tx, blockConcise, txIndex);
+          outputs = o.outputs;
+          traces = o.traces;
+        }
+      }
     }
     const traceElapsed = timeDiff(start);
 

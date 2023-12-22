@@ -34,10 +34,8 @@ export class TxDigestRepo {
   }
 
   public async countByAddress(address: string) {
-    const fromCount = await this.model.count({ from: address.toLowerCase() });
-
-    const toCount = await this.model.count({ to: address.toLowerCase() });
-    return fromCount + toCount;
+    const count = await this.model.count({ $or: [{ from: address.toLowerCase() }, { to: address.toLowerCase() }] });
+    return count;
   }
 
   // paginates
