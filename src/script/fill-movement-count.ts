@@ -32,8 +32,10 @@ const runAsync = async (options) => {
       .process(async hash => {
         const movementCount = await movementRepo.countByTxHash(hash)
         console.log(`${movementCount} for ${hash}`)
-        await txRepo.updateMovementCount(hash, movementCount)
-        console.log(`saved for ${movementCount} to tx ${hash}`)
+        if (movementCount) {
+          await txRepo.updateMovementCount(hash, movementCount)
+          console.log(`saved for ${movementCount} to tx ${hash}`)
+        }
     })
   }
 };
