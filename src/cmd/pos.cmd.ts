@@ -1256,10 +1256,12 @@ export class PosCMD extends CMD {
   async updateMovements(
     tx: Omit<Flex.Meter.Transaction, 'meta'> & Omit<Flex.Meter.Receipt, 'meta'>,
     blockConcise: IBlockConcise
-  ): Promise<void> {
+  ): Promise<number> {
     if (tx.reverted) {
-      return;
+      return 0;
     }
+
+    const movementCountBefore = this.movementsCache.length
 
     for (const [clauseIndex, o] of tx.outputs.entries()) {
       // ----------------------------------
@@ -1295,6 +1297,10 @@ export class PosCMD extends CMD {
         await this.parseERC1155Movement(logIndex, evt, clauseIndex, blockConcise, tx.id);
       } // End of handling events
     }
+
+    const movementCountAfter = this.movementsCache.length
+
+    return movementCountAfter - movementCountBefore
   }
 
   protected updateTxDigests(
@@ -1648,7 +1654,7 @@ export class PosCMD extends CMD {
 
     let start = new Date().getTime();
     // update movement && accounts
-    await this.updateMovements(tx, blockConcise);
+    const movementCount = await this.updateMovements(tx, blockConcise);
     const mvmtElapsed = timeDiff(start);
 
     start = new Date().getTime();
@@ -1779,7 +1785,6 @@ export class PosCMD extends CMD {
     const internalTxElapsed = timeDiff(start);
 
     start = new Date().getTime();
-    const movementCount = await this.movementRepo.countByTxHash(tx.id);
 
     const txModel: ITx = {
       hash: tx.id,

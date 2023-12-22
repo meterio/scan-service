@@ -2,24 +2,38 @@
 require('../utils/validateEnv');
 
 import { connectDB, disconnectDB } from '../utils/db';
-import { TxRepo, MovementRepo } from '../repo';
+import { TxRepo, MovementRepo, HeadRepo } from '../repo';
 import { runWithOptions } from '../utils';
+import PromisePool from '@supercharge/promise-pool';
 
 const runAsync = async (options) => {
   const { network, standby } = options;
 
   await connectDB(network, standby);
+  const headRepo = new HeadRepo();
   const txRepo = new TxRepo();
   const movementRepo = new MovementRepo();
 
-  const txs = await txRepo.findAll();
-  const txHashs = txs.map((a) => a.hash);
-  console.log('tx hash length', txHashs.length)
+  const poshead = await headRepo.findByKey('pos');
+  const best = poshead.num;
+  console.log('best ', best)
+  const step = 10000;
+  
+  for (let i = 0; i < best; i += step) {
+    const start = i;
+    const end = i + step - 1 > best ? best : i + step - 1;
 
-  for (const hash of txHashs) {
-    const movementCount = await movementRepo.countByTxHash(hash)
-    console.log(`${movementCount} for ${hash}`)
-    // await txRepo.updateMovementCount(hash, movementCount)
+    const txs = await txRepo.findInRange(start, end);
+    const txHashs = txs.map((a) => a.hash);
+    console.log(`tx hash ${start}-${end} length:`, txHashs.length)
+
+    await PromisePool.withConcurrency(20)
+      .for(txHashs)
+      .process(async hash => {
+        const movementCount = await movementRepo.countByTxHash(hash)
+        console.log(`${movementCount} for ${hash}`)
+        // await txRepo.updateMovementCount(hash, movementCount)
+    })
   }
 };
 
