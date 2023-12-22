@@ -17,7 +17,7 @@ const runAsync = async (options) => {
   const poshead = await headRepo.findByKey('pos');
   const best = poshead.num;
   console.log('best ', best)
-  const step = 10000;
+  const step = 100000;
   
   for (let i = 0; i < best; i += step) {
     const start = i;
@@ -32,7 +32,8 @@ const runAsync = async (options) => {
       .process(async hash => {
         const movementCount = await movementRepo.countByTxHash(hash)
         console.log(`${movementCount} for ${hash}`)
-        // await txRepo.updateMovementCount(hash, movementCount)
+        await txRepo.updateMovementCount(hash, movementCount)
+        console.log(`saved for ${movementCount} to tx ${hash}`)
     })
   }
 };
