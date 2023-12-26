@@ -36,7 +36,8 @@ import { CMD } from './cmd';
 import axios from 'axios';
 import { FormatTypes, Interface } from 'ethers/lib/utils';
 import PromisePool from '@supercharge/promise-pool/dist';
-import { ABIFragment } from '../model';
+import { providers } from 'ethers';
+
 const SAMPLING_INTERVAL = 3000;
 
 const SOURCIFY_SERVER_API = 'https://sourcify.dev/server';
@@ -202,6 +203,37 @@ export class MetricCMD extends CMD {
       } catch (e) {
         this.log.error({ err: e }, 'could not send alert');
       }
+    }
+  }
+
+  private async checkRpc(url: string, index: number, interval: number) {
+    if (index % interval === 0) {
+      let epoch = 0;
+      let number = 0;
+      try {
+        this.log.info(`check rpc: ${url}`);
+        const recentBlks = await this.blockRepo.findRecent();
+        epoch = recentBlks[0].epoch;
+        const provider = new providers.JsonRpcProvider(url);
+        number = await provider.getBlockNumber();
+        const blk = await provider.getBlock(number);
+        if (blk.number != number) {
+          throw new Error('invalid block');
+        }
+        const blk2 = await provider.getBlock(number);
+        if (blk2.number != number) {
+          throw new Error('invalid block 2nd try');
+        }
+      } catch (e) {
+        await this.checkOrSendAlert(
+          Network[Network.MainNet],
+          epoch,
+          number,
+          'slack',
+          `rpc endpoint ${url} failure: ${e}`
+        );
+      }
+      this.log.info(`done check rpc: ${url}`);
     }
   }
 
@@ -887,6 +919,12 @@ export class MetricCMD extends CMD {
 
         // check network, if halt for 2 mins, send alert
         await this.alertIfNetworkHalt(index, every2m);
+
+        if (this.network == Network.MainNet) {
+          await this.checkRpc('http://rpc-asia.meter.io', index, every10m);
+          await this.checkRpc('http://rpc-eu.meter.io', index, every10m);
+          await this.checkRpc('http://rpc-us.meter.io', index, every10m);
+        }
 
         // update price/change every 10 minutes
         await this.updateMarketPriceWithCoingecko(index, every30m);

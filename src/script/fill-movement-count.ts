@@ -16,27 +16,24 @@ const runAsync = async (options) => {
 
   const poshead = await headRepo.findByKey('pos');
   const best = poshead.num;
-  console.log('best ', best)
-  const step = 100000;
-  
+  const step = 1000;
+
   for (let i = 0; i < best; i += step) {
     const start = i;
     const end = i + step - 1 > best ? best : i + step - 1;
 
-    const txs = await txRepo.findInRange(start, end);
-    const txHashs = txs.map((a) => a.hash);
-    console.log(`tx hash ${start}-${end} length:`, txHashs.length)
+    const movementCounts = await movementRepo.groupCountByTxHash(start, end);
 
     await PromisePool.withConcurrency(20)
-      .for(txHashs)
-      .process(async hash => {
-        const movementCount = await movementRepo.countByTxHash(hash)
-        console.log(`${movementCount} for ${hash}`)
-        if (movementCount) {
-          await txRepo.updateMovementCount(hash, movementCount)
-          console.log(`saved for ${movementCount} to tx ${hash}`)
+      .for(movementCounts)
+      .process(async (mc) => {
+        const tx = await txRepo.findByHash(mc._id);
+        if (tx.movementCount != mc.count) {
+          tx.movementCount = mc.count;
+          await tx.save();
+          console.log(`update movement count to ${mc.count} for tx ${tx.hash}`);
         }
-    })
+      });
   }
 };
 

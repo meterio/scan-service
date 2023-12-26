@@ -106,6 +106,13 @@ export class MovementRepo {
     );
   }
 
+  public async groupCountByTxHash(startNum, endNum: number) {
+    return this.model.aggregate([
+      { $match: { 'block.number': { $gte: startNum, $lte: endNum } } },
+      { $group: { _id: '$txHash', count: { $sum: 1 } } },
+    ]);
+  }
+
   // public async paginateByAccount(addr: string, pageNum?: number, limitNum?: number) {
   //   return this.paginate({ $or: [{ from: addr }, { to: addr }] }, pageNum, limitNum);
   // }
