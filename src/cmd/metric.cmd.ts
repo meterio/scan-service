@@ -225,13 +225,7 @@ export class MetricCMD extends CMD {
           throw new Error('invalid block 2nd try');
         }
       } catch (e) {
-        await this.checkOrSendAlert(
-          Network[Network.MainNet],
-          epoch,
-          number,
-          'slack',
-          `rpc endpoint ${url} failure: ${e}`
-        );
+        await this.checkOrSendAlert('mainnet', epoch, number, 'slack', `rpc endpoint ${url} failure: ${e}`);
       }
       this.log.info(`done check rpc: ${url}`);
     }
