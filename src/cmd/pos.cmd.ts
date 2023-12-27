@@ -1261,7 +1261,7 @@ export class PosCMD extends CMD {
       return 0;
     }
 
-    const movementCountBefore = this.movementsCache.length
+    const movementCountBefore = this.movementsCache.length;
 
     for (const [clauseIndex, o] of tx.outputs.entries()) {
       // ----------------------------------
@@ -1298,9 +1298,9 @@ export class PosCMD extends CMD {
       } // End of handling events
     }
 
-    const movementCountAfter = this.movementsCache.length
+    const movementCountAfter = this.movementsCache.length;
 
-    return movementCountAfter - movementCountBefore
+    return movementCountAfter - movementCountBefore;
   }
 
   protected updateTxDigests(
@@ -1883,7 +1883,7 @@ export class PosCMD extends CMD {
         powBlocks.push({ ...pb });
       }
     } else {
-      if (blk.isKBlock) {
+      if (blk.blockType == 'KBlock') {
         if (config.powEnabled) {
           const epochInfo = await this.pos.getEpochInfo(blk.qc.epochID);
           for (const pb of epochInfo.powBlocks) {
@@ -1939,7 +1939,7 @@ export class PosCMD extends CMD {
       gasChanged,
       score,
       txCount,
-      blockType: blk.isKBlock ? BlockType.KBlock : BlockType.MBlock,
+      blockType: blk.blockType == 'KBlock' ? BlockType.KBlock : BlockType.MBlock,
 
       epoch,
       committee: members,
