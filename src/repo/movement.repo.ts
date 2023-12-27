@@ -24,7 +24,7 @@ export class MovementRepo {
   }
 
   public async findByHash(hash: string) {
-    return this.model.findOne({ hash });
+    return this.model.find({ hash });
   }
 
   public async findByBlockNum(blockNum: number) {

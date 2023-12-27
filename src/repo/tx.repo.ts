@@ -80,6 +80,15 @@ export class TxRepo {
       .sort({ 'block.number': 1 });
   }
 
+  public async findEmptyMovementsInBlockRangeSortAsc(startNum: number, endNum: number) {
+    return this.model
+      .find({
+        'block.number': { $gte: startNum, $lte: endNum },
+        $or: [{ movementCount: { $exists: false } }],
+      })
+      .sort({ 'block.number': 1 });
+  }
+
   public async findUserTxsInBlockRangeSortAsc(startNum: number, endNum: number) {
     return this.model
       .find({
