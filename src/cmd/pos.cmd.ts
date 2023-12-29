@@ -485,11 +485,15 @@ export class PosCMD extends CMD {
       this.log.info(`saved ${this.txsCache.length} txs`);
       const txMetric = await this.metricRepo.findByKey(MetricName.TX_MAX_COUNT);
       if (txMetric) {
-        let totalMvmtCount = 0;
+        let txMaxCount = 0;
         for (const tx of this.txsCache) {
-          totalMvmtCount += tx.movementCount;
+          if (tx.movementCount > tx.clauseCount) {
+            txMaxCount += tx.movementCount;
+          } else {
+            txMaxCount += tx.clauseCount;
+          }
         }
-        txMetric.value = String(Number(txMetric.value) + totalMvmtCount);
+        txMetric.value = String(Number(txMetric.value) + txMaxCount);
         await txMetric.save();
         this.log.info(`saved metric TX_MAX_COUNT with ${txMetric.value}`);
       }
