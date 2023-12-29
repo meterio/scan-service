@@ -14,6 +14,7 @@ import {
   NFTRepo,
   MovementRepo,
   TokenBalanceRepo,
+  TxRepo,
 } from '../repo';
 import { IContractFile, IValidator, IBucket, IABIFragment } from '../model';
 import { ERC20 } from '@meterio/devkit/dist';
@@ -53,6 +54,7 @@ const every10m = (60 * 10) / (SAMPLING_INTERVAL / 1000); // count of index in 10
 const every20m = (60 * 20) / (SAMPLING_INTERVAL / 1000); // count of index in 20 minutes
 const every30m = (60 * 30) / (SAMPLING_INTERVAL / 1000); // count of index in 30 minutes
 const every2h = (2 * 60 * 60) / (SAMPLING_INTERVAL / 1000); // count of index in 2 hours
+const every1h = (1 * 60 * 60) / (SAMPLING_INTERVAL / 1000); // count of index in 1 hours
 const every4h = (4 * 60 * 60) / (SAMPLING_INTERVAL / 1000); // count of index in 4 hours
 const every6h = (6 * 60 * 60) / (SAMPLING_INTERVAL / 1000); // count of index in 6 hours
 
@@ -73,8 +75,7 @@ export class MetricCMD extends CMD {
   private alertRepo = new AlertRepo();
   private headRepo = new HeadRepo();
   private nftRepo = new NFTRepo();
-  private tokenBalanceRepo = new TokenBalanceRepo();
-  private movementRepo = new MovementRepo();
+  private txRepo = new TxRepo();
   private contractRepo = new ContractRepo();
   private abiFragmentRepo = new ABIFragmentRepo();
   private contractFileRepo = new ContractFileRepo();
@@ -394,6 +395,15 @@ export class MetricCMD extends CMD {
         }
       }
       this.log.info('done update token rank');
+    }
+  }
+
+  private async updateTxMaxCount(index: number, interval: number) {
+    if (index % interval == 0) {
+      this.log.info('update tx max count');
+      const res = await this.txRepo.countMax();
+      console.log(`max count tx: `, res[0].total);
+      await this.cache.update(MetricName.TX_MAX_COUNT, res[0].total);
     }
   }
 
@@ -939,6 +949,8 @@ export class MetricCMD extends CMD {
         if (config.auctionEnabled) {
           await this.updateAuctionInfo(index, every5m);
         }
+
+        await this.updateTxMaxCount(index, every1h);
 
         // update validator rewards
         // await this.updateValidatorRewards(index, every5m);

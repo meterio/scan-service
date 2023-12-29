@@ -65,6 +65,9 @@ export const METRIC_DEFS = [
 
   // Address Count
   { key: MetricName.ADDRESS_COUNT, type: MetricType.STRING, default: '0' },
+
+  // Tx Max Count
+  { key: MetricName.TX_MAX_COUNT, type: MetricType.STRING, default: '0' },
 ];
 
 export class MetricCache {

@@ -39,4 +39,5 @@ export enum MetricName {
   MTRG_TOTALSUPPLY = 'mtrg_totalsupply',
   MTR_TOTALSUPPLY = 'mtr_totalsupply',
   ADDRESS_COUNT = 'address_count',
+  TX_MAX_COUNT = 'tx_max_count',
 }

@@ -149,4 +149,11 @@ export class TxRepo {
       .find({ 'block.number': { $gte: start, $lt: end }, 'traces.0.json': tracePattern })
       .sort({ 'block.number': 1 });
   }
+
+  public async countMax() {
+    return this.model.aggregate([
+      { $project: { maxCount: { $max: ['$movementCount', '$clauseCount'] } } },
+      { $group: { _id: null, total: { $sum: '$maxCount' } } },
+    ]);
+  }
 }
