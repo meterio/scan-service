@@ -74,6 +74,7 @@ import { newIterator, LogItem } from '../utils/log-traverser';
 import { AccountCache, TokenBalanceCache } from '../types';
 import { MetricName, getPreAllocAccount } from '../const';
 import { KeyTransactionFeeAddress } from '../const/key';
+import { totalmem } from 'os';
 
 const Web3 = require('web3');
 const meterify = require('meterify').meterify;
@@ -480,9 +481,18 @@ export class PosCMD extends CMD {
     }
 
     if (this.txsCache.length > 0) {
-      const start = new Date().getTime();
       await this.txRepo.bulkInsert(...this.txsCache);
       this.log.info(`saved ${this.txsCache.length} txs`);
+      const txMetric = await this.metricRepo.findByKey(MetricName.TX_MAX_COUNT);
+      if (txMetric) {
+        let totalMvmtCount = 0;
+        for (const tx of this.txsCache) {
+          totalMvmtCount += tx.movementCount;
+        }
+        txMetric.value = String(Number(txMetric.value) + totalMvmtCount);
+        await txMetric.save();
+        this.log.info(`saved metric TX_MAX_COUNT with ${txMetric.value}`);
+      }
     }
     if (this.logEventCache.length > 0) {
       await this.logEventRepo.bulkInsert(...this.logEventCache);
