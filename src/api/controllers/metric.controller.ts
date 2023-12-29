@@ -71,7 +71,7 @@ class MetricController extends BaseController {
       }
       tps = (100 * tps) / (last.timestamp - first.timestamp) / 100;
     }
-    const txsCount = await this.movementRepo.count();
+    const txsCount = map[MetricName.TX_MAX_COUNT];
 
     const totalStaked = map[MetricName.MTRG_STAKED];
     const totalStakedLocked = map[MetricName.MTRG_STAKED_LOCKED];
