@@ -529,6 +529,7 @@ export class PosCMD extends CMD {
       this.log.info(`saved ${this.withdrawCache.length} withdraws`);
     }
 
+    this.log.info(`contracts cache size ${this.contractsCache.length}`);
     if (this.contractsCache.length > 0) {
       for (const c of this.contractsCache) {
         // find if contract address existed before
@@ -722,7 +723,13 @@ export class PosCMD extends CMD {
         c.totalSupply = new BigNumber(erc20.totalSupply.toString());
       }
     }
-    this.log.info(c, 'found contract: ');
+    for (const knownContract of this.contractsCache) {
+      if (knownContract.address === c.address) {
+        this.log.info(c, 'created new contract but already known');
+        return;
+      }
+    }
+    this.log.info(c, 'created new contract: ');
     this.contractsCache.push(c);
   }
 
@@ -1848,6 +1855,7 @@ export class PosCMD extends CMD {
       },
       'processed tx'
     );
+    this.log.info(`contract cache size: ${this.contractsCache.length}`);
   }
 
   async processBlock(blk: Pos.ExpandedBlock): Promise<void> {
