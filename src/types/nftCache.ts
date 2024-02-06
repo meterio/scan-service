@@ -215,6 +215,22 @@ export class NFTCache {
     } else if (fromNFT.value === value) {
       fromNFT.owner = to;
       this.updated[key] = fromNFT;
+      const toNFTKey = this.key1155(tokenAddress, tokenId, to);
+      let toNFT = await this.repo.findByIDWithOwner(tokenAddress, tokenId, to);
+      if (toNFT) {
+        if (toNFTKey in this.updated) {
+          toNFT = this.updated[toNFTKey];
+        }
+        toNFT.value += value;
+        this.updated[toNFTKey] = toNFT;
+      } else {
+        let existedValue = 0;
+        if (toNFTKey in this.minted) {
+          existedValue = this.minted[toNFTKey].value;
+        }
+        this.minted[toNFTKey] = { ...fromNFT.toJSON(), owner: to, value: value + existedValue };
+      }
+      delete this.updated[key];
     } else {
       const toNFTKey = this.key1155(tokenAddress, tokenId, to);
       let toNFT = await this.repo.findByIDWithOwner(tokenAddress, tokenId, to);
