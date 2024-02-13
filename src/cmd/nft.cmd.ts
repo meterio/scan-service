@@ -152,11 +152,11 @@ export class NFTCMD extends CMD {
         const value = Number(decoded.values[i].toString());
         const tokenStr = `${tokenAddress}[${id}]`;
         if (from !== ZeroAddress) {
-          this.log.info({ txHash: evt.txHash }, `transfer ERC1155 ${tokenStr} ${value} ${from} -> ${to}`);
+          this.log.info({ txHash: evt.txHash }, `Transfer ERC1155 ${tokenStr} ${value} ${from} -> ${to}`);
           await this.nftCache.transfer1155(tokenAddress, id, from, to, value);
           continue;
         }
-        this.log.info({ txHash: evt.txHash }, `mint ERC1155 ${tokenStr} ${value} 0x -> ${to}`);
+        this.log.info({ txHash: evt.txHash }, `Mint ERC1155 ${tokenStr} ${value} 0x -> ${to}`);
 
         const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
         const contract = new ethers.Contract(tokenAddress, [ERC1155ABI.uri], provider);
@@ -210,12 +210,12 @@ export class NFTCMD extends CMD {
       const tokenStr = `${tokenAddress}[${tokenId}]`;
 
       if (from !== ZeroAddress) {
-        this.log.info({ txHash: evt.txHash }, `transfer ERC1155 ${tokenStr} ${value} ${from} -> ${to}`);
+        this.log.info({ txHash: evt.txHash }, `Transfer ERC1155 ${tokenStr} ${value} ${from} -> ${to}`);
         await this.nftCache.transfer1155(tokenAddress, tokenId, from, to, value);
         continue;
       }
 
-      this.log.info({ txHash: evt.txHash }, `mint ERC1155 ${tokenStr} ${value} 0x -> ${to}`);
+      this.log.info({ txHash: evt.txHash }, `Mint ERC1155 ${tokenStr} ${value} 0x -> ${to}`);
       const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
       const contract = new ethers.Contract(tokenAddress, [ERC1155ABI.uri], provider);
       let tokenURI = '';
@@ -273,12 +273,12 @@ export class NFTCMD extends CMD {
       const tokenStr = `${tokenAddress}[${tokenId}]`;
 
       if (from !== ZeroAddress) {
-        this.log.info({ txHash: evt.txHash }, `transfer ERC721 ${tokenStr} ${from} -> ${to}`);
+        this.log.info({ txHash: evt.txHash }, `Transfer ERC721 ${tokenStr} ${from} -> ${to}`);
         await this.nftCache.transfer721(tokenAddress, tokenId, from, to);
         continue;
       }
 
-      this.log.info({ txHash: evt.txHash }, `mint ERC721 ${tokenStr} 0x -> ${to}`);
+      this.log.info({ txHash: evt.txHash }, `Mint ERC721 ${tokenStr} 0x -> ${to}`);
       const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
       const contract = new ethers.Contract(tokenAddress, [ERC721ABI.tokenURI], provider);
       let tokenURI = '';

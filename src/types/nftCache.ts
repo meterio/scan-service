@@ -67,7 +67,7 @@ export class NFTCache {
       return;
     }
 
-    console.log(`Mint ERC721 ${nft.address}[${nft.tokenId}] to ${nft.owner}`);
+    // console.log(`Mint ERC721 ${nft.address}[${nft.tokenId}] to ${nft.owner}`);
     const key = this.key721(nft.address, nft.tokenId);
     if (key in this.minted) {
       console.log(`[SKIP] mint cache-existed ERC721 ${key}`);
@@ -90,7 +90,7 @@ export class NFTCache {
       return;
     }
 
-    console.log(`Mint ERC1155 ${nft.address}[${nft.tokenId}:${nft.value}] to ${nft.owner}`);
+    // console.log(`Mint ERC1155 ${nft.address}[${nft.tokenId}:${nft.value}] to ${nft.owner}`);
     const key = this.key1155(nft.address, nft.tokenId, nft.owner);
     if (key in this.minted) {
       const existed = this.minted[key];
@@ -113,7 +113,7 @@ export class NFTCache {
   public async transfer721(tokenAddress: string, tokenId: string, from: string, to: string) {
     const key = this.key721(tokenAddress, tokenId);
 
-    console.log(`Transfer ERC721 ${tokenAddress}[${tokenId}] from ${from} to ${to}`);
+    // console.log(`Transfer ERC721 ${tokenAddress}[${tokenId}] from ${from} to ${to}`);
     if (key in this.updated) {
       const nft = this.updated[key];
       if (nft.type !== 'ERC721') {
@@ -157,7 +157,7 @@ export class NFTCache {
   public async transfer1155(tokenAddress: string, tokenId: string, from: string, to: string, value: number) {
     const key = this.key1155(tokenAddress, tokenId, from);
 
-    console.log(`Transfer ERC1155 ${tokenAddress}[${tokenId}:${value}] from ${from} to ${to}`);
+    // console.log(`Transfer ERC1155 ${tokenAddress}[${tokenId}:${value}] from ${from} to ${to}`);
 
     // if token exists in minted cache
     if (key in this.minted) {
