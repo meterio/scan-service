@@ -23,9 +23,11 @@ const runAsync = async (options) => {
     .for(uncached)
     .process(async (nft, index, pool) => {
       try {
-        await Promise.any([sleep(10000), nftCache.updateNFTInfo(nft)]);
-        console.log(`${index}/${uncached.length} updated NFT ${nft.address}[${nft.tokenId}]`, nft);
-        await nft.save();
+        await Promise.any([sleep(10000), nftCache.updateNFTInfo(nft, 2)]);
+        if (nft.status != 'new') {
+          console.log(`${index}/${uncached.length} updated NFT ${nft.address}[${nft.tokenId}]`, nft);
+          await nft.save();
+        }
       } catch (e) {
         console.log(`could not cache nft image for [${nft.tokenId}] on ${nft.address} `, e);
       }

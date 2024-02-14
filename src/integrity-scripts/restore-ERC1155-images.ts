@@ -59,8 +59,10 @@ const runAsync = async (options) => {
 
       try {
         await nftCache.updateNFTInfo(nft);
-        console.log(`updated NFT ${nft.address}[${nft.tokenId}]`, nft);
-        await nft.save();
+        if (nft.status != 'new') {
+          console.log(`updated NFT ${nft.address}[${nft.tokenId}]`, nft);
+          await nft.save();
+        }
       } catch (e) {
         console.log(`could not update info for NFT ${nft.address}[${nft.tokenId}]: `, e);
       }

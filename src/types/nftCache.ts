@@ -263,18 +263,8 @@ export class NFTCache {
         .for(Object.keys(this.minted))
         .process(async (key, index, pool) => {
           const nft = this.minted[key];
-          for (let i = 0; i < 3; i++) {
-            try {
-              if (i > 0) {
-                console.log(`retry ${i + 1} time to update INFT Info for [${nft.tokenId}] of ${nft.address}`);
-              }
-              await this.updateNFTInfo(nft);
-              return;
-            } catch (e) {
-              console.log(`${index + 1}/${mintedCount}| Error: ${e.message} for [${nft.tokenId}] of ${nft.address} `);
-              continue;
-            }
-          }
+
+          await this.updateNFTInfo(nft, 3);
         });
       let visited = {};
       for (const m of Object.values(this.minted)) {
@@ -333,11 +323,22 @@ export class NFTCache {
       });
   }
 
-  convertUrl(uri: string): string {
+  convertUrl(uri: string, meterProxy = true): string {
+    const { PINATA_IPFS_GATEWAY, PINATA_GATEWAY_TOKEN } = process.env;
     let url = uri;
     for (const conv of CONVERTIBLES) {
       if (url.startsWith(conv)) {
-        return url.replace(conv, METER_IPFS_PREFIX);
+        if (meterProxy || (!meterProxy && (!PINATA_IPFS_GATEWAY || !PINATA_GATEWAY_TOKEN))) {
+          return url.replace(conv, METER_IPFS_PREFIX);
+        } else {
+          const pinataPrefix = PINATA_IPFS_GATEWAY.replace(/\/$/, '') + '/ipfs/';
+          const newUrl = url.replace(conv, pinataPrefix);
+          if (newUrl.includes('?')) {
+            return newUrl + `&pinataGatewayToken=${PINATA_GATEWAY_TOKEN}`;
+          } else {
+            return newUrl + `?pinataGatewayToken=${PINATA_GATEWAY_TOKEN}`;
+          }
+        }
       }
     }
     return url;
@@ -393,75 +394,86 @@ export class NFTCache {
     }
   }
 
-  async updateNFTInfo(nft: INFT) {
-    console.log(`update info for ${nft.type}:${nft.address}[${nft.tokenId}] with tokenURI: ${nft.tokenURI}`);
-    if (!nft.tokenURI || nft.tokenURI == '') {
-      console.log('SKIPPED due to empty tokenURI');
-      nft.status = 'invalid';
-      return;
-    }
-    let { tokenURI, tokenJSON } = nft;
-
-    let mediaURI = '';
-    if (tokenURI !== BASE64_ENCODED_JSON) {
-      const url = this.convertUrl(nft.tokenURI);
-      console.log(`  download tokenURI ${url} for ${nft.address}[${nft.tokenId}]`);
-      const tokenJSONRes = await axios.get(url);
-      const contentType = tokenJSONRes.headers['content-type'];
-      if (contentType.startsWith('image')) {
-        mediaURI = url;
-      } else {
-        if (tokenJSONRes && tokenJSONRes.data) {
-          try {
-            tokenJSON = JSON.stringify(tokenJSONRes.data);
-          } catch (e) {
-            nft.status = 'invalid';
-            return;
-          }
+  async updateNFTInfo(nft: INFT, retryCount: number = 1) {
+    for (let i = 0; i < retryCount; i++) {
+      try {
+        if (i > 0) {
+          console.log(`retry ${i + 1} time to update NFT Info for  ${nft.type}:{nft.address}[${nft.tokenId}]`);
         } else {
-          nft.status = 'invalid';
-          return;
+          console.log(`update NFT info for ${nft.type}:${nft.address}[${nft.tokenId}] with tokenURI: ${nft.tokenURI}`);
         }
-        try {
-          const decoded = JSON.parse(tokenJSON);
-          mediaURI = String(decoded.image);
-        } catch (e) {
-          console.log('could not decode tokenJSON');
+        if (!nft.tokenURI || nft.tokenURI == '') {
+          console.log('SKIPPED due to empty tokenURI');
           nft.status = 'invalid';
-          return;
+          continue;
         }
+        let { tokenURI, tokenJSON } = nft;
+
+        let mediaURI = '';
+        if (tokenURI !== BASE64_ENCODED_JSON) {
+          const url = this.convertUrl(nft.tokenURI, i % 2 == 0);
+          console.log(`  download tokenURI ${url} for ${nft.address}[${nft.tokenId}]`);
+          const tokenJSONRes = await axios.get(url);
+          const contentType = tokenJSONRes.headers['content-type'];
+          if (contentType.startsWith('image')) {
+            mediaURI = url;
+          } else {
+            if (tokenJSONRes && tokenJSONRes.data) {
+              try {
+                tokenJSON = JSON.stringify(tokenJSONRes.data);
+              } catch (e) {
+                nft.status = 'invalid';
+                continue;
+              }
+            } else {
+              nft.status = 'invalid';
+              continue;
+            }
+            try {
+              const decoded = JSON.parse(tokenJSON);
+              mediaURI = String(decoded.image);
+            } catch (e) {
+              console.log('could not decode tokenJSON');
+              nft.status = 'invalid';
+              continue;
+            }
+          }
+        }
+
+        let mediaType: string;
+        let reader: any;
+        if (mediaURI.includes(';base64')) {
+          reader = Buffer.from(mediaURI.split(';base64,').pop(), 'base64');
+          mediaType = mediaURI.split(';base64').shift().replace('data:', '');
+        } else {
+          const downURI = this.convertUrl(mediaURI, i % 2 == 0);
+          if (mediaURI) {
+            console.log(`  download media ${downURI} for ${nft.address}[${nft.tokenId}]`);
+            const res = await axios.get(downURI, { responseType: 'arraybuffer' });
+            if (res.status !== 200) {
+              nft.status = 'uncached';
+              continue;
+            }
+            reader = res.data;
+            mediaType = res.headers['content-type'];
+          }
+        }
+
+        const uploaded = await this.isCached(nft.address, nft.tokenId);
+        const cachedMediaURI = `https://${S3_WEBSITE_BASE}/${nft.address}/${nft.tokenId}`;
+        if (!uploaded) {
+          await this.uploadToAlbum(nft.address, nft.tokenId, reader, mediaType);
+          console.log(`uploaded ${mediaURI} to ${cachedMediaURI}`);
+        }
+        nft.tokenJSON = tokenJSON;
+        nft.mediaType = mediaType;
+        nft.mediaURI = cachedMediaURI;
+        nft.status = 'cached';
+      } catch (e) {
+        console.log(`Error: ${e}`);
+        continue;
       }
     }
-
-    let mediaType: string;
-    let reader: any;
-    if (mediaURI.includes(';base64')) {
-      reader = Buffer.from(mediaURI.split(';base64,').pop(), 'base64');
-      mediaType = mediaURI.split(';base64').shift().replace('data:', '');
-    } else {
-      const downURI = this.convertUrl(mediaURI);
-      if (mediaURI) {
-        console.log(`  download media ${downURI} for ${nft.address}[${nft.tokenId}]`);
-        const res = await axios.get(downURI, { responseType: 'arraybuffer' });
-        if (res.status !== 200) {
-          nft.status = 'uncached';
-          return;
-        }
-        reader = res.data;
-        mediaType = res.headers['content-type'];
-      }
-    }
-
-    const uploaded = await this.isCached(nft.address, nft.tokenId);
-    const cachedMediaURI = `https://${S3_WEBSITE_BASE}/${nft.address}/${nft.tokenId}`;
-    if (!uploaded) {
-      await this.uploadToAlbum(nft.address, nft.tokenId, reader, mediaType);
-      console.log(`uploaded ${mediaURI} to ${cachedMediaURI}`);
-    }
-    nft.tokenJSON = tokenJSON;
-    nft.mediaType = mediaType;
-    nft.mediaURI = cachedMediaURI;
-    nft.status = 'cached';
   }
 
   private async updateCounts(address: string) {
