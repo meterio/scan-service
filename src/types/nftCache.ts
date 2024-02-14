@@ -402,31 +402,37 @@ export class NFTCache {
     }
     let { tokenURI, tokenJSON } = nft;
 
+    let mediaURI = '';
     if (tokenURI !== BASE64_ENCODED_JSON) {
       const url = this.convertUrl(nft.tokenURI);
-      console.log(`download token json from ${url}`);
+      console.log(`  download info from tokenURI ${url} for ${nft.address}[${nft.tokenId}]`);
       const tokenJSONRes = await axios.get(url);
-      if (tokenJSONRes && tokenJSONRes.data) {
-        try {
-          tokenJSON = JSON.stringify(tokenJSONRes.data);
-        } catch (e) {
+      const contentType = tokenJSONRes.headers['content-type'];
+      if (contentType.startsWith('image')) {
+        mediaURI = url;
+      } else {
+        if (tokenJSONRes && tokenJSONRes.data) {
+          try {
+            tokenJSON = JSON.stringify(tokenJSONRes.data);
+          } catch (e) {
+            nft.status = 'invalid';
+            return;
+          }
+        } else {
           nft.status = 'invalid';
           return;
         }
-      } else {
-        nft.status = 'invalid';
-        return;
+        try {
+          const decoded = JSON.parse(tokenJSON);
+          mediaURI = String(decoded.image);
+        } catch (e) {
+          console.log('could not decode tokenJSON');
+          nft.status = 'invalid';
+          return;
+        }
       }
     }
-    let mediaURI = '';
-    try {
-      const decoded = JSON.parse(tokenJSON);
-      mediaURI = String(decoded.image);
-    } catch (e) {
-      console.log('could not decode tokenJSON');
-      nft.status = 'invalid';
-      return;
-    }
+
     let mediaType: string;
     let reader: any;
     if (mediaURI.includes(';base64')) {
@@ -434,7 +440,7 @@ export class NFTCache {
       mediaType = mediaURI.split(';base64').shift().replace('data:', '');
     } else {
       const downURI = this.convertUrl(mediaURI);
-      console.log(`download media from ${downURI}`);
+      console.log(`  download media from ${downURI} for ${nft.address}[${nft.tokenId}]`);
       const res = await axios.get(downURI, { responseType: 'arraybuffer' });
       if (res.status !== 200) {
         nft.status = 'uncached';
