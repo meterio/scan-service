@@ -405,7 +405,7 @@ export class NFTCache {
     let mediaURI = '';
     if (tokenURI !== BASE64_ENCODED_JSON) {
       const url = this.convertUrl(nft.tokenURI);
-      console.log(`  download info from tokenURI ${url} for ${nft.address}[${nft.tokenId}]`);
+      console.log(`  download tokenURI ${url} for ${nft.address}[${nft.tokenId}]`);
       const tokenJSONRes = await axios.get(url);
       const contentType = tokenJSONRes.headers['content-type'];
       if (contentType.startsWith('image')) {
@@ -440,14 +440,16 @@ export class NFTCache {
       mediaType = mediaURI.split(';base64').shift().replace('data:', '');
     } else {
       const downURI = this.convertUrl(mediaURI);
-      console.log(`  download media from ${downURI} for ${nft.address}[${nft.tokenId}]`);
-      const res = await axios.get(downURI, { responseType: 'arraybuffer' });
-      if (res.status !== 200) {
-        nft.status = 'uncached';
-        return;
+      if (mediaURI) {
+        console.log(`  download media ${downURI} for ${nft.address}[${nft.tokenId}]`);
+        const res = await axios.get(downURI, { responseType: 'arraybuffer' });
+        if (res.status !== 200) {
+          nft.status = 'uncached';
+          return;
+        }
+        reader = res.data;
+        mediaType = res.headers['content-type'];
       }
-      reader = res.data;
-      mediaType = res.headers['content-type'];
     }
 
     const uploaded = await this.isCached(nft.address, nft.tokenId);
