@@ -28,7 +28,7 @@ export class NFTCMD extends CMD {
   private blockRepo = new BlockRepo();
   private contractRepo = new ContractRepo();
 
-  private nftCache: NFTCache;
+  public nftCache: NFTCache;
 
   constructor(net: Network) {
     super();

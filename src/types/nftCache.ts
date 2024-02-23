@@ -367,7 +367,7 @@ export class NFTCache {
     };
     try {
       const data = await s3.send(new PutObjectCommand(uploadParams));
-      console.log(`uploaded file to ${key}`);
+      // console.log(`uploaded file to ${key}`);
     } catch (err) {
       throw new Error('error uploading your photo: ' + err.message);
     }
@@ -398,7 +398,7 @@ export class NFTCache {
     for (let i = 0; i < retryCount; i++) {
       try {
         if (i > 0) {
-          console.log(`retry ${i + 1} time to update NFT Info for  ${nft.type}:{nft.address}[${nft.tokenId}]`);
+          console.log(`retry #${i + 1} to update NFT Info for  ${nft.type}:${nft.address}[${nft.tokenId}]`);
         } else {
           console.log(`update NFT info for ${nft.type}:${nft.address}[${nft.tokenId}] with tokenURI: ${nft.tokenURI}`);
         }
@@ -409,10 +409,12 @@ export class NFTCache {
         }
         let { tokenURI, tokenJSON } = nft;
 
+        let reader: any;
+        let mediaType: string;
         let mediaURI = '';
         if (tokenURI !== BASE64_ENCODED_JSON) {
           const url = this.convertUrl(nft.tokenURI, i % 2 == 0);
-          console.log(`  download tokenURI ${url} for ${nft.address}[${nft.tokenId}]`);
+          console.log(`|- download tokenURI ${url}`);
           const tokenJSONRes = await axios.get(url);
           const contentType = tokenJSONRes.headers['content-type'];
           if (contentType.startsWith('image')) {
@@ -423,39 +425,50 @@ export class NFTCache {
                 tokenJSON = JSON.stringify(tokenJSONRes.data);
               } catch (e) {
                 nft.status = 'invalid';
+                console.log(`|- download tokenURI failed during decoding ${url}`);
                 continue;
               }
             } else {
+              console.log(`|- download tokenURI failed during fetching ${url}`);
               nft.status = 'invalid';
               continue;
             }
             try {
               const decoded = JSON.parse(tokenJSON);
-              mediaURI = String(decoded.image);
+              mediaURI = decoded.image;
+              if (decoded.hasOwnProperty('image_data')) {
+                reader = Buffer.from(decoded.image_data);
+                if (decoded.image_data.startsWith('<svg') && decoded.image_data.endsWith('svg>')) {
+                  mediaType = 'image/svg+xml';
+                }
+              }
             } catch (e) {
-              console.log('could not decode tokenJSON');
+              console.log('  could not decode tokenJSON');
               nft.status = 'invalid';
               continue;
             }
           }
         }
 
-        let mediaType: string;
-        let reader: any;
-        if (mediaURI.includes(';base64')) {
-          reader = Buffer.from(mediaURI.split(';base64,').pop(), 'base64');
-          mediaType = mediaURI.split(';base64').shift().replace('data:', '');
-        } else {
-          const downURI = this.convertUrl(mediaURI, i % 2 == 0);
-          if (mediaURI) {
-            console.log(`  download media ${downURI} for ${nft.address}[${nft.tokenId}]`);
-            const res = await axios.get(downURI, { responseType: 'arraybuffer' });
-            if (res.status !== 200) {
-              nft.status = 'uncached';
-              continue;
+        if (mediaURI) {
+          if (mediaURI.includes(';base64')) {
+            reader = Buffer.from(mediaURI.split(';base64,').pop(), 'base64');
+            mediaType = mediaURI.split(';base64').shift().replace('data:', '');
+          } else {
+            const downURI = this.convertUrl(mediaURI, i % 2 == 0);
+            if (mediaURI) {
+              console.log(`|- download media ${downURI}`);
+              const res = await axios.get(downURI, { responseType: 'arraybuffer' });
+              if (res.status !== 200) {
+                nft.status = 'uncached';
+                console.log(
+                  `|- download media failed ${downURI} with ${res.status} for ${nft.address}[${nft.tokenId}]`
+                );
+                continue;
+              }
+              reader = res.data;
+              mediaType = res.headers['content-type'];
             }
-            reader = res.data;
-            mediaType = res.headers['content-type'];
           }
         }
 
@@ -463,12 +476,13 @@ export class NFTCache {
         const cachedMediaURI = `https://${S3_WEBSITE_BASE}/${nft.address}/${nft.tokenId}`;
         if (!uploaded) {
           await this.uploadToAlbum(nft.address, nft.tokenId, reader, mediaType);
-          console.log(`uploaded ${mediaURI} to ${cachedMediaURI}`);
+          console.log(`|- uploaded ${mediaType} to ${cachedMediaURI}`);
         }
         nft.tokenJSON = tokenJSON;
         nft.mediaType = mediaType;
         nft.mediaURI = cachedMediaURI;
         nft.status = 'cached';
+        break;
       } catch (e) {
         console.log(`Error: ${e}`);
         continue;

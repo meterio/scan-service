@@ -1,3 +1,4 @@
+import { start } from 'repl';
 import { NFT, INFT } from '../model';
 import { formalizePageAndLimit } from '../utils';
 
@@ -16,12 +17,13 @@ export class NFTRepo {
     return this.model.find({ address: address.toLowerCase(), tokenId });
   }
 
-  public async findUncached() {
+  public async findUncached(startNum, endNum: number) {
     return this.model.find({
       status: 'new',
       tokenURI: { $exists: true },
       tokenJSON: '{}',
       mediaURI: { $exists: false },
+      'block.number': { $gte: startNum, $lt: endNum },
     });
     // return this.model.find({ status: 'new', tokenURI: /ipfs:.+/ });
   }
