@@ -30,8 +30,8 @@ export const LockedMeterGovAddrs: { [key: string]: true } = {
   // '0x045df1ef32d6db371f1857bb60551ef2e43abb1e': true, // Team 3
   '0xbb8fca96089572f08736062b9c7da651d00011d0': true, // Team 4
   // '0xab22ab75f8c42b6969c5d226f39aeb7be35bf24b': true, // Team 5
-  '0x63723217e860bc409e29b46eec70101cd03d8242': true, // Team 6
-  '0x0374f5867ab2effd2277c895e7d1088b10ec9452': true, // Team 7
+  // '0x63723217e860bc409e29b46eec70101cd03d8242': true, // Team 6
+  // '0x0374f5867ab2effd2277c895e7d1088b10ec9452': true, // Team 7
   '0x5308b6f26f21238963d0ea0b391eafa9be53c78e': true, // Team 8
   '0xe9061c2517bba8a7e2d2c20053cd8323b577efe7': true,
   '0xbb28e3212cf0df458cb3ba2cf2fd14888b2d7da7': true,
