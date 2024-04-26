@@ -205,6 +205,10 @@ export class AccountCache {
       this.accts[addr].mtrgBalance = this.accts[addr].mtrgBalance.plus(formattedAmount);
       this.accts[addr].mtrgBounded = this.accts[addr].mtrgBounded.minus(formattedAmount);
       console.log(`Got => Balance: ${this.accts[addr].mtrgBalance}, Bounded: ${this.accts[addr].mtrgBounded}`);
+      if (this.accts[addr].mtrgBounded.isLessThan(0)) {
+        console.log(`Got negative bounded: ${this.accts[addr].mtrgBounded}`);
+        await this.fixAccount(addr, blockConcise);
+      }
     }
     this.accts[addr].lastUpdate = blockConcise;
   }
