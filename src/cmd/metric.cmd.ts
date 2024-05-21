@@ -143,7 +143,7 @@ export class MetricCMD extends CMD {
     this.log.info(`efficiency: ${efficiency.toFixed()}`);
     const btcHashrate = this.cache.get(MetricName.BTC_HASHRATE);
     const btcPrice = this.cache.get(MetricName.BTC_PRICE);
-    const rewardPerDay = new BigNumber(efficiency).dividedBy(10).times(24);
+    const rewardPerDay = new BigNumber(efficiency).dividedBy(10).times(24).div(2);
     const costParity = new BigNumber(6.25) // bitcoin reward
       .times(24 * 6)
       .times(1000)
