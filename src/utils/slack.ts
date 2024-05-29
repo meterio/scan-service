@@ -3,7 +3,7 @@ import axios from 'axios';
 export const postToSlackChannel = async (msg: any) => {
   try {
     const res = await axios.post(
-      'https://hooks.slack.com/services/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',
+      'https://hooks.slack.com/services/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',
       msg
     );
     console.log(res);
