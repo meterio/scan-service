@@ -143,13 +143,14 @@ export class MetricCMD extends CMD {
     this.log.info(`efficiency: ${efficiency.toFixed()}`);
     const btcHashrate = this.cache.get(MetricName.BTC_HASHRATE);
     const btcPrice = this.cache.get(MetricName.BTC_PRICE);
-    const rewardPerDay = new BigNumber(efficiency).dividedBy(10).times(24).div(2);
+    const rewardPerDay = new BigNumber(efficiency).dividedBy(10).times(24);
     const costParity = new BigNumber(6.25) // bitcoin reward
       .times(24 * 6)
       .times(1000)
       .times(btcPrice)
       .dividedBy(btcHashrate)
-      .dividedBy(rewardPerDay);
+      .dividedBy(rewardPerDay)
+      .dividedBy(2);
     this.log.info(`rewardPerDay: ${rewardPerDay.toFixed()}, cost parity: ${costParity}`);
     await this.cache.update(MetricName.COST_PARITY, costParity.toFixed());
     await this.cache.update(MetricName.REWARD_PER_DAY, rewardPerDay.toFixed());
