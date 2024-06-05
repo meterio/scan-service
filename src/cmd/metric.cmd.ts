@@ -868,7 +868,7 @@ export class MetricCMD extends CMD {
 
         // update verified contracts from sourcify
         if (config.sourcifyEnabled && shouldRun(index, every4h)) {
-          await this.updateVerifiedContracts();
+          // await this.updateVerifiedContracts();
         }
 
         if (config.powEnabled) {
