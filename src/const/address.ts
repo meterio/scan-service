@@ -42,6 +42,7 @@ export const LockedMeterGovAddrs: { [key: string]: true } = {
 
 export const SubFromTotalSupply: { [key: string]: true } = {
   '0x46b77531b74ff31882c4636a35547535818e0baa': true, // Permanant Locked
+  '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef': true,
 };
 
 export const LockedMeterAddrs: { [key: string]: true } = {
