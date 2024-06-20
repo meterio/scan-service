@@ -19,7 +19,7 @@ jobs:
           event: pass
           custom: |
             {
-              "text": docker image meterio/scan-api:latest published !",
+              "text": "docker image meterio/scan-api:latest published !",
               "blocks": [
                 {
                   "type": "header",
