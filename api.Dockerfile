@@ -1,24 +1,22 @@
-FROM node:16-bullseye-slim
-
-RUN npm install -g pm2
-# RUN pm2 install typescript
+#Build stage
+FROM node:20-alpine AS build
 
 WORKDIR /app
-RUN apt-get update && apt-get install -y ca-certificates wget && wget https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && apt-get autoremove -y wget
-
-# Bundle APP files
-COPY src ./src
-COPY package.json .
-COPY pm2.json .
-COPY tsconfig.json .
-
-# Install app dependencies
+COPY package*.json .
 RUN npm install
-RUN npm run build 
-ENV NPM_CONFIG_LOGLEVEL warn
+COPY . .
+RUN npm run build
+
+#Production stage
+FROM node:20-alpine AS production
+WORKDIR /app
+COPY package*.json .
+RUN npm ci --only=production
+COPY --from=build /app/dist ./dist
+
 
 ENV API_NETWORK main
 ENV API_PORT 4000
 ENV API_STANDBY no
 
-ENTRYPOINT [ "pm2-runtime", "start", "pm2.json" ]
+ENTRYPOINT ["/usr/local/bin/node", "dist/src/main.js", "api"]

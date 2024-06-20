@@ -19,7 +19,7 @@ jobs:
           event: pass
           custom: |
             {
-              "text": "$DOCKER_REPO image with tags $DOCKER_TAGS publish succeeded!",
+              "text": docker image meterio/scan-api:latest published !",
               "blocks": [
                 {
                   "type": "header",
@@ -67,7 +67,7 @@ jobs:
             }
 
 workflows:
-  build_docker:
+  build_docker_flow:
     jobs:
       - build_docker:
           context:

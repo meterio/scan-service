@@ -33,7 +33,6 @@
     "@types/lru-cache": "^7.4.0",
     "@types/node": "^18.8.5",
     "@types/object-hash": "^2.2.1",
-    "pm2": "^5.2.0",
     "prettier": "^2.6.2",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.2"

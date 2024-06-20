@@ -40,7 +40,7 @@ export const connectDB = async (network: Network, standby: boolean) => {
   let options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    sslValidate: false,
+    tlsAllowInvalidCertificates: false,
     sslCA: undefined,
   };
   let query: { [key: string]: string } = {};
@@ -52,7 +52,7 @@ export const connectDB = async (network: Network, standby: boolean) => {
     // url += '?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred';
     options = {
       ...options,
-      sslValidate: true,
+      tlsAllowInvalidCertificates: true,
       sslCA: MONGO_SSL_CA,
     };
   }
