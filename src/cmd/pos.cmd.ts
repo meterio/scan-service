@@ -936,7 +936,7 @@ export class PosCMD extends CMD {
           });
           bucketIDs.push(decoded.fromBktID);
           bucketIDs.push(decoded.toBktID);
-          await this.accountCache.withdraw(owner, recipient, token, amount, blockConcise);
+          // await this.accountCache.withdraw(owner, recipient, token, amount, blockConcise);
           break;
 
         case ScriptEngine.NativeBucketMerge.signature:
