@@ -624,9 +624,9 @@ export class MetricCMD extends CMD {
     let totalStakedLocked = new BigNumber(0);
     for (const b of buckets) {
       if (b.owner in LockedMeterGovAddrs) {
-        totalStakedLocked = totalStakedLocked.plus(b.totalVotes);
+        totalStakedLocked = totalStakedLocked.plus(b.value);
       }
-      totalStaked = totalStaked.plus(b.totalVotes);
+      totalStaked = totalStaked.plus(b.value);
     }
     await this.cache.update(MetricName.MTRG_STAKED, totalStaked.toFixed(0));
     await this.cache.update(MetricName.MTRG_STAKED_LOCKED, totalStakedLocked.toFixed(0));
