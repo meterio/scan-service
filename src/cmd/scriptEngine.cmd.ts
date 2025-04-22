@@ -108,7 +108,7 @@ export class ScriptEngineCMD extends TxBlockReviewer {
               break;
             }
             const tgtAuction = await this.auctionRepo.findByID(endedAuction.auctionID);
-            if (tgtAuction.pending !== true) {
+            if (!tgtAuction || tgtAuction.pending !== true) {
               this.log.info('Error: try to end an already ended auction');
               break;
             }
