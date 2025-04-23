@@ -9,7 +9,7 @@ import { InterruptedError, Pos, sleep } from '../utils';
 import { CMD } from './cmd';
 
 const FASTFORWARD_INTERVAL = 500;
-const NORMAL_INTERVAL = 2000;
+const NORMAL_INTERVAL = 5000;
 const LOOP_WINDOW = 1000;
 const WAIT_INTERVAL = 8000;
 
@@ -120,6 +120,8 @@ export abstract class TxBlockListener extends CMD {
             break;
           }
           await this.processBlock(blk);
+
+          sleep(NORMAL_INTERVAL);
 
           // update head
 
