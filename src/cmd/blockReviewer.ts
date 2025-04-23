@@ -11,6 +11,7 @@ import { CMD } from './cmd';
 const FASTFORWARD_INTERVAL = 500;
 const NORMAL_INTERVAL = 2000;
 const LOOP_WINDOW = 1000;
+const RECOVERY_INTERVAL = 2 * 60 * 1000; // 2 min for recovery
 
 export abstract class TxBlockReviewer extends CMD {
   protected shutdown = false;
@@ -159,11 +160,12 @@ export abstract class TxBlockReviewer extends CMD {
       } catch (e) {
         if (!(e instanceof InterruptedError)) {
           this.log.error({ err: e }, `Error during loop`);
-          break;
+          await sleep(RECOVERY_INTERVAL);
+          this.log.info(`sleep for ${RECOVERY_INTERVAL / 1000} seconds, hope it would resolve`);
         } else {
           if (this.shutdown) {
             this.ev.emit('closed');
-            break;
+          } else {
           }
         }
       }
