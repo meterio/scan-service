@@ -149,8 +149,8 @@ export class PosCMD extends CMD {
   private mtrgV2SysToken: TokenBasic;
 
   // cache
-  private blocksCache: IBlock[] = [];
-  private txsCache: ITx[] = [];
+  public blocksCache: IBlock[] = [];
+  public txsCache: ITx[] = [];
   private committeesCache: ICommittee[] = [];
   private txDigestsCache: ITxDigest[] = [];
   private movementsCache: IMovement[] = [];
@@ -162,8 +162,8 @@ export class PosCMD extends CMD {
   private accountCache: AccountCache;
   private tokenBalanceCache: TokenBalanceCache;
   private beneficiaryCache = ZeroAddress;
-  private logEventCache: ILogEvent[] = [];
-  private logTransferCache: ILogTransfer[] = [];
+  public logEventCache: ILogEvent[] = [];
+  public logTransferCache: ILogTransfer[] = [];
   private internalTxCache: IInternalTx[] = [];
 
   constructor(net: Network) {
@@ -196,7 +196,7 @@ export class PosCMD extends CMD {
     this.shutdown = true;
   }
 
-  private cleanCache() {
+  public cleanCache() {
     this.blocksCache = [];
     this.txsCache = [];
     this.committeesCache = [];

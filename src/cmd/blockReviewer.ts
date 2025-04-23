@@ -140,6 +140,9 @@ export abstract class TxBlockReviewer extends CMD {
             start = end;
 
             // head = await this.headRepo.update(this.name, endBlock.number, endBlock.hash);
+            if (!endBlock) {
+              this.log.info(`empty endblock ${endNum}`);
+            }
             head.num = endBlock.number;
             head.hash = endBlock.hash;
             await head.save();
