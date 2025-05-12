@@ -114,7 +114,7 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         // pow
         powUser: 'testuser',
         powPass: 'testpass',
-        powHost: 'c01.meter.io',
+        powHost: 'c1.meter.io',
         powPort: 8332,
 
         // pos
@@ -147,7 +147,7 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         // pow
         powUser: 'testuser',
         powPass: 'testpass',
-        powHost: 't03.meter.io',
+        powHost: 't3.meter.io',
         powPort: 8332,
 
         // pos
