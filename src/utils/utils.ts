@@ -117,3 +117,39 @@ export const runWithOptions = async (runAsync) => {
     .action(runAsync);
   await program.parseAsync(process.argv);
 };
+
+export function isBrowserUserAgent(userAgent) {
+  if (!userAgent) return false;
+  
+  // 常见浏览器标识
+  const browserPatterns = [
+    /Chrome\//i,
+    /Firefox\//i,
+    /Safari\//i,
+    /Edg\//i,
+    /OPR\//i,
+    /Opera\//i,
+    /iPhone|iPad|iPod/i,
+    /Android.*Mobile/i
+  ];
+  
+  // 非浏览器标识
+  const nonBrowserPatterns = [
+    /node/i,
+    /axios/i,
+    /Postman/i,
+    /curl/i,
+    /python-requests/i,
+    /Java/i,
+    /Go-http-client/i,
+    /http\.js/i
+  ];
+  
+  // 检查是否包含非浏览器标识
+  if (nonBrowserPatterns.some(pattern => pattern.test(userAgent))) {
+    return false;
+  }
+  
+  // 检查是否包含浏览器标识
+  return browserPatterns.some(pattern => pattern.test(userAgent));
+}
