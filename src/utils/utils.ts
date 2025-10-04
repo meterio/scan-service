@@ -2,6 +2,7 @@ import { BigNumber } from 'bignumber.js';
 import { ScriptEngine } from '@meterio/devkit';
 import { Network, UNIT_WEI } from '../const';
 import commander from 'commander';
+import cors = require('cors');
 
 export const MAX_BLOCK_PROPOSERS = 101;
 export const BLOCK_INTERVAL = 10;
@@ -152,4 +153,32 @@ export function isBrowserUserAgent(userAgent) {
   
   // 检查是否包含浏览器标识
   return browserPatterns.some(pattern => pattern.test(userAgent));
+}
+
+export function strictBrowserOnly(allowedOrigin) {
+  return [
+    // CORS中间件
+    cors({
+      origin: function (origin, callback) {
+        if (!origin) {
+          return callback(new Error('No origin allowed'), false);
+        }
+        if (origin === allowedOrigin) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'), false);
+        }
+      },
+    }),
+    
+    // 浏览器验证中间件
+    (req, res, next) => {
+      const userAgent = req.get('User-Agent') || '';
+      if (!isBrowserUserAgent(userAgent)) {
+        
+        return res.status(403).json({ error: 'Access not allowed' });
+      }
+      next();
+    }
+  ];
 }

@@ -1,38 +1,11 @@
 import { Request, Response, Router } from 'express';
-import cors = require('cors');
 import { try$ } from 'express-toolbox';
 import { Network } from '../../const';
 import { PermitRouter__factory } from '../typechain';
 import { ethers } from 'ethers';
 import { SWAP_GAS_NEED } from '../const';
 import { BaseController } from './baseController';
-import { isBrowserUserAgent } from '../../utils';
-
-const allowedOrigin = 'https://wallet.meter.io'
-const strictBrowserOnly = [
-  cors({
-    origin: function (origin, callback) {
-      // 不允许没有origin的请求（Node.js/Postman等）
-      if (!origin) return callback(new Error('No origin allowed'), false);
-      if (origin === allowedOrigin) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-      callback(null, true);
-    },
-  }),
-  // 额外浏览器验证
-  (req, res, next) => {
-    const userAgent = req.get('User-Agent') || '';
-    if (!isBrowserUserAgent(userAgent)) {
-    return res.status(403).json({ 
-      error: 'Access not allowed',
-    });
-  }
-    next();
-  }
-]
+import { strictBrowserOnly } from '../../utils';
 
 class SwapController extends BaseController {
   public path = '/api/swap';
@@ -44,8 +17,8 @@ class SwapController extends BaseController {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}/swapGas`, ...strictBrowserOnly, try$(this.swapGas));
-    this.router.get(`${this.path}/swapGasV2`, ...strictBrowserOnly, try$(this.swapGasV2));
+    this.router.get(`${this.path}/swapGas`, ...strictBrowserOnly('https://wallet.meter.io'), try$(this.swapGas));
+    this.router.get(`${this.path}/swapGasV2`, ...strictBrowserOnly('https://wallet.meter.io'), try$(this.swapGasV2));
   }
 
   private formatSwapParams = (req: Request) => {
