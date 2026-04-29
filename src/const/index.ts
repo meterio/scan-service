@@ -118,8 +118,8 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         powPort: 8332,
 
         // pos
-        posUrl: 'http://35.225.48.250:8669', // external ip 35.225.48.250
-        rpcUrl: 'http://35.225.48.250:8545', // external ip 35.225.48.250
+        posUrl: 'https://mainnet.meter.io', // external ip 35.225.48.250
+        rpcUrl: 'http://rpc.meter.io', // external ip 35.225.48.250
 
         wmtrEnabled: true,
         wmtrAddress: '0x160361ce13ec33c993b5cca8f62b6864943eb083',
