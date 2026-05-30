@@ -1908,7 +1908,7 @@ export class PosCMD extends CMD {
       if (blk.blockType == 'KBlock') {
         if (config.powEnabled) {
           const epochInfo = await this.pos.getEpochInfo(blk.qc.epochID);
-          for (const pb of epochInfo.powBlocks) {
+          for (const pb of (epochInfo.powBlocks || [])) {
             powBlocks.push({ ...pb, beneficiary: pb.Beneficiary || pb.beneficiary });
           }
         }
