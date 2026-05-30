@@ -1,24 +1,32 @@
 services:
   sync-pos:
-    image: meterio/scan-api:latest
+    build:
+      context: .
+      dockerfile: sync.Dockerfile
     env_file: .env.testnet
     command: ["sync", "pos", "-n", "test"]
     restart: unless-stopped
 
   sync-nft:
-    image: meterio/scan-api:latest
+    build:
+      context: .
+      dockerfile: sync.Dockerfile
     env_file: .env.testnet
     command: ["sync", "nft", "-n", "test"]
     restart: unless-stopped
 
   sync-metric:
-    image: meterio/scan-api:latest
+    build:
+      context: .
+      dockerfile: sync.Dockerfile
     env_file: .env.testnet
     command: ["sync", "metric", "-n", "test"]
     restart: unless-stopped
 
   sync-scriptengine:
-    image: meterio/scan-api:latest
+    build:
+      context: .
+      dockerfile: sync.Dockerfile
     env_file: .env.testnet
     command: ["sync", "scriptengine", "-n", "test"]
     restart: unless-stopped

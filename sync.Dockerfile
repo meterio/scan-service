@@ -14,10 +14,4 @@ COPY package*.json .
 RUN npm ci --only=production
 COPY --from=build /app/dist ./dist
 
-
-ENV API_NETWORK main
-ENV API_PORT 4000
-ENV API_STANDBY no
-
 ENTRYPOINT ["/usr/local/bin/node", "dist/src/main.js"]
-CMD ["api"]
