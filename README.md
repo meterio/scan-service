@@ -1,119 +1,230 @@
 # Scan Service
 
-Meter Scan backend service includes two major components:
+Meter Scan backend service for the [Meter blockchain explorer](https://scan.meter.io). It consists of two major components:
 
-1. `sync` that extracts data from chain and store it in base db
-2. `api` that exposes query endpoints
+1. **`sync`** — extracts data from the chain and stores it in MongoDB
+2. **`api`** — exposes REST query endpoints for the frontend
 
-## Sync Workflow
-
-```
-+----------------+       +--------------+        +----------------+
-|                |       |              |        |                |
-| Meter FullNode +-----> +   Base DB    +------->+ Defined Entity |
-|                |       |              |        |                |
-+----------------+       +--------------+        +----------------+
-```
-
-- `Base DB`: Blocks/TXs/PowBlocks/PowTxs/Receipts/...
-- `Defined Entity`: Balances/Transfers/ etc
-
-## Features
-
-- Blocks/TXs/Receipts
-- Committee/Epoch
-- MTR/MTRG Native Balance and Transfer
-- MTR/MTRG System Contract Transfer
-- ERC20 Token Balance and Transfer
-- Staking Engine
-- Auction Engine
-- AccountLock Engine
-- NFT
-
-## Usage
-
-1. Install dependency
+## Architecture
 
 ```
+                          ┌─────────────────────────────────────────────┐
+                          │               Meter Full Node                │
+                          └────────────────────┬────────────────────────┘
+                                               │ RPC / REST
+                    ┌──────────────────────────▼──────────────────────────┐
+                    │                    Sync Services                     │
+                    │                                                      │
+                    │  ┌──────────┐  ┌──────────┐  ┌───────────────────┐ │
+                    │  │  pos     │  │  pow     │  │  scriptengine     │ │
+                    │  │ (blocks, │  │ (PoW     │  │  (DeFi/auction/   │ │
+                    │  │  txs,    │  │  blocks) │  │   staking events) │ │
+                    │  │  epochs) │  └──────────┘  └───────────────────┘ │
+                    │  └──────────┘                                       │
+                    │  ┌──────────┐  ┌──────────┐                        │
+                    │  │  nft     │  │  metric  │                        │
+                    │  │ (ERC721/ │  │ (chain   │                        │
+                    │  │  ERC1155)│  │  metrics)│                        │
+                    │  └──────────┘  └──────────┘                        │
+                    └──────────────────────┬──────────────────────────────┘
+                                           │ read/write
+                              ┌────────────▼────────────┐
+                              │         MongoDB          │
+                              │  scandb-main / scandb-   │
+                              │  test (per network)      │
+                              └────────────┬────────────┘
+                                           │ read
+                              ┌────────────▼────────────┐
+                              │        API Service       │
+                              │   (REST endpoints on     │
+                              │    port 4000/4001)       │
+                              └─────────────────────────┘
+```
+
+### Sync Services
+
+| Service        | Description                                                    | Networks        |
+|----------------|----------------------------------------------------------------|-----------------|
+| `pos`          | Syncs PoS blocks, transactions, receipts, epochs, committees  | mainnet, testnet |
+| `pow`          | Syncs PoW blocks and transactions                             | mainnet only    |
+| `nft`          | Indexes ERC721 and ERC1155 token events and metadata          | mainnet, testnet |
+| `metric`       | Computes and stores chain-level metrics                       | mainnet, testnet |
+| `scriptengine` | Processes staking, auction, and accountlock script engine events | mainnet, testnet |
+
+### Database
+
+MongoDB is used as the primary data store. The database name is selected automatically based on the network:
+
+| Network  | Database name     |
+|----------|-------------------|
+| mainnet  | `scandb-main`     |
+| testnet  | `scandb-test`     |
+
+---
+
+## Prerequisites
+
+- **Node.js** v20+
+- **npm** (or **yarn**)
+- **MongoDB** v5+ — running locally or accessible remotely
+- **Docker** + **Docker Compose** — for containerized deployment
+- A running **Meter full node** to sync from
+
+---
+
+## Running Locally
+
+### 1. Install dependencies
+
+```bash
 git clone https://github.com/meterio/scan-service
 cd scan-service
-yarn
+npm install
 ```
 
-2. Prepare .env file with these information
+### 2. Configure environment
 
+Copy the sample env file and fill in your values:
+
+```bash
+cp .env.sample .env
 ```
-# file .env
 
-# database
+```env
+# MongoDB connection
 MONGO_PATH=localhost:27017
-MONGO_PWD=scan
 MONGO_USER=scan
+MONGO_PWD=scan
 MONGO_SSL_CA=
 
-# used by api
+# Required by API
 SWAPPER_PRIVATE_KEY=
 SWAPPER_RPC_URL=
 
+COINMARKETCAP_API_KEY=
+CALLBACK_URL=
+CONSUMER_KEY=
+CONSUMER_SECRET=
 ```
 
-3. Help
+### 3. Run sync services
 
 ```bash
-yarn start help
+# Sync PoS blocks/txs (mainnet)
+npm start sync pos -n main
+
+# Sync PoS blocks/txs (testnet)
+npm start sync pos -n test
+
+# Sync NFTs
+npm start sync nft -n main
+
+# Sync metrics
+npm start sync metric -n main
+
+# Sync script engine events
+npm start sync scriptengine -n main
+
+# Sync PoW blocks (mainnet only)
+npm start sync pow -n main
 ```
 
-4. Run sync
+### 4. Run the API
 
 ```bash
-# sync pos
-yarn start sync pos -n main
+# Mainnet API on port 4000
+npm start api -n main -p 4000
 
-# sync nft
-yarn start sync nft -n main
+# Testnet API on port 4001
+npm start api -n test -p 4001
 ```
 
-5. Run api
+---
+
+## Running with Docker Compose
+
+The Docker image is `meterio/scan-api:latest`. Build it with:
 
 ```bash
-yarn start api -n main -p 3000
-```
-
-## API Docker
-
-```bash
-# build docker
 ./api.docker.sh
 ```
 
-## NFT related APIs
+Separate compose files are provided for mainnet and testnet. Each reads from its own env file.
+
+### Mainnet
+
+```bash
+cp .env.sample .env.mainnet
+# edit .env.mainnet with mainnet values
+
+docker compose -f docker-compose.mainnet.yml up -d
+```
+
+### Testnet
+
+```bash
+cp .env.sample .env.testnet
+# edit .env.testnet with testnet values
+
+docker compose -f docker-compose.testnet.yml up -d
+```
+
+### Services included
+
+| Service            | Mainnet | Testnet |
+|--------------------|---------|---------|
+| `sync-pos`         | ✅      | ✅      |
+| `sync-pow`         | ✅      | ❌      |
+| `sync-nft`         | ✅      | ✅      |
+| `sync-metric`      | ✅      | ✅      |
+| `sync-scriptengine`| ✅      | ✅      |
+
+---
+
+## API Reference
 
 > Mainnet API base: `https://api.meter.io:8000/api`
 
 > Testnet API base: `https://api.meter.io:4000/api`
 
-Notice: `page` and `limit` are optional params for API access, `limit` means how many entries will be included in one page. The total number of entries will be returned in response with the name of `totalRows`, you'll need to loop the page number from 1 to Math.ceiling(`totalRows`/`limit`) to collect all the information
+`page` and `limit` are optional query params. `limit` controls entries per page. Use `totalRows` in the response to calculate total pages: `Math.ceil(totalRows / limit)`.
 
-### Get all the tokens in NFT collection
+### NFT APIs
 
-> GET /nfts/:address/tokens?page=1&limit=20
+#### Get all tokens in an NFT collection
 
-eg: https://api.meter.io:8000/api/nfts/0x608203020799f9bda8bfcc3ac60fc7d9b0ba3d78/tokens
+```
+GET /nfts/:address/tokens?page=1&limit=20
+```
 
-### Get detail for NFT token
+#### Get detail for an NFT token
 
-> GET /nfts/:address/:tokenId
+```
+GET /nfts/:address/:tokenId
+```
 
-eg: https://api.meter.io:8000/api/nfts/0x608203020799f9bda8bfcc3ac60fc7d9b0ba3d78/3445
+#### Get NFT holdings for an address
 
-### Get NFT token holdings on user address
+```
+GET /accounts/:address/nfts?page=1&limit=20
+```
 
-> GET /accounts/:address/nfts?page=1&limit=20
+#### List all holders of an NFT collection
 
-eg: https://api.meter.io:8000/api/accounts/0x00704fe459dd9ea5b23a2254333a8dce5485b6d1/nfts?page=1&limit=20
+```
+GET /accounts/:tokenAddress/holders?page=1&limit=20
+```
 
-### List out all the token holders for NFT collection
+---
 
-> GET /account/:tokenAddress/holders?page=1&limit=20
+## Features
 
-eg: https://api.meter.io:8000/api/accounts/0x608203020799f9bda8bfcc3ac60fc7d9b0ba3d78/holders?page=1&limit=20
+- Blocks, transactions, receipts
+- Committee and epoch tracking
+- MTR/MTRG native balance and transfers
+- MTR/MTRG system contract transfers
+- ERC20 token balance and transfers
+- Staking engine
+- Auction engine
+- AccountLock engine
+- NFT (ERC721 / ERC1155)
