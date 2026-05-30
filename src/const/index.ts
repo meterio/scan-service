@@ -161,7 +161,7 @@ export const GetNetworkConfig = (net: Network): NetworkConfig | undefined => {
         stMTRGAddress: '',
         stMTRG_MTRG_Pair: '',
 
-        powEnabled: true,
+        powEnabled: false,
         auctionEnabled: true,
         sourcifyEnabled: true,
 
