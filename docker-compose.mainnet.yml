@@ -1,3 +1,5 @@
+name: scan-mainnet
+
 services:
   sync-pos:
     build:

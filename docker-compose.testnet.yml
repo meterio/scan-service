@@ -1,3 +1,5 @@
+name: scan-testnet
+
 services:
   sync-pos:
     build:
