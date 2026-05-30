@@ -1,0 +1,30 @@
+services:
+  sync-pos:
+    image: meterio/scan-api:latest
+    env_file: .env.mainnet
+    command: ["sync", "pos", "-n", "main"]
+    restart: unless-stopped
+
+  sync-pow:
+    image: meterio/scan-api:latest
+    env_file: .env.mainnet
+    command: ["sync", "pow", "-n", "main"]
+    restart: unless-stopped
+
+  sync-nft:
+    image: meterio/scan-api:latest
+    env_file: .env.mainnet
+    command: ["sync", "nft", "-n", "main"]
+    restart: unless-stopped
+
+  sync-metric:
+    image: meterio/scan-api:latest
+    env_file: .env.mainnet
+    command: ["sync", "metric", "-n", "main"]
+    restart: unless-stopped
+
+  sync-scriptengine:
+    image: meterio/scan-api:latest
+    env_file: .env.mainnet
+    command: ["sync", "scriptengine", "-n", "main"]
+    restart: unless-stopped
