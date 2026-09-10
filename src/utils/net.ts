@@ -59,6 +59,8 @@ export class Net {
   // often a deterministic origin error and replaying it just wastes time.
   private static readonly RETRYABLE_STATUS = new Set([408, 425, 429, 502, 503, 504]);
 
+  private static readonly USER_AGENT = 'meterio-scan-service';
+
   private static readonly MAX_ATTEMPTS = 3;
   private static readonly BASE_BACKOFF_MS = 250;
 
@@ -105,7 +107,10 @@ export class Net {
         url,
         {
           method,
-          headers: params!.headers || {},
+          // Node sends no User-Agent by default. Some upstreams reject that
+          // outright - CoinGecko answers 403 "Please add a descriptive
+          // User-Agent" - so set one, while letting callers override it.
+          headers: { 'User-Agent': Net.USER_AGENT, ...(params!.headers || {}) },
           agent: this.agent,
           timeout: this.timeout,
         },

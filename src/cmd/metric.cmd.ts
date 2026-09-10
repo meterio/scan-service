@@ -289,18 +289,28 @@ export class MetricCMD extends CMD {
       if (!!res) {
         for (const id in res) {
           const price = res[id];
-          const percent20h = Math.floor(parseFloat(price.usd_24h_change) * 100) / 100;
+          // usd_24h_change is null for thinly traded pairs (MTRG currently), and
+          // parseFloat(null) is NaN - writing that would put "NaN%" on the page.
+          const rawChange = parseFloat(price.usd_24h_change);
+          const percent24h = Number.isFinite(rawChange) ? Math.floor(rawChange * 100) / 100 : null;
 
           if (id == 'bitcoin') {
             this.cache.update(MetricName.BTC_PRICE, String(price.usd));
           }
           if (id == config.coingeckoEnergy) {
             this.cache.update(MetricName.MTR_PRICE, String(price.usd));
-            this.cache.update(MetricName.MTR_PRICE_CHANGE, `${percent20h}%`);
+            if (percent24h !== null) {
+              this.cache.update(MetricName.MTR_PRICE_CHANGE, `${percent24h}%`);
+            }
           }
           if (id == config.coingeckoBalance) {
             this.cache.update(MetricName.MTRG_PRICE, String(price.usd));
-            this.cache.update(MetricName.MTRG_PRICE_CHANGE, `${percent20h}%`);
+            if (percent24h !== null) {
+              this.cache.update(MetricName.MTRG_PRICE_CHANGE, `${percent24h}%`);
+            }
+          }
+          if (percent24h === null) {
+            this.log.info(`no 24h change reported for ${id}, keeping previous value`);
           }
         }
       }
@@ -324,7 +334,8 @@ export class MetricCMD extends CMD {
         for (const id in res.data) {
           const data = res.data[id];
           const price = Math.floor(parseFloat(data.quote.USD.price) * 100) / 100;
-          const percent24h = Math.floor(parseFloat(data.quote.USD.percent_change_24h) * 100) / 100;
+          const rawChange = parseFloat(data.quote.USD.percent_change_24h);
+          const percent24h = Number.isFinite(rawChange) ? Math.floor(rawChange * 100) / 100 : 0;
 
           if (data.slug == 'bitcoin') {
             this.cache.update(MetricName.BTC_PRICE, String(price));

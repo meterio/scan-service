@@ -132,6 +132,26 @@ test('a stalled request rejects instead of hanging forever', async () => {
   }
 });
 
+test('sends a User-Agent, and lets callers override it', async () => {
+  // Regression: Node sets no UA by default and CoinGecko answers 403 without
+  // one, which silently broke MTR/MTRG price updates for months.
+  let seen: string | undefined;
+  const f = await startServer((req, res) => {
+    seen = req.headers['user-agent'];
+    ok(res);
+  });
+  try {
+    const net = new Net(f.base);
+    await net.http('GET', 'simple/price');
+    assert.ok(seen && seen.length > 0, 'a User-Agent must be sent');
+
+    await net.http('GET', 'simple/price', { headers: { 'User-Agent': 'custom-agent' } });
+    assert.strictEqual(seen, 'custom-agent', 'an explicit User-Agent must win');
+  } finally {
+    await f.close();
+  }
+});
+
 (async () => {
   let failed = 0;
   for (const t of tests) {
