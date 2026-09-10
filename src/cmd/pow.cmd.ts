@@ -65,6 +65,8 @@ export class PowCMD extends CMD {
     const b = await this.pow.getBlock(num);
 
     // preload blocks
+    // see the note in pos.cmd.ts: a bare .catch() leaves the rejection unhandled,
+    // which is fatal under Node's default --unhandled-rejections=throw
     (async () => {
       for (let i = 1; i <= PRELOAD_WINDOW; i++) {
         const blk = await this.pow.getBlock(num + i);
@@ -72,7 +74,9 @@ export class PowCMD extends CMD {
           return;
         }
       }
-    })().catch();
+    })().catch((e) => {
+      this.log.warn({ err: e }, 'block preload failed');
+    });
     return b;
   }
 

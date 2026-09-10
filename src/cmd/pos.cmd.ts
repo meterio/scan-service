@@ -222,11 +222,18 @@ export class PosCMD extends CMD {
     const b = await this.pos.getBlock(num, 'expanded');
 
     // preload blocks
+    // NOTE: .catch() with no handler does NOT handle the rejection - it returns a
+    // new rejected promise that nothing awaits, which Node treats as an unhandled
+    // rejection and turns into a fatal error. A single ECONNRESET from the RPC
+    // would kill the process. Preloading is only cache warming, so a failure here
+    // is safe to swallow: the main path re-fetches any block it needs.
     (async () => {
       for (let i = 1; i <= PRELOAD_WINDOW; i++) {
         await this.pos.getBlock(num + i, 'expanded');
       }
-    })().catch();
+    })().catch((e) => {
+      this.log.warn({ err: e }, 'block preload failed');
+    });
     return b;
   }
 
@@ -316,6 +323,7 @@ export class PosCMD extends CMD {
     const blockHash = head.hash;
     // delete invalid/incomplete blocks
     this.log.info(`Start to fix dirty data on block ${blockNum}`);
+    const phaseStart = new Date().getTime();
     const block = await this.blockRepo.deleteAfter(blockNum);
     const tx = await this.txRepo.deleteAfter(blockNum);
     const logEvent = await this.logEventRepo.deleteAfter(blockNum);
@@ -327,6 +335,10 @@ export class PosCMD extends CMD {
     const movement = await this.movementRepo.deleteAfter(blockNum);
     const contract = await this.contractRepo.deleteAfter(blockNum);
     const internalTxs = await this.internalTxRepo.deleteAfter(blockNum);
+    const deletesMs = new Date().getTime() - phaseStart;
+    this.log.info(`cleanup phase: deletes took ${deletesMs / 1000}s`);
+
+    const acctStart = new Date().getTime();
     const accts = await this.accountRepo.findLastUpdateAfter(blockNum);
     for (const acct of accts) {
       await this.fixAccount(acct, blockNum);
@@ -335,6 +347,10 @@ export class PosCMD extends CMD {
     for (const acct of incorrectAccts) {
       await this.fixAccount(acct, blockNum);
     }
+    const acctMs = new Date().getTime() - acctStart;
+    this.log.info(`cleanup phase: account repair took ${acctMs / 1000}s`);
+
+    const balStart = new Date().getTime();
     const bals = await this.tokenBalanceRepo.findLastUpdateAfter(blockNum);
     for (const bal of bals) {
       await this.fixTokenBalance(bal, blockNum);
@@ -343,6 +359,7 @@ export class PosCMD extends CMD {
     for (const bal of incorrectBals) {
       await this.fixTokenBalance(bal, blockNum);
     }
+    this.log.info(`cleanup phase: token balance repair took ${(new Date().getTime() - balStart) / 1000}s`);
     this.log.info(
       {
         block,
@@ -405,6 +422,14 @@ export class PosCMD extends CMD {
         );
         // begin import round from headNum+1 to tgtNum
         for (let num = headNum + 1; num <= endNum; num++) {
+          // check between blocks so shutdown does not have to wait out a whole
+          // round. Bailing here is safe: in fast-forward nothing is persisted
+          // until the round ends, and in normal mode every earlier block is
+          // already saved with the head advanced to match.
+          if (this.shutdown) {
+            throw new InterruptedError();
+          }
+
           // fetch block from RESTful API
           const blk = await this.getBlockFromREST(num);
 
@@ -452,11 +477,20 @@ export class PosCMD extends CMD {
           if (head) {
             await this.cleanUpIncompleteData(head);
           }
+
+          // discard in-memory caches as well, otherwise the next round replays the
+          // failed range on top of retained blocks/txs/movements and duplicates them
+          this.cleanCache();
+          this.beneficiaryCache = ZeroAddress;
+
           const elapsed = new Date().getTime() - start;
 
           this.log.info(`clean up elapsed: ${elapsed / 1000} seconds`);
-          this.log.error(`sleep for ${RECOVERY_INTERVAL / 1000 / 60} minutes, hope it will resolve`);
-          await sleep(RECOVERY_INTERVAL - elapsed);
+          // cleanup can easily outlast RECOVERY_INTERVAL, which made this
+          // negative and skipped the backoff entirely while still logging it
+          const remaining = Math.max(0, RECOVERY_INTERVAL - elapsed);
+          this.log.error(`sleep for ${remaining / 1000 / 60} minutes, hope it will resolve`);
+          await sleep(remaining);
         }
       }
     }

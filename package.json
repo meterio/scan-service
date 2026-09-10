@@ -74,7 +74,8 @@
   },
   "scripts": {
     "start": "ts-node src/main.ts",
-    "build": "rm -fr dist && tsc -p ."
+    "build": "rm -fr dist && tsc -p .",
+    "test": "ts-node test/pos-recovery.test.ts && ts-node test/net-retry.test.ts"
   },
   "bin": {
     "scan-service": "dist/src/main.js"

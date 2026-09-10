@@ -43,6 +43,25 @@ const runSync = async (task, options) => {
     default:
       throw new commander.InvalidArgumentError('Not a valid task to sync');
   }
+  // Docker sends SIGTERM on stop/restart and SIGKILLs ~10s later. Without a
+  // handler the process is killed mid-write, leaving rows above the persisted
+  // head that the next startup has to clean up - which on a slow disk costs
+  // minutes. Ask the loop to stop instead: it finishes the block it is on,
+  // persists what it has, and exits cleanly.
+  let stopping = false;
+  const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM', 'SIGQUIT'];
+  for (const sig of signals) {
+    process.on(sig, () => {
+      if (stopping) {
+        process.stdout.write(`Got ${sig} again, exiting immediately\n`);
+        process.exit(1);
+      }
+      stopping = true;
+      process.stdout.write(`Got ${sig}, finishing current block then shutting down...\n`);
+      cmd.stop();
+    });
+  }
+
   await cmd.start();
   await disconnectDB();
 };
