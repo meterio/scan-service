@@ -1,17 +1,17 @@
 #Build stage
-FROM node:20-alpine AS build
+FROM node:22.23.4-alpine AS build
 
 WORKDIR /app
-COPY package*.json .
-RUN npm install
+COPY package*.json ./
+RUN npm ci
 COPY . .
 RUN npm run build
 
 #Production stage
-FROM node:20-alpine AS production
+FROM node:22.23.4-alpine AS production
 WORKDIR /app
-COPY package*.json .
-RUN npm ci --only=production
+COPY package*.json ./
+RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
 
 ENTRYPOINT ["/usr/local/bin/node", "dist/src/main.js"]

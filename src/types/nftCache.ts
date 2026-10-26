@@ -417,7 +417,7 @@ export class NFTCache {
           console.log(`|- download tokenURI ${url}`);
           const tokenJSONRes = await axios.get(url);
           const contentType = tokenJSONRes.headers['content-type'];
-          if (contentType.startsWith('image')) {
+          if (typeof contentType === 'string' && contentType.startsWith('image')) {
             mediaURI = url;
           } else {
             if (tokenJSONRes && tokenJSONRes.data) {
@@ -467,7 +467,8 @@ export class NFTCache {
                 continue;
               }
               reader = res.data;
-              mediaType = res.headers['content-type'];
+              const contentType = res.headers['content-type'];
+              mediaType = typeof contentType === 'string' ? contentType : undefined;
             }
           }
         }

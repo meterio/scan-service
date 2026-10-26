@@ -1,5 +1,5 @@
 const fs = require('fs');
-const parse = require('csv-parse/lib/sync');
+const { parse } = require('csv-parse/sync');
 const stringify = require('csv-stringify');
 
 export const loadCSV = (path) => {
